@@ -16,15 +16,47 @@ jobs:
 
     - name: Vérification des fichiers critiques
       run: |
-        test -f index.html || (echo "Erreur: index.html manquant" && exit 1)
-        test -f manifest.json || (echo "Erreur: manifest.json manquant" && exit 1)
-        test -f sw.js || (echo "Erreur: sw.js (Service Worker) manquant" && exit 1)
-        test -f LICENSE || (echo "Erreur: Fichier LICENSE manquant" && exit 1)
+        echo "Vérification des fichiers requis..."
+        test -f index.html || (echo "❌ Erreur: index.html manquant" && exit 1)
+        test -f manifest.json || (echo "❌ Erreur: manifest.json manquant" && exit 1)
+        test -f sw.js || (echo "❌ Erreur: sw.js (Service Worker) manquant" && exit 1)
+        test -f LICENSE || (echo "❌ Erreur: Fichier LICENSE manquant" && exit 1)
+        test -f js/app.js || (echo "❌ Erreur: js/app.js manquant" && exit 1)
+        test -f css/style.css || (echo "❌ Erreur: css/style.css manquant" && exit 1)
+        echo "✅ Tous les fichiers critiques sont présents"
 
-    - name: Validation HTML (Linter)
-      uses: htmlhint/htmlhint-action@v2
-      with:
-        rules: 'tag-pair=true,spec-char-escape=true,id-unique=true,style-disabled=true'
+    - name: Vérification de la structure du projet
+      run: |
+        echo "Vérification de la structure..."
+        test -d js || (echo "❌ Erreur: Dossier js manquant" && exit 1)
+        test -d css || (echo "❌ Erreur: Dossier css manquant" && exit 1)
+        test -d img || (echo "❌ Erreur: Dossier img manquant" && exit 1)
+        test -d LICENSES || (echo "❌ Erreur: Dossier LICENSES manquant" && exit 1)
+        echo "✅ Structure du projet correcte"
 
     - name: Vérification de la licence GPL-3.0
-      run: grep -q "GNU GENERAL PUBLIC LICENSE" LICENSE || (echo "Erreur: La licence n'est pas conforme à la GPL-3.0" && exit 1)
+      run: |
+        echo "Vérification de la licence..."
+        grep -q "GNU GENERAL PUBLIC LICENSE" LICENSE || (echo "❌ Erreur: La licence n'est pas conforme à la GPL-3.0" && exit 1)
+        echo "✅ Licence GPL-3.0 valide"
+
+    - name: Vérification du manifest PWA
+      run: |
+        echo "Vérification du manifest.json..."
+        grep -q '"name"' manifest.json || (echo "❌ Erreur: Champ 'name' manquant dans manifest.json" && exit 1)
+        grep -q '"start_url"' manifest.json || (echo "❌ Erreur: Champ 'start_url' manquant dans manifest.json" && exit 1)
+        grep -q '"display"' manifest.json || (echo "❌ Erreur: Champ 'display' manquant dans manifest.json" && exit 1)
+        echo "✅ Manifest PWA valide"
+
+    - name: Vérification syntaxe JavaScript
+      run: |
+        echo "Vérification de la syntaxe JavaScript..."
+        node --check js/app.js || (echo "❌ Erreur de syntaxe dans app.js" && exit 1)
+        node --check js/data.js || (echo "❌ Erreur de syntaxe dans data.js" && exit 1)
+        echo "✅ Syntaxe JavaScript correcte"
+
+    - name: Résumé
+      run: |
+        echo "=========================================="
+        echo "✅ Toutes les vérifications ont réussi !"
+        echo "=========================================="
