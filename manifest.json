@@ -1,0 +1,86 @@
+{
+  "name": "AFERTES Connect",
+  "short_name": "AFERTES",
+  "description": "Application de gestion pour le centre de formation AFERTES - Portail étudiant et formateur",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#253672",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "fr-FR",
+  "categories": ["education", "productivity"],
+  "icons": [
+    {
+      "src": "img/icons/icon-72x72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "img/icons/icon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "img/icons/icon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "img/icons/icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "img/icons/icon-152x152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "img/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "img/icons/icon-384x384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "img/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Actualités",
+      "short_name": "Actus",
+      "description": "Voir les dernières actualités",
+      "url": "/index.html#news",
+      "icons": [{ "src": "img/icons/news-icon.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Messages",
+      "short_name": "Messages",
+      "description": "Accéder à la messagerie",
+      "url": "/index.html#messages",
+      "icons": [{ "src": "img/icons/message-icon.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "BDE Info",
+      "short_name": "BDE",
+      "description": "Événements du BDE",
+      "url": "/index.html#bde",
+      "icons": [{ "src": "img/icons/bde-icon.png", "sizes": "96x96" }]
+    }
+  ]
+}

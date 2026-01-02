@@ -1,0 +1,1602 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AFERTES Connect - Portail étudiant du centre de formation en travail social">
+    <meta name="theme-color" content="#253672">
+    <title>AFERTES Connect - Portail Étudiant</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="apple-touch-icon" href="img/icons/icon-192x192.png">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+    <!-- Écran de chargement -->
+    <div id="loading-screen" class="loading-screen">
+        <div class="loader">
+            <img src="img/logo-afertes.png" alt="AFERTES" class="loader-logo">
+            <div class="loader-spinner"></div>
+            <p>Chargement...</p>
+        </div>
+    </div>
+
+    <!-- Page de connexion -->
+    <div id="login-page" class="page login-page">
+        <div class="login-container">
+            <div class="login-header">
+                <img src="img/logo-afertes.png" alt="AFERTES" class="login-logo">
+                <h1>AFERTES Connect</h1>
+                <p>Portail étudiant du centre de formation en travail social</p>
+            </div>
+
+            <form id="login-form" class="login-form">
+                <div class="site-selector">
+                    <label>Votre site de formation :</label>
+                    <div class="site-buttons">
+                        <button type="button" class="site-btn active" data-site="slb">
+                            <i class="fas fa-building"></i>
+                            Saint-Laurent-Blangy
+                        </button>
+                        <button type="button" class="site-btn" data-site="avion">
+                            <i class="fas fa-building"></i>
+                            Avion
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="login-email">
+                        <i class="fas fa-envelope"></i>
+                        Adresse email
+                    </label>
+                    <input type="email" id="login-email" placeholder="prenom.nom@afertes.org" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="login-password">
+                        <i class="fas fa-lock"></i>
+                        Mot de passe
+                    </label>
+                    <input type="password" id="login-password" placeholder="••••••••" required>
+                </div>
+
+                <div class="form-options">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="remember-me">
+                        <span>Se souvenir de moi</span>
+                    </label>
+                    <a href="#" class="forgot-password" onclick="showForgotPassword()">Mot de passe oublié ?</a>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block">
+                    <i class="fas fa-sign-in-alt"></i>
+                    Se connecter
+                </button>
+
+                <div class="login-divider">
+                    <span>ou</span>
+                </div>
+
+                <button type="button" class="btn btn-secondary btn-block" onclick="showRegister()">
+                    <i class="fas fa-user-plus"></i>
+                    Créer un compte
+                </button>
+            </form>
+
+            <div class="login-footer">
+                <p>© 2025 AFERTES - Centre de formation en travail social</p>
+                <p><a href="https://afertes.org" target="_blank">afertes.org</a></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Page d'inscription -->
+    <div id="register-page" class="page register-page hidden">
+        <div class="register-container">
+            <button class="back-btn" onclick="showLogin()">
+                <i class="fas fa-arrow-left"></i>
+                Retour
+            </button>
+
+            <div class="register-header">
+                <img src="img/logo-afertes.png" alt="AFERTES" class="register-logo">
+                <h1>Créer un compte</h1>
+                <p>Rejoignez la communauté AFERTES</p>
+            </div>
+
+            <form id="register-form" class="register-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="reg-firstname">Prénom *</label>
+                        <input type="text" id="reg-firstname" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="reg-lastname">Nom *</label>
+                        <input type="text" id="reg-lastname" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="reg-email">Email *</label>
+                    <input type="email" id="reg-email" placeholder="prenom.nom@afertes.org" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="reg-role">Vous êtes *</label>
+                    <select id="reg-role" required>
+                        <option value="">Sélectionnez votre statut</option>
+                        <option value="student">Étudiant(e)</option>
+                        <option value="teacher">Formateur(rice)</option>
+                        <option value="secretary">Secrétaire</option>
+                        <option value="bde">Membre BDE</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="formation-group">
+                    <label for="reg-formation">Formation *</label>
+                    <select id="reg-formation">
+                        <option value="">Sélectionnez votre formation</option>
+                        <option value="es">ES - Éducateur Spécialisé</option>
+                        <option value="me">ME - Moniteur Éducateur</option>
+                        <option value="aes">AES - Accompagnant Éducatif et Social</option>
+                        <option value="caferuis">CAFERUIS</option>
+                        <option value="cafdes">CAFDES</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="promo-group">
+                    <label for="reg-promo">Promotion *</label>
+                    <select id="reg-promo">
+                        <option value="">Sélectionnez votre promotion</option>
+                        <option value="2023">Promotion 2023-2026</option>
+                        <option value="2024">Promotion 2024-2027</option>
+                        <option value="2025">Promotion 2025-2028</option>
+                    </select>
+                </div>
+
+                <div class="form-group hidden" id="specialty-group">
+                    <label for="reg-specialty">Spécialité / Discipline *</label>
+                    <select id="reg-specialty">
+                        <option value="">Sélectionnez votre spécialité</option>
+                        <option value="pedagogie">Pédagogie sociale</option>
+                        <option value="psychologie">Psychologie</option>
+                        <option value="sociologie">Sociologie</option>
+                        <option value="droit">Droit / Législation sociale</option>
+                        <option value="methodologie">Méthodologie de projet</option>
+                        <option value="communication">Communication</option>
+                        <option value="ethique">Éthique et déontologie</option>
+                        <option value="pratique">Pratiques professionnelles</option>
+                        <option value="accompagnement">Accompagnement de stage</option>
+                        <option value="autre">Autre</option>
+                    </select>
+                </div>
+
+                <div class="form-group hidden" id="formations-taught-group">
+                    <label>Formations enseignées *</label>
+                    <div class="checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="formations-taught" value="es">
+                            <span>ES - Éducateur Spécialisé</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="formations-taught" value="me">
+                            <span>ME - Moniteur Éducateur</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="formations-taught" value="aes">
+                            <span>AES - Accompagnant Éducatif et Social</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="formations-taught" value="caferuis">
+                            <span>CAFERUIS</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="formations-taught" value="cafdes">
+                            <span>CAFDES</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="site-selector">
+                    <label>Site de formation *</label>
+                    <div class="site-buttons">
+                        <button type="button" class="site-btn active" data-site="slb">
+                            <i class="fas fa-building"></i>
+                            Saint-Laurent-Blangy
+                        </button>
+                        <button type="button" class="site-btn" data-site="avion">
+                            <i class="fas fa-building"></i>
+                            Avion
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="reg-password">Mot de passe *</label>
+                        <input type="password" id="reg-password" required minlength="8">
+                    </div>
+                    <div class="form-group">
+                        <label for="reg-password-confirm">Confirmer *</label>
+                        <input type="password" id="reg-password-confirm" required>
+                    </div>
+                </div>
+
+                <div class="rgpd-notice">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="rgpd-consent" required>
+                        <span>J'accepte que mes données personnelles soient traitées conformément à la 
+                        <a href="#" onclick="showRGPD()">politique de confidentialité RGPD</a> de l'AFERTES.</span>
+                    </label>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block">
+                    <i class="fas fa-user-plus"></i>
+                    Créer mon compte
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Application principale -->
+    <div id="app" class="app hidden">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-left">
+                <button class="menu-toggle" onclick="toggleSidebar()">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <img src="img/logo-afertes.png" alt="AFERTES" class="header-logo">
+                <span class="header-title">AFERTES Connect</span>
+            </div>
+            <div class="header-right">
+                <span class="site-badge" id="current-site">Saint-Laurent-Blangy</span>
+                <button class="notification-btn" onclick="toggleNotifications()">
+                    <i class="fas fa-bell"></i>
+                    <span class="notification-badge" id="notif-count">3</span>
+                </button>
+                <div class="user-menu" onclick="toggleUserMenu()">
+                    <img src="img/default-avatar.svg" alt="Avatar" class="user-avatar" id="header-avatar">
+                    <span class="user-name" id="header-username">Utilisateur</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+            </div>
+        </header>
+
+        <!-- Panneau de notifications -->
+        <div id="notifications-panel" class="notifications-panel hidden">
+            <div class="panel-header">
+                <h3><i class="fas fa-bell"></i> Notifications</h3>
+                <button onclick="markAllRead()">Tout marquer comme lu</button>
+            </div>
+            <div class="notifications-list" id="notifications-list">
+                <!-- Notifications générées dynamiquement -->
+            </div>
+        </div>
+
+        <!-- Menu utilisateur -->
+        <div id="user-menu-dropdown" class="user-menu-dropdown hidden">
+            <a href="#" onclick="showPage('profile')">
+                <i class="fas fa-user"></i> Mon profil
+            </a>
+            <a href="#" onclick="showPage('settings')">
+                <i class="fas fa-cog"></i> Paramètres
+            </a>
+            <hr>
+            <a href="#" onclick="logout()">
+                <i class="fas fa-sign-out-alt"></i> Déconnexion
+            </a>
+        </div>
+
+        <!-- Sidebar -->
+        <nav class="sidebar" id="sidebar">
+            <div class="sidebar-content">
+                <div class="nav-section">
+                    <span class="nav-section-title">Principal</span>
+                    <a href="#" class="nav-item active" data-page="dashboard" onclick="showPage('dashboard')">
+                        <i class="fas fa-home"></i>
+                        <span>Accueil</span>
+                    </a>
+                    <a href="#" class="nav-item" data-page="news" onclick="showPage('news')">
+                        <i class="fas fa-newspaper"></i>
+                        <span>Actualités</span>
+                    </a>
+                    <a href="#" class="nav-item" data-page="bde" onclick="showPage('bde')">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span>BDE Info</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <span class="nav-section-title">Communication</span>
+                    <a href="#" class="nav-item" data-page="messages" onclick="showPage('messages')">
+                        <i class="fas fa-comments"></i>
+                        <span>Messages</span>
+                        <span class="nav-badge" id="msg-count">2</span>
+                    </a>
+                    <a href="#" class="nav-item" data-page="group-messages" onclick="showPage('group-messages')">
+                        <i class="fas fa-users"></i>
+                        <span>Groupes</span>
+                    </a>
+                    <a href="#" class="nav-item" data-page="promo" onclick="showPage('promo')">
+                        <i class="fas fa-user-friends"></i>
+                        <span>Ma Promo</span>
+                    </a>
+                    <a href="#" class="nav-item" data-page="directory" onclick="showPage('directory')">
+                        <i class="fas fa-address-book"></i>
+                        <span>Annuaire</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <span class="nav-section-title">Mon espace</span>
+                    <a href="#" class="nav-item" data-page="schedule" onclick="showPage('schedule')">
+                        <i class="fas fa-calendar-week"></i>
+                        <span>Emploi du temps</span>
+                    </a>
+                    <a href="#" class="nav-item" data-page="grades" onclick="showPage('grades')">
+                        <i class="fas fa-graduation-cap"></i>
+                        <span>Notes</span>
+                    </a>
+                    <a href="#" class="nav-item" data-page="drive" onclick="showPage('drive')">
+                        <i class="fas fa-cloud"></i>
+                        <span>Mon Drive</span>
+                    </a>
+                    <a href="#" class="nav-item" data-page="profile" onclick="showPage('profile')">
+                        <i class="fas fa-user-circle"></i>
+                        <span>Mon Profil</span>
+                    </a>
+                    <a href="#" class="nav-item" data-page="documents" onclick="showPage('documents')">
+                        <i class="fas fa-folder"></i>
+                        <span>Ressources</span>
+                    </a>
+                </div>
+
+                <!-- Section formateur (conditionnelle) -->
+                <div class="nav-section formateur-only hidden" id="formateur-section">
+                    <span class="nav-section-title">Formateur</span>
+                    <a href="#" class="nav-item" data-page="manage-promos" onclick="showPage('manage-promos')">
+                        <i class="fas fa-users-class"></i>
+                        <span>Promotions</span>
+                    </a>
+                    <a href="#" class="nav-item" data-page="manage-students" onclick="showPage('manage-students')">
+                        <i class="fas fa-user-graduate"></i>
+                        <span>Étudiants</span>
+                    </a>
+                    <a href="#" class="nav-item" data-page="manage-grades" onclick="showPage('manage-grades')">
+                        <i class="fas fa-clipboard-check"></i>
+                        <span>Saisie des notes</span>
+                    </a>
+                    <a href="#" class="nav-item" data-page="manage-schedule" onclick="showPage('manage-schedule')">
+                        <i class="fas fa-calendar-plus"></i>
+                        <span>Emplois du temps</span>
+                    </a>
+                    <a href="#" class="nav-item" data-page="publish-news" onclick="showPage('publish-news')">
+                        <i class="fas fa-edit"></i>
+                        <span>Publier</span>
+                    </a>
+                </div>
+
+                <!-- Section secrétaire (conditionnelle) -->
+                <div class="nav-section secretary-only hidden" id="secretary-section">
+                    <span class="nav-section-title">Administration</span>
+                    <a href="#" class="nav-item" data-page="manage-promos" onclick="showPage('manage-promos')">
+                        <i class="fas fa-layer-group"></i>
+                        <span>Promotions</span>
+                    </a>
+                    <a href="#" class="nav-item" data-page="admin-students" onclick="showPage('admin-students')">
+                        <i class="fas fa-users-cog"></i>
+                        <span>Gestion étudiants</span>
+                    </a>
+                    <a href="#" class="nav-item" data-page="admin-schedules" onclick="showPage('admin-schedules')">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span>Emplois du temps</span>
+                    </a>
+                    <a href="#" class="nav-item" data-page="admin-grades" onclick="showPage('admin-grades')">
+                        <i class="fas fa-file-alt"></i>
+                        <span>Notes & bulletins</span>
+                    </a>
+                    <a href="#" class="nav-item" data-page="admin-inscriptions" onclick="showPage('admin-inscriptions')">
+                        <i class="fas fa-user-plus"></i>
+                        <span>Inscriptions</span>
+                    </a>
+                    <a href="#" class="nav-item" data-page="publish-news" onclick="showPage('publish-news')">
+                        <i class="fas fa-bullhorn"></i>
+                        <span>Actualités</span>
+                    </a>
+                </div>
+
+                <!-- Section BDE (conditionnelle) -->
+                <div class="nav-section bde-only hidden" id="bde-section">
+                    <span class="nav-section-title">Gestion BDE</span>
+                    <a href="#" class="nav-item" data-page="bde-events-manage" onclick="showPage('bde-events-manage')">
+                        <i class="fas fa-calendar-plus"></i>
+                        <span>Gérer événements</span>
+                    </a>
+                    <a href="#" class="nav-item" data-page="bde-members" onclick="showPage('bde-members')">
+                        <i class="fas fa-id-card"></i>
+                        <span>Membres BDE</span>
+                    </a>
+                    <a href="#" class="nav-item" data-page="publish-news" onclick="showPage('publish-news')">
+                        <i class="fas fa-bullhorn"></i>
+                        <span>Publier actualité</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="sidebar-footer">
+                <div class="site-info">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <div class="site-details">
+                        <span class="site-name" id="sidebar-site">Saint-Laurent-Blangy</span>
+                        <span class="site-address" id="sidebar-address">1 rue Pierre et Marie Curie</span>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Contenu principal -->
+        <main class="main-content" id="main-content">
+            <!-- Dashboard -->
+            <section id="page-dashboard" class="page-content active">
+                <div class="page-header">
+                    <h1>Bienvenue, <span id="welcome-name">Utilisateur</span> !</h1>
+                    <p class="welcome-subtitle">Voici les dernières informations de votre espace AFERTES</p>
+                </div>
+
+                <div class="dashboard-grid">
+                    <!-- Carte Emploi du temps -->
+                    <div class="dashboard-card schedule-card highlight-card">
+                        <div class="card-header">
+                            <h2><i class="fas fa-calendar-week"></i> Mon emploi du temps</h2>
+                            <a href="#" onclick="showPage('schedule')">Voir complet</a>
+                        </div>
+                        <div class="card-content" id="dashboard-schedule">
+                            <div class="today-schedule">
+                                <div class="schedule-day-header">
+                                    <span class="day-name">Aujourd'hui</span>
+                                    <span class="day-date" id="today-date"></span>
+                                </div>
+                                <div class="schedule-items" id="today-schedule-items">
+                                    <!-- Emploi du temps du jour généré dynamiquement -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Carte Documents rapides -->
+                    <div class="dashboard-card documents-quick-card">
+                        <div class="card-header">
+                            <h2><i class="fas fa-folder-open"></i> Accès rapide</h2>
+                            <a href="#" onclick="showPage('documents')">Tous les documents</a>
+                        </div>
+                        <div class="card-content">
+                            <div class="quick-links">
+                                <a href="#" class="quick-link" onclick="showPage('documents')">
+                                    <i class="fas fa-book"></i>
+                                    <span>Règlement intérieur</span>
+                                </a>
+                                <a href="#" class="quick-link" onclick="showPage('schedule')">
+                                    <i class="fas fa-calendar-alt"></i>
+                                    <span>Calendrier formation</span>
+                                </a>
+                                <a href="#" class="quick-link" onclick="showPage('grades')">
+                                    <i class="fas fa-graduation-cap"></i>
+                                    <span>Mes notes</span>
+                                </a>
+                                <a href="#" class="quick-link" onclick="showPage('documents')">
+                                    <i class="fas fa-file-pdf"></i>
+                                    <span>Guide de stage</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Carte actualités -->
+                    <div class="dashboard-card news-card">
+                        <div class="card-header">
+                            <h2><i class="fas fa-newspaper"></i> Actualités récentes</h2>
+                            <a href="#" onclick="showPage('news')">Voir tout</a>
+                        </div>
+                        <div class="card-content" id="dashboard-news">
+                            <!-- Actualités générées dynamiquement -->
+                        </div>
+                    </div>
+
+                    <!-- Carte BDE -->
+                    <div class="dashboard-card bde-card">
+                        <div class="card-header">
+                            <h2><i class="fas fa-calendar-alt"></i> Événements BDE</h2>
+                            <a href="#" onclick="showPage('bde')">Voir tout</a>
+                        </div>
+                        <div class="card-content" id="dashboard-bde">
+                            <!-- Événements BDE générés dynamiquement -->
+                        </div>
+                    </div>
+
+                    <!-- Carte messages -->
+                    <div class="dashboard-card messages-card">
+                        <div class="card-header">
+                            <h2><i class="fas fa-comments"></i> Messages récents</h2>
+                            <a href="#" onclick="showPage('messages')">Voir tout</a>
+                        </div>
+                        <div class="card-content" id="dashboard-messages">
+                            <!-- Messages générés dynamiquement -->
+                        </div>
+                    </div>
+
+                    <!-- Carte promo -->
+                    <div class="dashboard-card promo-card">
+                        <div class="card-header">
+                            <h2><i class="fas fa-users"></i> Ma Promotion</h2>
+                            <a href="#" onclick="showPage('promo')">Voir tout</a>
+                        </div>
+                        <div class="card-content" id="dashboard-promo">
+                            <!-- Membres de la promo -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Page Actualités -->
+            <section id="page-news" class="page-content">
+                <div class="page-header">
+                    <h1><i class="fas fa-newspaper"></i> Actualités</h1>
+                    <div class="filter-tabs">
+                        <button class="filter-tab active" data-filter="all">Toutes</button>
+                        <button class="filter-tab" data-filter="slb">Saint-Laurent-Blangy</button>
+                        <button class="filter-tab" data-filter="avion">Avion</button>
+                    </div>
+                </div>
+                <div class="news-list" id="news-list">
+                    <!-- Actualités générées dynamiquement -->
+                </div>
+            </section>
+
+            <!-- Page BDE -->
+            <section id="page-bde" class="page-content">
+                <div class="page-header">
+                    <h1><i class="fas fa-calendar-alt"></i> BDE Info</h1>
+                    <p>Bureau Des Étudiants - Événements et activités</p>
+                </div>
+                <div class="bde-content">
+                    <div class="bde-upcoming">
+                        <h2>Événements à venir</h2>
+                        <div class="events-list" id="bde-events">
+                            <!-- Événements générés dynamiquement -->
+                        </div>
+                    </div>
+                    <div class="bde-sidebar">
+                        <div class="bde-contact-card">
+                            <h3>Contact BDE</h3>
+                            <p><i class="fas fa-envelope"></i> bde@afertes.org</p>
+                            <p><i class="fas fa-instagram"></i> @bde.afertes</p>
+                        </div>
+                        <div class="bde-join-card">
+                            <h3>Rejoindre le BDE</h3>
+                            <p>Tu veux t'impliquer dans la vie étudiante ?</p>
+                            <button class="btn btn-secondary" onclick="contactBDE()">
+                                <i class="fas fa-hand-paper"></i> Je suis intéressé(e)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Page Messages -->
+            <section id="page-messages" class="page-content">
+                <div class="messages-container">
+                    <div class="conversations-list" id="conversations-list">
+                        <div class="conversations-header">
+                            <h2>Conversations</h2>
+                            <button class="btn btn-icon" onclick="newConversation()">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                        <div class="conversations-search">
+                            <input type="text" placeholder="Rechercher une conversation...">
+                        </div>
+                        <div class="conversations-items" id="conversations-items">
+                            <!-- Conversations générées dynamiquement -->
+                        </div>
+                    </div>
+                    <div class="chat-container" id="chat-container">
+                        <div class="chat-placeholder">
+                            <i class="fas fa-comments"></i>
+                            <p>Sélectionnez une conversation ou créez-en une nouvelle</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Page Ma Promo -->
+            <section id="page-promo" class="page-content">
+                <div class="page-header">
+                    <h1><i class="fas fa-users"></i> Ma Promotion</h1>
+                    <p id="promo-info">ES - Promotion 2024-2027</p>
+                </div>
+                <div class="promo-grid" id="promo-members">
+                    <!-- Membres de la promo générés dynamiquement -->
+                </div>
+            </section>
+
+            <!-- Page Annuaire -->
+            <section id="page-directory" class="page-content">
+                <div class="page-header">
+                    <h1><i class="fas fa-address-book"></i> Annuaire</h1>
+                    <div class="directory-search">
+                        <input type="text" id="directory-search" placeholder="Rechercher un nom, une formation...">
+                        <select id="directory-filter">
+                            <option value="all">Tous</option>
+                            <option value="student">Étudiants</option>
+                            <option value="teacher">Formateurs</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="directory-grid" id="directory-list">
+                    <!-- Annuaire généré dynamiquement -->
+                </div>
+            </section>
+
+            <!-- Page Profil -->
+            <section id="page-profile" class="page-content">
+                <div class="profile-container">
+                    <div class="profile-header-card">
+                        <div class="profile-cover" id="profile-cover"></div>
+                        <div class="profile-info">
+                            <div class="profile-avatar-wrapper">
+                                <img src="img/default-avatar.svg" alt="Avatar" class="profile-avatar" id="profile-avatar">
+                                <button class="avatar-edit-btn" onclick="changeAvatar()">
+                                    <i class="fas fa-camera"></i>
+                                </button>
+                            </div>
+                            <div class="profile-details">
+                                <h1 id="profile-fullname">Prénom Nom</h1>
+                                <p class="profile-role" id="profile-role">Étudiant - ES</p>
+                                <p class="profile-site" id="profile-site">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    Saint-Laurent-Blangy
+                                </p>
+                            </div>
+                            <button class="btn btn-secondary" onclick="editProfile()">
+                                <i class="fas fa-edit"></i> Modifier mon profil
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="profile-content">
+                        <div class="profile-section">
+                            <h2><i class="fas fa-user"></i> Informations personnelles</h2>
+                            <div class="profile-grid">
+                                <div class="profile-field">
+                                    <label>Email</label>
+                                    <span id="profile-email">email@afertes.org</span>
+                                </div>
+                                <div class="profile-field">
+                                    <label>Formation</label>
+                                    <span id="profile-formation">Éducateur Spécialisé</span>
+                                </div>
+                                <div class="profile-field">
+                                    <label>Promotion</label>
+                                    <span id="profile-promo">2024-2027</span>
+                                </div>
+                                <div class="profile-field">
+                                    <label>Site</label>
+                                    <span id="profile-site-detail">Saint-Laurent-Blangy</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="profile-section">
+                            <h2><i class="fas fa-info-circle"></i> À propos de moi</h2>
+                            <p class="profile-bio" id="profile-bio">Cliquez sur "Modifier mon profil" pour ajouter une description.</p>
+                        </div>
+
+                        <div class="profile-section">
+                            <h2><i class="fas fa-shield-alt"></i> Confidentialité RGPD</h2>
+                            <div class="privacy-settings">
+                                <label class="toggle-setting">
+                                    <span>Profil visible dans l'annuaire</span>
+                                    <input type="checkbox" id="privacy-directory" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                                <label class="toggle-setting">
+                                    <span>Email visible par les autres étudiants</span>
+                                    <input type="checkbox" id="privacy-email">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                                <label class="toggle-setting">
+                                    <span>Photo visible dans l'annuaire</span>
+                                    <input type="checkbox" id="privacy-photo" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            <a href="#" class="rgpd-link" onclick="showRGPD()">
+                                <i class="fas fa-external-link-alt"></i>
+                                Consulter la politique de confidentialité complète
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Page Documents -->
+            <section id="page-documents" class="page-content">
+                <div class="page-header">
+                    <h1><i class="fas fa-folder"></i> Documents</h1>
+                    <p>Documents et ressources de formation</p>
+                </div>
+                <div class="documents-grid" id="documents-list">
+                    <!-- Documents générés dynamiquement -->
+                </div>
+            </section>
+
+            <!-- Page Emploi du temps -->
+            <section id="page-schedule" class="page-content">
+                <div class="page-header">
+                    <h1><i class="fas fa-calendar-week"></i> Emploi du temps</h1>
+                    <div class="schedule-navigation">
+                        <button class="btn btn-icon" onclick="previousWeek()">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <span class="week-display" id="week-display">Semaine du 6 janvier 2025</span>
+                        <button class="btn btn-icon" onclick="nextWeek()">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                        <button class="btn btn-secondary" onclick="goToToday()">Aujourd'hui</button>
+                    </div>
+                </div>
+                <div class="schedule-container">
+                    <div class="schedule-week" id="schedule-week">
+                        <!-- Emploi du temps généré dynamiquement -->
+                    </div>
+                </div>
+                <div class="schedule-legend">
+                    <span class="legend-item"><span class="legend-color cours"></span> Cours</span>
+                    <span class="legend-item"><span class="legend-color td"></span> TD</span>
+                    <span class="legend-item"><span class="legend-color stage"></span> Stage</span>
+                    <span class="legend-item"><span class="legend-color examen"></span> Examen</span>
+                </div>
+            </section>
+
+            <!-- Page Notes (étudiants) -->
+            <section id="page-grades" class="page-content">
+                <div class="page-header">
+                    <h1><i class="fas fa-graduation-cap"></i> Mes notes</h1>
+                    <p>Résultats et évaluations de votre formation</p>
+                </div>
+                <div class="grades-overview">
+                    <div class="grade-summary-card">
+                        <div class="grade-summary-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="grade-summary-content">
+                            <span class="grade-summary-value" id="average-grade">--</span>
+                            <span class="grade-summary-label">Moyenne générale</span>
+                        </div>
+                    </div>
+                    <div class="grade-summary-card">
+                        <div class="grade-summary-icon">
+                            <i class="fas fa-clipboard-check"></i>
+                        </div>
+                        <div class="grade-summary-content">
+                            <span class="grade-summary-value" id="total-grades">--</span>
+                            <span class="grade-summary-label">Notes reçues</span>
+                        </div>
+                    </div>
+                    <div class="grade-summary-card">
+                        <div class="grade-summary-icon">
+                            <i class="fas fa-award"></i>
+                        </div>
+                        <div class="grade-summary-content">
+                            <span class="grade-summary-value" id="best-grade">--</span>
+                            <span class="grade-summary-label">Meilleure note</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="grades-filters">
+                    <select id="grade-semester-filter">
+                        <option value="all">Tous les semestres</option>
+                        <option value="s1">Semestre 1</option>
+                        <option value="s2">Semestre 2</option>
+                        <option value="s3">Semestre 3</option>
+                        <option value="s4">Semestre 4</option>
+                        <option value="s5">Semestre 5</option>
+                        <option value="s6">Semestre 6</option>
+                    </select>
+                    <select id="grade-dc-filter">
+                        <option value="all">Tous les DC</option>
+                        <option value="dc1">DC1 - Relation éducative</option>
+                        <option value="dc2">DC2 - Conception projet</option>
+                        <option value="dc3">DC3 - Communication</option>
+                        <option value="dc4">DC4 - Dynamiques institutionnelles</option>
+                    </select>
+                </div>
+                <div class="grades-table-container">
+                    <table class="grades-table" id="grades-table">
+                        <thead>
+                            <tr>
+                                <th>Épreuve</th>
+                                <th>DC</th>
+                                <th>Date</th>
+                                <th>Note</th>
+                                <th>Coefficient</th>
+                                <th>Commentaire</th>
+                            </tr>
+                        </thead>
+                        <tbody id="grades-tbody">
+                            <!-- Notes générées dynamiquement -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Page Gestion des notes (formateurs) -->
+            <section id="page-manage-grades" class="page-content formateur-only">
+                <div class="page-header">
+                    <h1><i class="fas fa-clipboard-check"></i> Saisie des notes</h1>
+                    <p>Enregistrer les notes des étudiants</p>
+                </div>
+                <div class="manage-grades-container">
+                    <div class="grade-form-card">
+                        <h2>Nouvelle évaluation</h2>
+                        <form id="grade-entry-form">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="grade-formation">Formation</label>
+                                    <select id="grade-formation" required>
+                                        <option value="">Sélectionner</option>
+                                        <option value="es">ES - Éducateur Spécialisé</option>
+                                        <option value="me">ME - Moniteur Éducateur</option>
+                                        <option value="aes">AES - Accompagnant Éducatif et Social</option>
+                                        <option value="caferuis">CAFERUIS</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="grade-promo">Promotion</label>
+                                    <select id="grade-promo" required>
+                                        <option value="">Sélectionner</option>
+                                        <option value="2023">2023-2026</option>
+                                        <option value="2024">2024-2027</option>
+                                        <option value="2025">2025-2028</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="grade-dc">Domaine de compétence</label>
+                                    <select id="grade-dc" required>
+                                        <option value="">Sélectionner</option>
+                                        <option value="dc1">DC1 - Relation éducative</option>
+                                        <option value="dc2">DC2 - Conception projet</option>
+                                        <option value="dc3">DC3 - Communication</option>
+                                        <option value="dc4">DC4 - Dynamiques institutionnelles</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="grade-type">Type d'épreuve</label>
+                                    <select id="grade-type" required>
+                                        <option value="">Sélectionner</option>
+                                        <option value="ecrit">Épreuve écrite</option>
+                                        <option value="oral">Épreuve orale</option>
+                                        <option value="dossier">Dossier</option>
+                                        <option value="stage">Évaluation de stage</option>
+                                        <option value="controle">Contrôle continu</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="grade-title">Intitulé de l'épreuve</label>
+                                <input type="text" id="grade-title" placeholder="Ex: Devoir sur table - Psychologie du développement" required>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="grade-date">Date</label>
+                                    <input type="date" id="grade-date" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="grade-coef">Coefficient</label>
+                                    <input type="number" id="grade-coef" min="0.5" max="5" step="0.5" value="1" required>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-primary" onclick="loadStudentsForGrading()">
+                                <i class="fas fa-users"></i> Charger les étudiants
+                            </button>
+                        </form>
+                    </div>
+                    <div class="grade-entry-card hidden" id="grade-entry-card">
+                        <h2>Saisie des notes - <span id="grade-entry-title"></span></h2>
+                        <div class="grade-entry-table-container">
+                            <table class="grade-entry-table">
+                                <thead>
+                                    <tr>
+                                        <th>Étudiant</th>
+                                        <th>Note /20</th>
+                                        <th>Commentaire</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="grade-entry-tbody">
+                                    <!-- Étudiants générés dynamiquement -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="grade-entry-actions">
+                            <button class="btn btn-secondary" onclick="cancelGradeEntry()">
+                                <i class="fas fa-times"></i> Annuler
+                            </button>
+                            <button class="btn btn-primary" onclick="saveGrades()">
+                                <i class="fas fa-save"></i> Enregistrer les notes
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Page Gestion des emplois du temps (formateurs) -->
+            <section id="page-manage-schedule" class="page-content formateur-only">
+                <div class="page-header">
+                    <h1><i class="fas fa-calendar-plus"></i> Gestion des emplois du temps</h1>
+                    <p>Créer et publier les emplois du temps</p>
+                </div>
+                <div class="manage-schedule-container">
+                    <div class="schedule-upload-card">
+                        <h2><i class="fas fa-upload"></i> Importer un emploi du temps</h2>
+                        <form id="schedule-upload-form">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="schedule-formation">Formation</label>
+                                    <select id="schedule-formation" required>
+                                        <option value="">Sélectionner</option>
+                                        <option value="es">ES - Éducateur Spécialisé</option>
+                                        <option value="me">ME - Moniteur Éducateur</option>
+                                        <option value="aes">AES - Accompagnant Éducatif et Social</option>
+                                        <option value="caferuis">CAFERUIS</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="schedule-promo-upload">Promotion</label>
+                                    <select id="schedule-promo-upload" required>
+                                        <option value="">Sélectionner</option>
+                                        <option value="2023">2023-2026</option>
+                                        <option value="2024">2024-2027</option>
+                                        <option value="2025">2025-2028</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="schedule-week-start">Semaine du</label>
+                                    <input type="date" id="schedule-week-start" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="schedule-site">Site</label>
+                                    <select id="schedule-site" required>
+                                        <option value="slb">Saint-Laurent-Blangy</option>
+                                        <option value="avion">Avion</option>
+                                        <option value="both">Les deux sites</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="file-upload-zone" id="schedule-file-zone">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <p>Glissez un fichier PDF ou Excel ici</p>
+                                <span>ou</span>
+                                <label class="btn btn-secondary">
+                                    <i class="fas fa-file"></i> Parcourir
+                                    <input type="file" id="schedule-file" accept=".pdf,.xlsx,.xls" hidden>
+                                </label>
+                                <p class="file-name" id="schedule-file-name"></p>
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-upload"></i> Publier l'emploi du temps
+                            </button>
+                        </form>
+                    </div>
+                    <div class="schedule-manual-card">
+                        <h2><i class="fas fa-plus-circle"></i> Ajouter un créneau</h2>
+                        <form id="schedule-slot-form">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="slot-date">Date</label>
+                                    <input type="date" id="slot-date" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="slot-start">Début</label>
+                                    <input type="time" id="slot-start" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="slot-end">Fin</label>
+                                    <input type="time" id="slot-end" required>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="slot-title">Intitulé du cours</label>
+                                <input type="text" id="slot-title" placeholder="Ex: Psychologie du développement" required>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="slot-room">Salle</label>
+                                    <input type="text" id="slot-room" placeholder="Ex: Salle 201">
+                                </div>
+                                <div class="form-group">
+                                    <label for="slot-type">Type</label>
+                                    <select id="slot-type" required>
+                                        <option value="cours">Cours</option>
+                                        <option value="td">TD</option>
+                                        <option value="stage">Stage</option>
+                                        <option value="examen">Examen</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-plus"></i> Ajouter le créneau
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Page Paramètres -->
+            <section id="page-settings" class="page-content">
+                <div class="page-header">
+                    <h1><i class="fas fa-cog"></i> Paramètres</h1>
+                </div>
+                <div class="settings-container">
+                    <div class="settings-section">
+                        <h2>Notifications</h2>
+                        <label class="toggle-setting">
+                            <span>Notifications push</span>
+                            <input type="checkbox" id="setting-push" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <label class="toggle-setting">
+                            <span>Notifications email</span>
+                            <input type="checkbox" id="setting-email" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="settings-section">
+                        <h2>Compte</h2>
+                        <button class="btn btn-secondary" onclick="changePassword()">
+                            <i class="fas fa-key"></i> Changer de mot de passe
+                        </button>
+                        <button class="btn btn-danger" onclick="deleteAccount()">
+                            <i class="fas fa-trash"></i> Supprimer mon compte
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Page Gestion Étudiants (Formateurs) -->
+            <section id="page-manage-students" class="page-content">
+                <div class="page-header">
+                    <h1><i class="fas fa-user-graduate"></i> Gestion des étudiants</h1>
+                </div>
+                <div class="manage-content" id="manage-students-content">
+                    <!-- Contenu pour les formateurs -->
+                </div>
+            </section>
+
+            <!-- Page Gestion des Promotions -->
+            <section id="page-manage-promos" class="page-content">
+                <div class="page-header">
+                    <h1><i class="fas fa-layer-group"></i> Gestion des promotions</h1>
+                    <p>Créer, modifier et gérer les promotions de chaque formation</p>
+                </div>
+
+                <div class="promo-management-container">
+                    <!-- Formulaire de création de promo -->
+                    <div class="promo-form-card">
+                        <h2><i class="fas fa-plus-circle"></i> Créer une nouvelle promotion</h2>
+                        <form id="create-promo-form" onsubmit="createPromo(event)">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Formation *</label>
+                                    <select id="promo-formation" required>
+                                        <option value="">Sélectionner une formation</option>
+                                        <option value="es">ES - Éducateur Spécialisé</option>
+                                        <option value="me">ME - Moniteur Éducateur</option>
+                                        <option value="aes">AES - Accompagnant Éducatif et Social</option>
+                                        <option value="caferuis">CAFERUIS</option>
+                                        <option value="cafdes">CAFDES</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Site *</label>
+                                    <select id="promo-site" required>
+                                        <option value="">Sélectionner un site</option>
+                                        <option value="slb">Saint-Laurent-Blangy</option>
+                                        <option value="avion">Avion</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Année de début *</label>
+                                    <input type="number" id="promo-year-start" min="2020" max="2030" placeholder="2024" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Année de fin *</label>
+                                    <input type="number" id="promo-year-end" min="2021" max="2035" placeholder="2027" required>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Capacité maximale</label>
+                                <input type="number" id="promo-capacity" min="1" max="100" placeholder="30">
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-block">
+                                <i class="fas fa-plus"></i> Créer la promotion
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Liste des promotions existantes -->
+                    <div class="promo-list-card">
+                        <h2><i class="fas fa-list"></i> Promotions existantes</h2>
+                        <div class="promo-filters">
+                            <select id="filter-promo-formation" onchange="loadPromosList()">
+                                <option value="">Toutes les formations</option>
+                                <option value="es">ES</option>
+                                <option value="me">ME</option>
+                                <option value="aes">AES</option>
+                                <option value="caferuis">CAFERUIS</option>
+                                <option value="cafdes">CAFDES</option>
+                            </select>
+                            <select id="filter-promo-status" onchange="loadPromosList()">
+                                <option value="">Tous les statuts</option>
+                                <option value="active">En cours</option>
+                                <option value="archived">Archivées</option>
+                            </select>
+                        </div>
+                        <div class="promos-list" id="promos-list">
+                            <!-- Liste des promos générée dynamiquement -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Page Publication (Formateurs) -->
+            <section id="page-publish-news" class="page-content">
+                <div class="page-header">
+                    <h1><i class="fas fa-edit"></i> Publier une actualité</h1>
+                </div>
+                <form id="publish-form" class="publish-form">
+                    <div class="form-group">
+                        <label for="news-title">Titre *</label>
+                        <input type="text" id="news-title" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="news-content">Contenu *</label>
+                        <textarea id="news-content" rows="6" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="news-site">Site concerné</label>
+                        <select id="news-site">
+                            <option value="all">Tous les sites</option>
+                            <option value="slb">Saint-Laurent-Blangy uniquement</option>
+                            <option value="avion">Avion uniquement</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="news-image">Image (optionnel)</label>
+                        <input type="file" id="news-image" accept="image/*">
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane"></i> Publier
+                    </button>
+                </form>
+            </section>
+
+            <!-- =========================================== -->
+            <!-- PAGES SECRÉTAIRE -->
+            <!-- =========================================== -->
+
+            <!-- Page Gestion Étudiants (Secrétaire) -->
+            <section id="page-admin-students" class="page-content">
+                <div class="page-header">
+                    <h1><i class="fas fa-users-cog"></i> Gestion des étudiants</h1>
+                    <p>Gérer les inscriptions et dossiers étudiants</p>
+                </div>
+                <div class="admin-toolbar">
+                    <div class="admin-filters">
+                        <select id="admin-student-formation">
+                            <option value="">Toutes les formations</option>
+                            <option value="es">ES - Éducateur Spécialisé</option>
+                            <option value="me">ME - Moniteur Éducateur</option>
+                            <option value="aes">AES - Accompagnant Éducatif et Social</option>
+                            <option value="caferuis">CAFERUIS</option>
+                            <option value="cafdes">CAFDES</option>
+                        </select>
+                        <select id="admin-student-promo">
+                            <option value="">Toutes les promotions</option>
+                            <!-- Promos chargées dynamiquement -->
+                        </select>
+                        <select id="admin-student-status">
+                            <option value="">Tous les statuts</option>
+                            <option value="active">Actifs</option>
+                            <option value="abandon">Abandons</option>
+                            <option value="diplome">Diplômés</option>
+                        </select>
+                        <input type="text" id="admin-student-search" placeholder="Rechercher un étudiant...">
+                    </div>
+                    <div class="admin-actions">
+                        <button class="btn btn-primary" onclick="showAddStudentModal()">
+                            <i class="fas fa-user-plus"></i> Ajouter un étudiant
+                        </button>
+                        <button class="btn btn-secondary" onclick="exportStudentsList()">
+                            <i class="fas fa-file-excel"></i> Exporter
+                        </button>
+                    </div>
+                </div>
+                <div class="admin-table-container">
+                    <table class="admin-table" id="admin-students-table">
+                        <thead>
+                            <tr>
+                                <th><input type="checkbox" id="select-all-students"></th>
+                                <th>Nom</th>
+                                <th>Prénom</th>
+                                <th>Email</th>
+                                <th>Formation</th>
+                                <th>Promotion</th>
+                                <th>Statut</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-students-tbody">
+                            <!-- Liste des étudiants générée dynamiquement -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Page Gestion Emplois du temps (Secrétaire) -->
+            <section id="page-admin-schedules" class="page-content">
+                <div class="page-header">
+                    <h1><i class="fas fa-calendar-alt"></i> Gestion des emplois du temps</h1>
+                    <p>Créer et modifier les plannings de formation</p>
+                </div>
+                <div class="admin-schedule-container">
+                    <div class="schedule-form-card">
+                        <h2><i class="fas fa-plus-circle"></i> Créer/Modifier un planning</h2>
+                        <form id="admin-schedule-form">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Formation</label>
+                                    <select id="admin-sched-formation" required>
+                                        <option value="">Sélectionner</option>
+                                        <option value="es">ES - Éducateur Spécialisé</option>
+                                        <option value="me">ME - Moniteur Éducateur</option>
+                                        <option value="aes">AES</option>
+                                        <option value="caferuis">CAFERUIS</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Promotion</label>
+                                    <select id="admin-sched-promo" required>
+                                        <option value="">Sélectionner</option>
+                                        <option value="2023-2026">2023-2026</option>
+                                        <option value="2024-2027">2024-2027</option>
+                                        <option value="2025-2028">2025-2028</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Date</label>
+                                    <input type="date" id="admin-sched-date" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Heure début</label>
+                                    <input type="time" id="admin-sched-start" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Heure fin</label>
+                                    <input type="time" id="admin-sched-end" required>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Intitulé du cours</label>
+                                <input type="text" id="admin-sched-title" placeholder="Ex: Psychologie du développement" required>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Salle</label>
+                                    <input type="text" id="admin-sched-room" placeholder="Ex: Salle 201">
+                                </div>
+                                <div class="form-group">
+                                    <label>Formateur</label>
+                                    <select id="admin-sched-teacher">
+                                        <option value="">Sélectionner un formateur</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Type</label>
+                                    <select id="admin-sched-type" required>
+                                        <option value="cours">Cours</option>
+                                        <option value="td">TD</option>
+                                        <option value="stage">Stage</option>
+                                        <option value="examen">Examen</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Enregistrer le créneau
+                            </button>
+                        </form>
+                    </div>
+                    <div class="schedule-import-card">
+                        <h2><i class="fas fa-file-import"></i> Import en masse</h2>
+                        <div class="file-upload-zone" id="admin-schedule-drop">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <p>Glissez un fichier Excel ou CSV</p>
+                            <span>Format: Date, Début, Fin, Cours, Salle, Type</span>
+                            <input type="file" id="admin-schedule-file" accept=".xlsx,.xls,.csv" hidden>
+                            <label class="btn btn-secondary" for="admin-schedule-file">
+                                <i class="fas fa-file"></i> Parcourir
+                            </label>
+                        </div>
+                        <button class="btn btn-primary btn-block" onclick="importScheduleFile()">
+                            <i class="fas fa-upload"></i> Importer
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Page Notes & Bulletins (Secrétaire) -->
+            <section id="page-admin-grades" class="page-content">
+                <div class="page-header">
+                    <h1><i class="fas fa-file-alt"></i> Notes & Bulletins</h1>
+                    <p>Consulter et exporter les notes des étudiants</p>
+                </div>
+                <div class="admin-toolbar">
+                    <div class="admin-filters">
+                        <select id="admin-grade-formation">
+                            <option value="">Toutes les formations</option>
+                            <option value="es">ES</option>
+                            <option value="me">ME</option>
+                            <option value="aes">AES</option>
+                        </select>
+                        <select id="admin-grade-promo">
+                            <option value="">Toutes les promotions</option>
+                            <option value="2023-2026">2023-2026</option>
+                            <option value="2024-2027">2024-2027</option>
+                        </select>
+                        <select id="admin-grade-dc">
+                            <option value="">Tous les DC</option>
+                            <option value="dc1">DC1</option>
+                            <option value="dc2">DC2</option>
+                            <option value="dc3">DC3</option>
+                            <option value="dc4">DC4</option>
+                        </select>
+                    </div>
+                    <div class="admin-actions">
+                        <button class="btn btn-primary" onclick="sendBulletinsToPromo()">
+                            <i class="fas fa-envelope"></i> Envoyer par email
+                        </button>
+                        <button class="btn btn-secondary" onclick="generateBulletins()">
+                            <i class="fas fa-file-pdf"></i> Générer bulletins
+                        </button>
+                        <button class="btn btn-secondary" onclick="exportGradesList()">
+                            <i class="fas fa-file-excel"></i> Exporter CSV
+                        </button>
+                    </div>
+                </div>
+                <div class="admin-table-container">
+                    <table class="admin-table" id="admin-grades-table">
+                        <thead>
+                            <tr>
+                                <th>Étudiant</th>
+                                <th>Formation</th>
+                                <th>DC1</th>
+                                <th>DC2</th>
+                                <th>DC3</th>
+                                <th>DC4</th>
+                                <th>Moyenne</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-grades-tbody">
+                            <!-- Notes générées dynamiquement -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Page Inscriptions (Secrétaire) -->
+            <section id="page-admin-inscriptions" class="page-content">
+                <div class="page-header">
+                    <h1><i class="fas fa-user-plus"></i> Gestion des inscriptions</h1>
+                    <p>Valider les nouvelles inscriptions et gérer les demandes</p>
+                </div>
+                <div class="inscription-tabs">
+                    <button class="inscription-tab active" data-tab="pending">En attente <span class="badge" id="pending-count">0</span></button>
+                    <button class="inscription-tab" data-tab="validated">Validées</button>
+                    <button class="inscription-tab" data-tab="rejected">Refusées</button>
+                </div>
+                <div class="inscriptions-list" id="inscriptions-list">
+                    <!-- Liste des inscriptions -->
+                </div>
+            </section>
+
+            <!-- =========================================== -->
+            <!-- PAGES BDE -->
+            <!-- =========================================== -->
+
+            <!-- Page Gestion Événements BDE -->
+            <section id="page-bde-events-manage" class="page-content">
+                <div class="page-header">
+                    <h1><i class="fas fa-calendar-plus"></i> Gérer les événements</h1>
+                    <p>Créer et modifier les événements du BDE</p>
+                </div>
+                <div class="bde-manage-container">
+                    <div class="bde-event-form-card">
+                        <h2><i class="fas fa-plus"></i> Nouvel événement</h2>
+                        <form id="bde-event-form" onsubmit="createBDEEvent(event)">
+                            <div class="form-group">
+                                <label>Titre de l'événement *</label>
+                                <input type="text" id="bde-event-title" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Description *</label>
+                                <textarea id="bde-event-desc" rows="4" required></textarea>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Date *</label>
+                                    <input type="datetime-local" id="bde-event-date" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Lieu *</label>
+                                    <input type="text" id="bde-event-location" required>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Places disponibles</label>
+                                    <input type="number" id="bde-event-places" min="0">
+                                </div>
+                                <div class="form-group">
+                                    <label>Prix (si payant)</label>
+                                    <input type="number" id="bde-event-price" min="0" step="0.5" placeholder="0 = gratuit">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Image de l'événement</label>
+                                <input type="file" id="bde-event-image" accept="image/*">
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-block">
+                                <i class="fas fa-plus"></i> Créer l'événement
+                            </button>
+                        </form>
+                    </div>
+                    <div class="bde-events-list-card">
+                        <h2><i class="fas fa-list"></i> Événements créés</h2>
+                        <div id="bde-events-manage-list">
+                            <!-- Liste des événements -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Page Membres BDE -->
+            <section id="page-bde-members" class="page-content">
+                <div class="page-header">
+                    <h1><i class="fas fa-id-card"></i> Membres du BDE</h1>
+                    <p>Gérer l'équipe BDE</p>
+                </div>
+                <div class="bde-members-container">
+                    <button class="btn btn-primary" onclick="showAddBDEMemberModal()">
+                        <i class="fas fa-user-plus"></i> Ajouter un membre
+                    </button>
+                    <div class="bde-members-grid" id="bde-members-grid">
+                        <!-- Membres du BDE -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- =========================================== -->
+            <!-- ESPACE DE STOCKAGE DE FICHIERS -->
+            <!-- =========================================== -->
+
+            <!-- Page Mon Drive (Espace de stockage personnel) -->
+            <section id="page-drive" class="page-content">
+                <div class="page-header">
+                    <h1><i class="fas fa-cloud"></i> Mon Drive</h1>
+                    <div class="drive-quota">
+                        <div class="quota-bar">
+                            <div class="quota-used" id="drive-quota-bar" style="width: 0%"></div>
+                        </div>
+                        <span id="drive-quota-text">0 Mo / 1 Go utilisés</span>
+                    </div>
+                </div>
+                <div class="drive-toolbar">
+                    <div class="drive-actions">
+                        <button class="btn btn-primary" onclick="uploadFile()">
+                            <i class="fas fa-upload"></i> Importer
+                        </button>
+                        <button class="btn btn-secondary" onclick="createFolder()">
+                            <i class="fas fa-folder-plus"></i> Nouveau dossier
+                        </button>
+                    </div>
+                    <div class="drive-view-toggle">
+                        <button class="view-btn active" onclick="setDriveView('grid')"><i class="fas fa-th-large"></i></button>
+                        <button class="view-btn" onclick="setDriveView('list')"><i class="fas fa-list"></i></button>
+                    </div>
+                </div>
+                <div class="drive-breadcrumb" id="drive-breadcrumb">
+                    <span class="breadcrumb-item" onclick="navigateDrive('/')"><i class="fas fa-home"></i> Mon Drive</span>
+                </div>
+                <div class="drive-upload-zone hidden" id="drive-upload-zone">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <p>Glissez vos fichiers ici pour les importer</p>
+                </div>
+                <div class="drive-content" id="drive-content">
+                    <!-- Fichiers et dossiers -->
+                </div>
+            </section>
+
+            <!-- =========================================== -->
+            <!-- MESSAGERIE AMÉLIORÉE -->
+            <!-- =========================================== -->
+
+            <!-- Page Messagerie Groupes/Promos -->
+            <section id="page-group-messages" class="page-content">
+                <div class="page-header">
+                    <h1><i class="fas fa-users"></i> Discussions de groupe</h1>
+                    <p>Échangez avec votre promotion ou vos groupes de travail</p>
+                </div>
+                <div class="group-messages-container">
+                    <div class="groups-list" id="groups-list">
+                        <div class="groups-header">
+                            <h2>Mes groupes</h2>
+                            <button class="btn btn-icon" onclick="createGroup()">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                        <div class="groups-items" id="groups-items">
+                            <!-- Liste des groupes -->
+                        </div>
+                    </div>
+                    <div class="group-chat-container" id="group-chat-container">
+                        <div class="chat-placeholder">
+                            <i class="fas fa-users"></i>
+                            <p>Sélectionnez un groupe pour démarrer une discussion</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modal générique -->
+    <div id="modal-overlay" class="modal-overlay hidden">
+        <div class="modal" id="modal">
+            <button class="modal-close" onclick="closeModal()">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="modal-content" id="modal-content">
+                <!-- Contenu du modal généré dynamiquement -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast notifications -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/data.js"></script>
+    <script>
+        // Enregistrement du Service Worker pour PWA
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js')
+                .then(reg => console.log('Service Worker enregistré'))
+                .catch(err => console.log('Service Worker non enregistré', err));
+        }
+    </script>
+</body>
+</html>

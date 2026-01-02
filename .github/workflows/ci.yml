@@ -1,0 +1,30 @@
+name: CI AFERTES Connect
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout du code
+      uses: actions/checkout@v4
+
+    - name: Vérification des fichiers critiques
+      run: |
+        test -f index.html || (echo "Erreur: index.html manquant" && exit 1)
+        test -f manifest.json || (echo "Erreur: manifest.json manquant" && exit 1)
+        test -f sw.js || (echo "Erreur: sw.js (Service Worker) manquant" && exit 1)
+        test -f LICENSE || (echo "Erreur: Fichier LICENSE manquant" && exit 1)
+
+    - name: Validation HTML (Linter)
+      uses: htmlhint/htmlhint-action@v2
+      with:
+        rules: 'tag-pair=true,spec-char-escape=true,id-unique=true,style-disabled=true'
+
+    - name: Vérification de la licence GPL-3.0
+      run: grep -q "GNU GENERAL PUBLIC LICENSE" LICENSE || (echo "Erreur: La licence n'est pas conforme à la GPL-3.0" && exit 1)
