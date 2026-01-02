@@ -340,6 +340,10 @@
                         <i class="fas fa-graduation-cap"></i>
                         <span>Notes</span>
                     </a>
+                    <a href="#" class="nav-item" data-page="my-documents" onclick="showPage('my-documents')">
+                        <i class="fas fa-folder-open"></i>
+                        <span>Mes documents</span>
+                    </a>
                     <a href="#" class="nav-item" data-page="drive" onclick="showPage('drive')">
                         <i class="fas fa-cloud"></i>
                         <span>Mon Drive</span>
@@ -833,6 +837,100 @@
                 </div>
             </section>
 
+            <!-- Page Mes Documents (Étudiants) -->
+            <section id="page-my-documents" class="page-content">
+                <div class="page-header">
+                    <h1><i class="fas fa-folder-open"></i> Mes documents</h1>
+                    <p>Gérez vos documents administratifs et téléchargez vos attestations</p>
+                </div>
+
+                <div class="documents-section">
+                    <h2><i class="fas fa-file-alt"></i> Documents déposés</h2>
+                    <p class="section-desc">Documents transmis lors de votre inscription</p>
+
+                    <div class="my-documents-grid" id="my-documents-list">
+                        <!-- Documents générés dynamiquement -->
+                    </div>
+
+                    <div class="upload-new-document">
+                        <h3>Ajouter ou mettre à jour un document</h3>
+                        <div class="documents-upload-grid">
+                            <div class="document-upload-card compact">
+                                <div class="document-icon"><i class="fas fa-id-card"></i></div>
+                                <label>Pièce d'identité</label>
+                                <div class="upload-zone" onclick="document.getElementById('update-doc-id').click()">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                    <span>Mettre à jour</span>
+                                </div>
+                                <input type="file" id="update-doc-id" accept=".jpg,.jpeg,.png,.pdf" hidden onchange="updateDocument(this, 'id')">
+                            </div>
+                            <div class="document-upload-card compact">
+                                <div class="document-icon"><i class="fas fa-heart"></i></div>
+                                <label>Carte Vitale</label>
+                                <div class="upload-zone" onclick="document.getElementById('update-doc-vitale').click()">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                    <span>Mettre à jour</span>
+                                </div>
+                                <input type="file" id="update-doc-vitale" accept=".jpg,.jpeg,.png,.pdf" hidden onchange="updateDocument(this, 'vitale')">
+                            </div>
+                            <div class="document-upload-card compact">
+                                <div class="document-icon"><i class="fas fa-camera"></i></div>
+                                <label>Photo d'identité</label>
+                                <div class="upload-zone" onclick="document.getElementById('update-doc-photo').click()">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                    <span>Mettre à jour</span>
+                                </div>
+                                <input type="file" id="update-doc-photo" accept=".jpg,.jpeg,.png" hidden onchange="updateDocument(this, 'photo')">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="documents-section">
+                    <h2><i class="fas fa-certificate"></i> Attestations disponibles</h2>
+                    <p class="section-desc">Téléchargez vos attestations officielles</p>
+
+                    <div class="attestations-grid">
+                        <div class="attestation-card">
+                            <div class="attestation-icon">
+                                <i class="fas fa-graduation-cap"></i>
+                            </div>
+                            <div class="attestation-content">
+                                <h3>Attestation de scolarité</h3>
+                                <p>Certificat prouvant votre inscription à l'AFERTES pour l'année en cours</p>
+                                <button class="btn btn-primary" onclick="generateAttestationScolarite()">
+                                    <i class="fas fa-download"></i> Télécharger PDF
+                                </button>
+                            </div>
+                        </div>
+                        <div class="attestation-card">
+                            <div class="attestation-icon">
+                                <i class="fas fa-building"></i>
+                            </div>
+                            <div class="attestation-content">
+                                <h3>Attestation de stage</h3>
+                                <p>Convention et attestation de présence en stage</p>
+                                <button class="btn btn-secondary" disabled>
+                                    <i class="fas fa-clock"></i> Bientôt disponible
+                                </button>
+                            </div>
+                        </div>
+                        <div class="attestation-card">
+                            <div class="attestation-icon">
+                                <i class="fas fa-file-invoice"></i>
+                            </div>
+                            <div class="attestation-content">
+                                <h3>Relevé de notes</h3>
+                                <p>Récapitulatif de vos notes et moyennes</p>
+                                <button class="btn btn-primary" onclick="generateStudentBulletin(currentUser.id)">
+                                    <i class="fas fa-download"></i> Télécharger PDF
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             <!-- Page Gestion des notes (formateurs) -->
             <section id="page-manage-grades" class="page-content formateur-only">
                 <div class="page-header">
@@ -1249,6 +1347,7 @@
                                 <th>Formation</th>
                                 <th>Promotion</th>
                                 <th>Statut</th>
+                                <th>Documents</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -1658,6 +1757,53 @@
                         <div class="form-group">
                             <label for="fl-city">Ville *</label>
                             <input type="text" id="fl-city" placeholder="Arras" required>
+                        </div>
+                    </div>
+
+                    <h3><i class="fas fa-file-upload"></i> Documents justificatifs</h3>
+                    <p class="form-section-desc">Ces documents sont nécessaires pour votre dossier administratif. Formats acceptés : JPG, PNG, PDF (max 5 Mo)</p>
+
+                    <div class="documents-upload-grid">
+                        <div class="document-upload-card">
+                            <div class="document-icon">
+                                <i class="fas fa-id-card"></i>
+                            </div>
+                            <label>Pièce d'identité *</label>
+                            <p class="document-desc">Carte d'identité ou passeport (recto)</p>
+                            <div class="upload-zone" id="upload-zone-id" onclick="document.getElementById('fl-doc-id').click()">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <span>Cliquez ou glissez un fichier</span>
+                            </div>
+                            <input type="file" id="fl-doc-id" accept=".jpg,.jpeg,.png,.pdf" hidden onchange="handleDocumentUpload(this, 'id')">
+                            <div class="upload-preview hidden" id="preview-id"></div>
+                        </div>
+
+                        <div class="document-upload-card">
+                            <div class="document-icon">
+                                <i class="fas fa-heart"></i>
+                            </div>
+                            <label>Carte Vitale *</label>
+                            <p class="document-desc">Attestation de droits ou carte vitale</p>
+                            <div class="upload-zone" id="upload-zone-vitale" onclick="document.getElementById('fl-doc-vitale').click()">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <span>Cliquez ou glissez un fichier</span>
+                            </div>
+                            <input type="file" id="fl-doc-vitale" accept=".jpg,.jpeg,.png,.pdf" hidden onchange="handleDocumentUpload(this, 'vitale')">
+                            <div class="upload-preview hidden" id="preview-vitale"></div>
+                        </div>
+
+                        <div class="document-upload-card">
+                            <div class="document-icon">
+                                <i class="fas fa-camera"></i>
+                            </div>
+                            <label>Photo d'identité *</label>
+                            <p class="document-desc">Photo récente sur fond neutre</p>
+                            <div class="upload-zone" id="upload-zone-photo" onclick="document.getElementById('fl-doc-photo').click()">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <span>Cliquez ou glissez un fichier</span>
+                            </div>
+                            <input type="file" id="fl-doc-photo" accept=".jpg,.jpeg,.png" hidden onchange="handleDocumentUpload(this, 'photo')">
+                            <div class="upload-preview hidden" id="preview-photo"></div>
                         </div>
                     </div>
 

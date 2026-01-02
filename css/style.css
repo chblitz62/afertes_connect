@@ -1901,6 +1901,460 @@ img {
     }
 }
 
+/* ===========================================
+   Documents Upload & Management
+   =========================================== */
+
+/* Form section description */
+.form-section-desc {
+    font-size: 0.85rem;
+    color: var(--text-light);
+    margin-bottom: 16px;
+}
+
+/* Documents upload grid */
+.documents-upload-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.document-upload-card {
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: var(--border-radius);
+    padding: 16px;
+    text-align: center;
+}
+
+.document-upload-card.compact {
+    padding: 12px;
+}
+
+.document-upload-card .document-icon {
+    width: 50px;
+    height: 50px;
+    background: var(--bg-tertiary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 12px;
+}
+
+.document-upload-card .document-icon i {
+    font-size: 1.3rem;
+    color: var(--primary-color);
+}
+
+.document-upload-card label {
+    display: block;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 4px;
+}
+
+.document-upload-card .document-desc {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+}
+
+/* Upload zone */
+.upload-zone {
+    border: 2px dashed #ccc;
+    border-radius: var(--border-radius-sm);
+    padding: 20px 16px;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    background: var(--bg-primary);
+}
+
+.upload-zone:hover {
+    border-color: var(--primary-color);
+    background: var(--primary-lighter);
+}
+
+.upload-zone i {
+    font-size: 1.5rem;
+    color: var(--text-muted);
+    display: block;
+    margin-bottom: 8px;
+}
+
+.upload-zone span {
+    font-size: 0.8rem;
+    color: var(--text-light);
+}
+
+.upload-zone.has-file {
+    border-color: var(--success-color);
+    background: #e8f5e9;
+}
+
+.upload-zone.has-file i {
+    color: var(--success-color);
+}
+
+/* Upload preview */
+.upload-preview {
+    margin-top: 10px;
+    padding: 10px;
+    background: var(--bg-tertiary);
+    border-radius: var(--border-radius-sm);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.upload-preview img {
+    width: 40px;
+    height: 40px;
+    object-fit: cover;
+    border-radius: 4px;
+}
+
+.upload-preview .file-info {
+    flex: 1;
+    text-align: left;
+}
+
+.upload-preview .file-name {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--text-dark);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 120px;
+}
+
+.upload-preview .file-size {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+}
+
+.upload-preview .remove-file {
+    background: none;
+    border: none;
+    color: var(--error-color);
+    cursor: pointer;
+    padding: 4px;
+}
+
+/* ===========================================
+   Page Mes Documents
+   =========================================== */
+.documents-section {
+    background: white;
+    border-radius: var(--border-radius);
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: var(--shadow-sm);
+}
+
+.documents-section h2 {
+    font-size: 1.1rem;
+    color: var(--primary-color);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.documents-section h2 i {
+    color: var(--secondary-color);
+}
+
+.section-desc {
+    font-size: 0.9rem;
+    color: var(--text-light);
+    margin-bottom: 20px;
+}
+
+/* My documents grid */
+.my-documents-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.my-document-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    background: var(--bg-tertiary);
+    border-radius: var(--border-radius-sm);
+    border: 1px solid #e0e0e0;
+}
+
+.my-document-card .doc-icon {
+    width: 48px;
+    height: 48px;
+    background: white;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.my-document-card .doc-icon i {
+    font-size: 1.3rem;
+    color: var(--primary-color);
+}
+
+.my-document-card .doc-icon.status-ok {
+    background: #e8f5e9;
+}
+
+.my-document-card .doc-icon.status-ok i {
+    color: var(--success-color);
+}
+
+.my-document-card .doc-icon.status-missing {
+    background: #ffebee;
+}
+
+.my-document-card .doc-icon.status-missing i {
+    color: var(--error-color);
+}
+
+.my-document-card .doc-info {
+    flex: 1;
+}
+
+.my-document-card .doc-name {
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 2px;
+}
+
+.my-document-card .doc-status {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.my-document-card .doc-status.ok {
+    color: var(--success-color);
+}
+
+.my-document-card .doc-status.missing {
+    color: var(--error-color);
+}
+
+.my-document-card .doc-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.my-document-card .doc-actions button {
+    padding: 8px;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    color: var(--text-medium);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.my-document-card .doc-actions button:hover {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+/* Attestations grid */
+.attestations-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.attestation-card {
+    display: flex;
+    gap: 16px;
+    padding: 20px;
+    background: var(--bg-tertiary);
+    border-radius: var(--border-radius);
+    border: 1px solid #e0e0e0;
+}
+
+.attestation-card .attestation-icon {
+    width: 56px;
+    height: 56px;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.attestation-card .attestation-icon i {
+    font-size: 1.5rem;
+    color: white;
+}
+
+.attestation-card .attestation-content {
+    flex: 1;
+}
+
+.attestation-card .attestation-content h3 {
+    font-size: 1rem;
+    color: var(--text-dark);
+    margin-bottom: 4px;
+}
+
+.attestation-card .attestation-content p {
+    font-size: 0.85rem;
+    color: var(--text-light);
+    margin-bottom: 12px;
+}
+
+/* Upload new document section */
+.upload-new-document {
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid #e0e0e0;
+}
+
+.upload-new-document h3 {
+    font-size: 0.95rem;
+    color: var(--text-dark);
+    margin-bottom: 16px;
+}
+
+/* Responsive documents */
+@media (max-width: 768px) {
+    .documents-upload-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .attestations-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .attestation-card {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .attestation-card .attestation-icon {
+        margin: 0 auto;
+    }
+}
+
+/* ===========================================
+   Admin Documents Status (Table)
+   =========================================== */
+.docs-status {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+}
+
+.docs-status i {
+    font-size: 0.85rem;
+    color: #ccc;
+    opacity: 0.5;
+}
+
+.docs-status i.ok {
+    color: var(--success-color);
+    opacity: 1;
+}
+
+.docs-status.complete {
+    background: #e8f5e9;
+    padding: 4px 8px;
+    border-radius: 12px;
+}
+
+.docs-status.incomplete {
+    background: #fff3e0;
+    padding: 4px 8px;
+    border-radius: 12px;
+}
+
+/* Admin Documents Modal */
+.admin-docs-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.admin-doc-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: var(--bg-tertiary);
+    border-radius: var(--border-radius-sm);
+    border: 1px solid #e0e0e0;
+}
+
+.admin-doc-item.has-doc {
+    border-left: 3px solid var(--success-color);
+}
+
+.admin-doc-item.missing-doc {
+    border-left: 3px solid var(--error-color);
+    opacity: 0.7;
+}
+
+.admin-doc-icon {
+    width: 40px;
+    height: 40px;
+    background: white;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.admin-doc-icon i {
+    font-size: 1.1rem;
+    color: var(--primary-color);
+}
+
+.admin-doc-info {
+    flex: 1;
+}
+
+.admin-doc-name {
+    font-weight: 600;
+    color: var(--text-dark);
+    font-size: 0.95rem;
+}
+
+.admin-doc-status {
+    font-size: 0.8rem;
+    margin-top: 2px;
+}
+
+.admin-doc-status .ok {
+    color: var(--success-color);
+}
+
+.admin-doc-status .missing {
+    color: var(--error-color);
+}
+
+.admin-doc-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-sm {
+    padding: 6px 10px;
+    font-size: 0.8rem;
+}
+
 /* Toast notifications */
 .toast-container {
     position: fixed;

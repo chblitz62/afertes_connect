@@ -353,6 +353,409 @@ function handleFirstLoginSubmit(e) {
     }
 }
 
+// ===========================================
+// Gestion des documents
+// ===========================================
+let uploadedDocuments = {
+    id: null,
+    vitale: null,
+    photo: null
+};
+
+function handleDocumentUpload(input, type) {
+    const file = input.files[0];
+    if (!file) return;
+
+    // Validation taille (5 Mo max)
+    if (file.size > 5 * 1024 * 1024) {
+        showToast('Le fichier est trop volumineux (max 5 Mo)', 'error');
+        input.value = '';
+        return;
+    }
+
+    // Validation type
+    const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
+    if (type === 'photo') {
+        allowedTypes.pop(); // Pas de PDF pour la photo
+    }
+    if (!allowedTypes.includes(file.type)) {
+        showToast('Format de fichier non autorisé', 'error');
+        input.value = '';
+        return;
+    }
+
+    // Stocker le fichier en base64
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        uploadedDocuments[type] = {
+            name: file.name,
+            type: file.type,
+            size: file.size,
+            data: e.target.result,
+            uploadedAt: new Date().toISOString()
+        };
+
+        // Mettre à jour l'UI
+        const uploadZone = document.getElementById(`upload-zone-${type}`);
+        const preview = document.getElementById(`preview-${type}`);
+
+        if (uploadZone) {
+            uploadZone.classList.add('has-file');
+            uploadZone.innerHTML = `
+                <i class="fas fa-check-circle"></i>
+                <span>${file.name}</span>
+            `;
+        }
+
+        if (preview) {
+            preview.classList.remove('hidden');
+            const isImage = file.type.startsWith('image/');
+            preview.innerHTML = `
+                ${isImage ? `<img src="${e.target.result}" alt="Aperçu">` : '<i class="fas fa-file-pdf" style="font-size: 24px; color: var(--error-color);"></i>'}
+                <div class="file-info">
+                    <span class="file-name">${file.name}</span>
+                    <span class="file-size">${formatFileSize(file.size)}</span>
+                </div>
+                <button type="button" class="remove-file" onclick="removeDocument('${type}')">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+        }
+
+        showToast('Document ajouté', 'success');
+    };
+    reader.readAsDataURL(file);
+}
+
+function removeDocument(type) {
+    uploadedDocuments[type] = null;
+
+    const uploadZone = document.getElementById(`upload-zone-${type}`);
+    const preview = document.getElementById(`preview-${type}`);
+    const input = document.getElementById(`fl-doc-${type}`);
+
+    if (uploadZone) {
+        uploadZone.classList.remove('has-file');
+        uploadZone.innerHTML = `
+            <i class="fas fa-cloud-upload-alt"></i>
+            <span>Cliquez ou glissez un fichier</span>
+        `;
+    }
+
+    if (preview) {
+        preview.classList.add('hidden');
+        preview.innerHTML = '';
+    }
+
+    if (input) {
+        input.value = '';
+    }
+}
+
+function formatFileSize(bytes) {
+    if (bytes < 1024) return bytes + ' o';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' Ko';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' Mo';
+}
+
+function updateDocument(input, type) {
+    const file = input.files[0];
+    if (!file) return;
+
+    // Validation
+    if (file.size > 5 * 1024 * 1024) {
+        showToast('Le fichier est trop volumineux (max 5 Mo)', 'error');
+        input.value = '';
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        // Sauvegarder le document
+        const docData = {
+            name: file.name,
+            type: file.type,
+            size: file.size,
+            data: e.target.result,
+            uploadedAt: new Date().toISOString()
+        };
+
+        // Mettre à jour dans le localStorage
+        const users = JSON.parse(localStorage.getItem('afertes_users') || '[]');
+        const userIndex = users.findIndex(u => u.id === currentUser.id);
+
+        if (userIndex !== -1) {
+            if (!users[userIndex].documents) {
+                users[userIndex].documents = {};
+            }
+            users[userIndex].documents[type] = docData;
+            localStorage.setItem('afertes_users', JSON.stringify(users));
+
+            currentUser.documents = users[userIndex].documents;
+            localStorage.setItem('afertes_user', JSON.stringify(currentUser));
+
+            showToast('Document mis à jour avec succès', 'success');
+            loadMyDocuments();
+        }
+    };
+    reader.readAsDataURL(file);
+}
+
+function loadMyDocuments() {
+    const container = document.getElementById('my-documents-list');
+    if (!container || !currentUser) return;
+
+    const documents = currentUser.documents || {};
+    const docTypes = [
+        { key: 'id', name: 'Pièce d\'identité', icon: 'fa-id-card' },
+        { key: 'vitale', name: 'Carte Vitale', icon: 'fa-heart' },
+        { key: 'photo', name: 'Photo d\'identité', icon: 'fa-camera' }
+    ];
+
+    container.innerHTML = docTypes.map(docType => {
+        const doc = documents[docType.key];
+        const hasDoc = !!doc;
+
+        return `
+            <div class="my-document-card">
+                <div class="doc-icon ${hasDoc ? 'status-ok' : 'status-missing'}">
+                    <i class="fas ${hasDoc ? 'fa-check' : docType.icon}"></i>
+                </div>
+                <div class="doc-info">
+                    <div class="doc-name">${docType.name}</div>
+                    <div class="doc-status ${hasDoc ? 'ok' : 'missing'}">
+                        ${hasDoc ? `Déposé le ${formatDateFR(doc.uploadedAt.split('T')[0])}` : 'Non déposé'}
+                    </div>
+                </div>
+                <div class="doc-actions">
+                    ${hasDoc ? `
+                        <button onclick="viewDocument('${docType.key}')" title="Voir">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button onclick="downloadDocument('${docType.key}')" title="Télécharger">
+                            <i class="fas fa-download"></i>
+                        </button>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function viewDocument(type) {
+    const doc = currentUser.documents?.[type];
+    if (!doc) return;
+
+    // Ouvrir dans une nouvelle fenêtre
+    const win = window.open();
+    if (doc.type.startsWith('image/')) {
+        win.document.write(`<img src="${doc.data}" style="max-width: 100%;">`);
+    } else {
+        win.document.write(`<iframe src="${doc.data}" style="width: 100%; height: 100vh; border: none;"></iframe>`);
+    }
+}
+
+function downloadDocument(type) {
+    const doc = currentUser.documents?.[type];
+    if (!doc) return;
+
+    const link = document.createElement('a');
+    link.href = doc.data;
+    link.download = doc.name;
+    link.click();
+}
+
+// ===========================================
+// Génération attestation de scolarité
+// ===========================================
+
+// Cache pour le logo en base64
+let logoBase64Cache = null;
+
+// Fonction pour charger le logo en base64
+function loadLogoBase64() {
+    return new Promise((resolve) => {
+        if (logoBase64Cache) {
+            resolve(logoBase64Cache);
+            return;
+        }
+
+        const img = new Image();
+        img.crossOrigin = 'Anonymous';
+        img.onload = function() {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+            logoBase64Cache = canvas.toDataURL('image/png');
+            resolve(logoBase64Cache);
+        };
+        img.onerror = function() {
+            resolve(null);
+        };
+        img.src = 'img/logo-afertes.png';
+    });
+}
+
+async function generateAttestationScolarite() {
+    if (!currentUser || currentUser.role !== 'student') {
+        showToast('Cette fonction est réservée aux étudiants', 'error');
+        return;
+    }
+
+    showToast('Génération en cours...', 'info');
+
+    // Charger le logo
+    const logoData = await loadLogoBase64();
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const margin = 20;
+
+    // En-tête avec fond coloré
+    doc.setFillColor(37, 54, 114);
+    doc.rect(0, 0, pageWidth, 50, 'F');
+
+    // Logo AFERTES
+    if (logoData) {
+        try {
+            doc.addImage(logoData, 'PNG', margin, 8, 35, 35);
+        } catch (e) {
+            console.log('Erreur logo:', e);
+        }
+    }
+
+    // Texte en-tête
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(20);
+    doc.setFont('helvetica', 'bold');
+    doc.text('AFERTES', pageWidth / 2 + 10, 22, { align: 'center' });
+
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Institut Régional du Travail Social', pageWidth / 2 + 10, 32, { align: 'center' });
+    doc.text('Hauts-de-France', pageWidth / 2 + 10, 40, { align: 'center' });
+
+    // Titre du document
+    doc.setTextColor(37, 54, 114);
+    doc.setFontSize(18);
+    doc.setFont('helvetica', 'bold');
+    doc.text('ATTESTATION DE SCOLARITÉ', pageWidth / 2, 70, { align: 'center' });
+
+    // Ligne décorative
+    doc.setDrawColor(77, 146, 159);
+    doc.setLineWidth(1);
+    doc.line(pageWidth / 2 - 50, 75, pageWidth / 2 + 50, 75);
+
+    // Année scolaire
+    const now = new Date();
+    const year = now.getMonth() >= 8 ? now.getFullYear() : now.getFullYear() - 1;
+    const schoolYear = `${year}-${year + 1}`;
+
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(0, 0, 0);
+    doc.text(`Année scolaire ${schoolYear}`, pageWidth / 2, 85, { align: 'center' });
+
+    // Corps du texte
+    doc.setFontSize(11);
+
+    const siteName = currentUser.site === 'slb' ? 'Saint-Laurent-Blangy' : 'Avion';
+    const siteAddress = currentUser.site === 'slb'
+        ? '1 rue Pierre et Marie Curie, 62223 Saint-Laurent-Blangy'
+        : 'Rue des montagnards, 62210 Avion';
+
+    let y = 105;
+
+    doc.text('Je soussigné(e), le Directeur de l\'AFERTES, certifie que :', margin, y);
+
+    y += 20;
+
+    // Informations étudiant
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(14);
+    const fullName = `${currentUser.firstname} ${currentUser.lastname.toUpperCase()}`;
+    doc.text(fullName, pageWidth / 2, y, { align: 'center' });
+
+    y += 12;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(11);
+
+    if (currentUser.birthdate) {
+        doc.text(`Né(e) le ${formatDateFR(currentUser.birthdate)}`, pageWidth / 2, y, { align: 'center' });
+        y += 10;
+    }
+
+    y += 10;
+
+    // Formation
+    const formationName = APP_CONFIG.formations[currentUser.formation] || currentUser.formation?.toUpperCase();
+    const promoYears = currentUser.promo ? `${currentUser.promo}-${parseInt(currentUser.promo) + 3}` : '';
+
+    doc.text('est régulièrement inscrit(e) en formation :', margin, y);
+    y += 12;
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(13);
+    doc.setTextColor(37, 54, 114);
+    doc.text(formationName, pageWidth / 2, y, { align: 'center' });
+
+    y += 10;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(11);
+    doc.setTextColor(0, 0, 0);
+    doc.text(`Promotion ${promoYears}`, pageWidth / 2, y, { align: 'center' });
+
+    y += 18;
+    doc.text(`au sein de l'établissement AFERTES - Site de ${siteName}`, margin, y);
+    y += 7;
+    doc.text(siteAddress, margin, y);
+
+    y += 20;
+    doc.text('Cette attestation est délivrée pour servir et valoir ce que de droit.', margin, y);
+
+    // Date et signature
+    y += 35;
+    const today = new Date().toLocaleDateString('fr-FR', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+    });
+
+    doc.text(`Fait à ${siteName}, le ${today}`, pageWidth - margin, y, { align: 'right' });
+
+    y += 20;
+    doc.text('Le Directeur,', pageWidth - margin - 30, y, { align: 'center' });
+
+    y += 25;
+    doc.setFont('helvetica', 'italic');
+    doc.setTextColor(128, 128, 128);
+    doc.text('Signature et cachet de l\'établissement', pageWidth - margin - 30, y, { align: 'center' });
+
+    // Pied de page
+    doc.setFillColor(37, 54, 114);
+    doc.rect(0, 275, pageWidth, 22, 'F');
+
+    doc.setFontSize(8);
+    doc.setTextColor(255, 255, 255);
+    doc.text('AFERTES - Association pour la Formation, l\'Expansion et la Recherche en Travail Éducatif et Social', pageWidth / 2, 283, { align: 'center' });
+    doc.text('Tél : 03 21 60 40 00 - www.afertes.org', pageWidth / 2, 290, { align: 'center' });
+
+    // Numéro d'attestation
+    const attestationNumber = `ATT-${currentUser.id}-${Date.now().toString(36).toUpperCase()}`;
+    doc.setTextColor(200, 200, 200);
+    doc.text(`N° ${attestationNumber}`, margin, 290);
+
+    // Télécharger
+    const filename = `attestation_scolarite_${currentUser.lastname}_${currentUser.firstname}_${schoolYear}.pdf`;
+    doc.save(filename);
+
+    showToast('Attestation de scolarité téléchargée', 'success');
+}
+
 function handleRegister(e) {
     e.preventDefault();
     
@@ -569,6 +972,9 @@ function showPage(pageName) {
             break;
         case 'grades':
             loadGrades();
+            break;
+        case 'my-documents':
+            loadMyDocuments();
             break;
         case 'manage-grades':
             initGradeManagement();
@@ -2358,7 +2764,7 @@ function viewStudentGrades(studentId) {
     document.getElementById('modal-overlay').classList.remove('hidden');
 }
 
-function generateStudentBulletin(studentId, download = true) {
+async function generateStudentBulletin(studentId, download = true) {
     const { jsPDF } = window.jspdf;
     const users = JSON.parse(localStorage.getItem('afertes_users') || '[]');
     const grades = JSON.parse(localStorage.getItem('afertes_grades') || '[]');
@@ -2369,24 +2775,38 @@ function generateStudentBulletin(studentId, download = true) {
         return null;
     }
 
+    // Charger le logo
+    const logoData = await loadLogoBase64();
+
     const studentGrades = grades.filter(g => g.userId === studentId);
 
     // Créer le PDF
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
 
-    // En-tête
-    doc.setFillColor(0, 51, 102);
-    doc.rect(0, 0, pageWidth, 40, 'F');
+    // En-tête avec logo
+    doc.setFillColor(37, 54, 114);
+    doc.rect(0, 0, pageWidth, 45, 'F');
+
+    // Logo AFERTES
+    if (logoData) {
+        try {
+            doc.addImage(logoData, 'PNG', 15, 6, 32, 32);
+        } catch (e) {
+            console.log('Erreur logo bulletin:', e);
+        }
+    }
 
     doc.setTextColor(255, 255, 255);
-    doc.setFontSize(22);
+    doc.setFontSize(20);
     doc.setFont('helvetica', 'bold');
-    doc.text('AFERTES', pageWidth / 2, 18, { align: 'center' });
-    doc.setFontSize(12);
+    doc.text('AFERTES', pageWidth / 2 + 10, 18, { align: 'center' });
+    doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
-    doc.text('Institut Régional du Travail Social', pageWidth / 2, 28, { align: 'center' });
-    doc.text('Bulletin de notes', pageWidth / 2, 36, { align: 'center' });
+    doc.text('Institut Régional du Travail Social - Hauts-de-France', pageWidth / 2 + 10, 28, { align: 'center' });
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('BULLETIN DE NOTES', pageWidth / 2 + 10, 40, { align: 'center' });
 
     // Informations étudiant
     doc.setTextColor(0, 0, 0);
@@ -2399,7 +2819,7 @@ function generateStudentBulletin(studentId, download = true) {
         'cafdes': 'CAFDES'
     };
 
-    let y = 55;
+    let y = 60;
     doc.setFont('helvetica', 'bold');
     doc.text('Étudiant:', 20, y);
     doc.setFont('helvetica', 'normal');
@@ -2624,8 +3044,8 @@ function exportGradesList() {
     showToast(`Export Excel effectué (${exportData.length} notes)`, 'success');
 }
 
-function sendBulletinByEmail(studentId) {
-    const result = generateStudentBulletin(studentId, false);
+async function sendBulletinByEmail(studentId) {
+    const result = await generateStudentBulletin(studentId, false);
     if (!result) return;
 
     const { doc, student } = result;
@@ -3692,6 +4112,15 @@ function loadAdminStudentsEnhanced() {
     tbody.innerHTML = filtered.map(student => {
         const status = student.status || 'active';
         const statusLabels = { active: 'Actif', abandon: 'Abandon', diplome: 'Diplômé' };
+
+        // Vérifier les documents
+        const docs = student.documents || {};
+        const hasId = !!docs.id;
+        const hasVitale = !!docs.vitale;
+        const hasPhoto = !!docs.photo;
+        const docsCount = [hasId, hasVitale, hasPhoto].filter(Boolean).length;
+        const docsComplete = docsCount === 3;
+
         return `
             <tr class="${status !== 'active' ? 'student-inactive' : ''}">
                 <td><input type="checkbox" data-id="${student.id}"></td>
@@ -3702,6 +4131,16 @@ function loadAdminStudentsEnhanced() {
                 <td>${student.promo || '-'}</td>
                 <td><span class="status-badge ${status}">${statusLabels[status]}</span></td>
                 <td>
+                    <div class="docs-status ${docsComplete ? 'complete' : 'incomplete'}" title="${docsCount}/3 documents">
+                        <i class="fas fa-id-card ${hasId ? 'ok' : ''}"></i>
+                        <i class="fas fa-heart ${hasVitale ? 'ok' : ''}"></i>
+                        <i class="fas fa-camera ${hasPhoto ? 'ok' : ''}"></i>
+                    </div>
+                </td>
+                <td>
+                    <button class="action-btn" onclick="viewStudentDocuments(${student.id})" title="Voir documents">
+                        <i class="fas fa-folder-open"></i>
+                    </button>
                     <button class="action-btn" onclick="editStudent(${student.id})" title="Modifier">
                         <i class="fas fa-edit"></i>
                     </button>
@@ -3764,6 +4203,93 @@ function saveStudentStatus(e, id) {
     closeModal();
     loadAdminStudentsEnhanced();
     showToast('Statut modifié avec succès', 'success');
+}
+
+function viewStudentDocuments(studentId) {
+    const users = JSON.parse(localStorage.getItem('afertes_users') || '[]');
+    const student = users.find(u => u.id === studentId);
+    if (!student) return;
+
+    const docs = student.documents || {};
+    const docTypes = [
+        { key: 'id', name: 'Pièce d\'identité', icon: 'fa-id-card' },
+        { key: 'vitale', name: 'Carte Vitale', icon: 'fa-heart' },
+        { key: 'photo', name: 'Photo d\'identité', icon: 'fa-camera' }
+    ];
+
+    const docsHtml = docTypes.map(docType => {
+        const doc = docs[docType.key];
+        const hasDoc = !!doc;
+
+        return `
+            <div class="admin-doc-item ${hasDoc ? 'has-doc' : 'missing-doc'}">
+                <div class="admin-doc-icon">
+                    <i class="fas ${docType.icon}"></i>
+                </div>
+                <div class="admin-doc-info">
+                    <div class="admin-doc-name">${docType.name}</div>
+                    <div class="admin-doc-status">
+                        ${hasDoc
+                            ? `<span class="ok"><i class="fas fa-check"></i> Déposé le ${formatDateFR(doc.uploadedAt.split('T')[0])}</span>`
+                            : `<span class="missing"><i class="fas fa-times"></i> Non déposé</span>`
+                        }
+                    </div>
+                </div>
+                ${hasDoc ? `
+                    <div class="admin-doc-actions">
+                        <button class="btn btn-sm" onclick="viewStudentDocument(${studentId}, '${docType.key}')">
+                            <i class="fas fa-eye"></i> Voir
+                        </button>
+                        <button class="btn btn-sm" onclick="downloadStudentDocument(${studentId}, '${docType.key}')">
+                            <i class="fas fa-download"></i>
+                        </button>
+                    </div>
+                ` : ''}
+            </div>
+        `;
+    }).join('');
+
+    const modalContent = `
+        <h2><i class="fas fa-folder-open" style="color: var(--primary-color);"></i> Documents de ${student.firstname} ${student.lastname}</h2>
+        <div class="admin-docs-list">
+            ${docsHtml}
+        </div>
+        <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid #eee;">
+            <p style="font-size: 0.85rem; color: var(--text-muted);">
+                <i class="fas fa-info-circle"></i> Profil ${student.profileCompleted ? 'complété' : 'incomplet'}
+                ${student.profileCompleted ? ` le ${formatDateFR(student.profileCompletedAt?.split('T')[0])}` : ''}
+            </p>
+        </div>
+    `;
+
+    document.getElementById('modal-content').innerHTML = modalContent;
+    document.getElementById('modal-overlay').classList.remove('hidden');
+}
+
+function viewStudentDocument(studentId, type) {
+    const users = JSON.parse(localStorage.getItem('afertes_users') || '[]');
+    const student = users.find(u => u.id === studentId);
+    const doc = student?.documents?.[type];
+    if (!doc) return;
+
+    const win = window.open();
+    if (doc.type.startsWith('image/')) {
+        win.document.write(`<img src="${doc.data}" style="max-width: 100%;">`);
+    } else {
+        win.document.write(`<iframe src="${doc.data}" style="width: 100%; height: 100vh; border: none;"></iframe>`);
+    }
+}
+
+function downloadStudentDocument(studentId, type) {
+    const users = JSON.parse(localStorage.getItem('afertes_users') || '[]');
+    const student = users.find(u => u.id === studentId);
+    const doc = student?.documents?.[type];
+    if (!doc) return;
+
+    const link = document.createElement('a');
+    link.href = doc.data;
+    link.download = `${student.lastname}_${student.firstname}_${type}_${doc.name}`;
+    link.click();
 }
 
 function showAddStudentModalEnhanced() {
@@ -3911,10 +4437,23 @@ window.editStudent = editStudent;
 window.saveStudentEdit = saveStudentEdit;
 window.deleteStudent = deleteStudent;
 window.viewStudentProfile = viewStudentProfile;
+window.changeStudentStatus = changeStudentStatus;
+window.saveStudentStatus = saveStudentStatus;
+window.viewStudentDocuments = viewStudentDocuments;
+window.viewStudentDocument = viewStudentDocument;
+window.downloadStudentDocument = downloadStudentDocument;
 window.exportStudentsList = exportStudentsList;
 window.formatDateFR = formatDateFR;
+window.formatFileSize = formatFileSize;
 window.showFirstLoginModal = showFirstLoginModal;
 window.handleFirstLoginSubmit = handleFirstLoginSubmit;
+window.handleDocumentUpload = handleDocumentUpload;
+window.removeDocument = removeDocument;
+window.updateDocument = updateDocument;
+window.loadMyDocuments = loadMyDocuments;
+window.viewDocument = viewDocument;
+window.downloadDocument = downloadDocument;
+window.generateAttestationScolarite = generateAttestationScolarite;
 window.loadAdminGrades = loadAdminGrades;
 window.viewStudentGrades = viewStudentGrades;
 window.generateStudentBulletin = generateStudentBulletin;
