@@ -229,22 +229,127 @@ function setupEventListeners() {
 // ===========================================
 function handleLogin(e) {
     e.preventDefault();
-    
+
     const email = document.getElementById('login-email').value;
     const password = document.getElementById('login-password').value;
-    
+
     // Vérifier les identifiants (simulé)
     const users = JSON.parse(localStorage.getItem('afertes_users') || '[]');
     const user = users.find(u => u.email === email);
-    
+
     if (user && user.password === password) {
         currentUser = user;
         localStorage.setItem('afertes_user', JSON.stringify(user));
         registerActiveSession(user.id);
-        showToast('Connexion réussie !', 'success');
-        showApp();
+
+        // Vérifier si c'est un étudiant qui doit compléter son profil
+        if (user.role === 'student' && !user.profileCompleted) {
+            showFirstLoginModal(user);
+        } else {
+            showToast('Connexion réussie !', 'success');
+            showApp();
+        }
     } else {
         showToast('Email ou mot de passe incorrect', 'error');
+    }
+}
+
+// ===========================================
+// Première connexion étudiant
+// ===========================================
+function showFirstLoginModal(user) {
+    const modal = document.getElementById('first-login-modal');
+
+    // Pré-remplir les champs avec les données existantes
+    document.getElementById('fl-lastname').value = user.lastname || '';
+    document.getElementById('fl-firstname').value = user.firstname || '';
+    document.getElementById('fl-email').value = user.email || '';
+
+    // Afficher le modal
+    modal.classList.remove('hidden');
+    document.getElementById('login-page').classList.add('hidden');
+
+    // Event listener pour le formulaire
+    document.getElementById('first-login-form').addEventListener('submit', handleFirstLoginSubmit);
+}
+
+function handleFirstLoginSubmit(e) {
+    e.preventDefault();
+
+    const lastname = document.getElementById('fl-lastname').value.trim();
+    const firstname = document.getElementById('fl-firstname').value.trim();
+    const birthdate = document.getElementById('fl-birthdate').value;
+    const phone = document.getElementById('fl-phone').value.trim();
+    const email = document.getElementById('fl-email').value.trim();
+    const socialSecurity = document.getElementById('fl-social-security').value.trim();
+    const address = document.getElementById('fl-address').value.trim();
+    const postalCode = document.getElementById('fl-postal-code').value.trim();
+    const city = document.getElementById('fl-city').value.trim();
+    const rgpdConsent = document.getElementById('fl-rgpd-consent').checked;
+
+    // Validation
+    if (!lastname || !firstname || !birthdate || !phone || !email || !socialSecurity || !address || !postalCode || !city) {
+        showToast('Veuillez remplir tous les champs obligatoires', 'error');
+        return;
+    }
+
+    // Validation numéro de sécurité sociale (15 chiffres)
+    const ssnRegex = /^[12][0-9]{2}[0-1][0-9][0-9]{2}[0-9]{3}[0-9]{3}[0-9]{2}$/;
+    if (!ssnRegex.test(socialSecurity)) {
+        showToast('Le numéro de sécurité sociale doit contenir 15 chiffres', 'error');
+        return;
+    }
+
+    // Validation code postal
+    const postalRegex = /^[0-9]{5}$/;
+    if (!postalRegex.test(postalCode)) {
+        showToast('Le code postal doit contenir 5 chiffres', 'error');
+        return;
+    }
+
+    // Validation téléphone
+    const phoneClean = phone.replace(/[\s.-]/g, '');
+    if (phoneClean.length < 10) {
+        showToast('Le numéro de téléphone est invalide', 'error');
+        return;
+    }
+
+    if (!rgpdConsent) {
+        showToast('Veuillez accepter la politique de confidentialité RGPD', 'error');
+        return;
+    }
+
+    // Mettre à jour l'utilisateur
+    const users = JSON.parse(localStorage.getItem('afertes_users') || '[]');
+    const userIndex = users.findIndex(u => u.id === currentUser.id);
+
+    if (userIndex !== -1) {
+        users[userIndex] = {
+            ...users[userIndex],
+            lastname,
+            firstname,
+            birthdate,
+            phone,
+            email,
+            socialSecurity,
+            address,
+            postalCode,
+            city,
+            rgpdConsentDate: new Date().toISOString(),
+            profileCompleted: true,
+            profileCompletedAt: new Date().toISOString()
+        };
+
+        localStorage.setItem('afertes_users', JSON.stringify(users));
+        currentUser = users[userIndex];
+        localStorage.setItem('afertes_user', JSON.stringify(currentUser));
+
+        // Fermer le modal et afficher l'application
+        document.getElementById('first-login-modal').classList.add('hidden');
+        showToast('Profil complété avec succès ! Bienvenue sur AFERTES Connect.', 'success');
+        showApp();
+    } else {
+        showToast('Erreur lors de la mise à jour du profil', 'error');
     }
 }
 
@@ -2108,14 +2213,80 @@ function viewStudentProfile(id) {
 }
 
 function exportStudentsList() {
+    // Vérifier si l'utilisateur a le droit d'exporter (secrétaire ou formateur)
+    if (!currentUser || !['secretary', 'teacher', 'admin'].includes(currentUser.role)) {
+        showToast('Vous n\'avez pas les droits pour effectuer cette action', 'error');
+        return;
+    }
+
     const users = JSON.parse(localStorage.getItem('afertes_users') || '[]');
     const students = users.filter(u => u.role === 'student');
-    let csv = 'Nom,Prénom,Email,Formation,Promotion,Site\n';
-    students.forEach(s => {
-        csv += `${s.lastname},${s.firstname},${s.email},${s.formation?.toUpperCase() || ''},${s.promo || ''},${s.site}\n`;
-    });
-    downloadFile(csv, 'etudiants_afertes.csv', 'text/csv');
-    showToast('Export effectué', 'success');
+
+    if (students.length === 0) {
+        showToast('Aucun étudiant à exporter', 'warning');
+        return;
+    }
+
+    // Préparer les données pour l'export Excel
+    const exportData = students.map(s => ({
+        'Nom': s.lastname || '',
+        'Prénom': s.firstname || '',
+        'Email': s.email || '',
+        'Téléphone': s.phone || '',
+        'Date de naissance': s.birthdate ? formatDateFR(s.birthdate) : '',
+        'N° Sécurité Sociale': s.socialSecurity || '',
+        'Adresse': s.address || '',
+        'Code Postal': s.postalCode || '',
+        'Ville': s.city || '',
+        'Formation': APP_CONFIG.formations[s.formation] || s.formation?.toUpperCase() || '',
+        'Promotion': s.promo ? `${s.promo}-${parseInt(s.promo) + 3}` : '',
+        'Site': s.site === 'slb' ? 'Saint-Laurent-Blangy' : s.site === 'avion' ? 'Avion' : s.site || '',
+        'Profil complété': s.profileCompleted ? 'Oui' : 'Non',
+        'Date inscription': s.createdAt ? formatDateFR(s.createdAt.split('T')[0]) : '',
+        'Consentement RGPD': s.rgpdConsentDate ? formatDateFR(s.rgpdConsentDate.split('T')[0]) : ''
+    }));
+
+    // Créer le workbook Excel avec SheetJS
+    const ws = XLSX.utils.json_to_sheet(exportData);
+
+    // Ajuster la largeur des colonnes
+    const colWidths = [
+        { wch: 15 }, // Nom
+        { wch: 15 }, // Prénom
+        { wch: 30 }, // Email
+        { wch: 15 }, // Téléphone
+        { wch: 15 }, // Date de naissance
+        { wch: 18 }, // N° Sécu
+        { wch: 35 }, // Adresse
+        { wch: 12 }, // Code Postal
+        { wch: 20 }, // Ville
+        { wch: 25 }, // Formation
+        { wch: 15 }, // Promotion
+        { wch: 20 }, // Site
+        { wch: 15 }, // Profil complété
+        { wch: 15 }, // Date inscription
+        { wch: 18 }  // Consentement RGPD
+    ];
+    ws['!cols'] = colWidths;
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Étudiants');
+
+    // Générer le fichier et télécharger
+    const filename = `etudiants_afertes_${new Date().toISOString().slice(0, 10)}.xlsx`;
+    XLSX.writeFile(wb, filename);
+
+    showToast(`Export Excel effectué (${students.length} étudiants)`, 'success');
+}
+
+// Fonction pour formater une date en français
+function formatDateFR(dateStr) {
+    if (!dateStr) return '';
+    const parts = dateStr.split('-');
+    if (parts.length === 3) {
+        return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+    return dateStr;
 }
 
 function loadAdminGrades() {
@@ -2385,6 +2556,12 @@ function generateBulletins() {
 }
 
 function exportGradesList() {
+    // Vérifier les droits
+    if (!currentUser || !['secretary', 'teacher', 'admin'].includes(currentUser.role)) {
+        showToast('Vous n\'avez pas les droits pour effectuer cette action', 'error');
+        return;
+    }
+
     const formationFilter = document.getElementById('admin-grade-formation')?.value || '';
     const promoFilter = document.getElementById('admin-grade-promo')?.value || '';
 
@@ -2395,23 +2572,56 @@ function exportGradesList() {
     if (formationFilter) students = students.filter(s => s.formation === formationFilter);
     if (promoFilter) students = students.filter(s => s.promo === promoFilter);
 
-    // Créer le CSV
-    let csv = 'Nom,Prénom,Formation,Promo,Matière,DC,Note,Date,Commentaire\n';
-
+    // Préparer les données pour l'export Excel
+    const exportData = [];
     students.forEach(student => {
         const studentGrades = grades.filter(g => g.userId === student.id);
         studentGrades.forEach(g => {
-            csv += `"${student.lastname}","${student.firstname}","${student.formation}","${student.promo}","${g.subject}","${g.dc}","${g.value}","${g.date}","${g.comment || ''}"\n`;
+            exportData.push({
+                'Nom': student.lastname || '',
+                'Prénom': student.firstname || '',
+                'Formation': APP_CONFIG.formations[student.formation] || student.formation?.toUpperCase() || '',
+                'Promotion': student.promo ? `${student.promo}-${parseInt(student.promo) + 3}` : '',
+                'Matière': g.subject || '',
+                'DC': g.dc || '',
+                'Note': g.value,
+                'Coefficient': g.coefficient || 1,
+                'Date': g.date ? formatDateFR(g.date) : '',
+                'Commentaire': g.comment || ''
+            });
         });
     });
 
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `notes_export_${new Date().toISOString().slice(0, 10)}.csv`;
-    link.click();
+    if (exportData.length === 0) {
+        showToast('Aucune note à exporter', 'warning');
+        return;
+    }
 
-    showToast('Export CSV effectué', 'success');
+    // Créer le workbook Excel
+    const ws = XLSX.utils.json_to_sheet(exportData);
+
+    // Ajuster la largeur des colonnes
+    ws['!cols'] = [
+        { wch: 15 }, // Nom
+        { wch: 15 }, // Prénom
+        { wch: 25 }, // Formation
+        { wch: 12 }, // Promotion
+        { wch: 25 }, // Matière
+        { wch: 10 }, // DC
+        { wch: 8 },  // Note
+        { wch: 12 }, // Coefficient
+        { wch: 12 }, // Date
+        { wch: 40 }  // Commentaire
+    ];
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Notes');
+
+    // Télécharger
+    const filename = `notes_afertes_${new Date().toISOString().slice(0, 10)}.xlsx`;
+    XLSX.writeFile(wb, filename);
+
+    showToast(`Export Excel effectué (${exportData.length} notes)`, 'success');
 }
 
 function sendBulletinByEmail(studentId) {
@@ -3702,6 +3912,9 @@ window.saveStudentEdit = saveStudentEdit;
 window.deleteStudent = deleteStudent;
 window.viewStudentProfile = viewStudentProfile;
 window.exportStudentsList = exportStudentsList;
+window.formatDateFR = formatDateFR;
+window.showFirstLoginModal = showFirstLoginModal;
+window.handleFirstLoginSubmit = handleFirstLoginSubmit;
 window.loadAdminGrades = loadAdminGrades;
 window.viewStudentGrades = viewStudentGrades;
 window.generateStudentBulletin = generateStudentBulletin;

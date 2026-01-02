@@ -839,6 +839,14 @@
                     <h1><i class="fas fa-clipboard-check"></i> Saisie des notes</h1>
                     <p>Enregistrer les notes des étudiants</p>
                 </div>
+                <div class="admin-actions" style="margin-bottom: 20px;">
+                    <button class="btn btn-secondary" onclick="exportStudentsList()">
+                        <i class="fas fa-file-excel"></i> Exporter liste étudiants
+                    </button>
+                    <button class="btn btn-secondary" onclick="exportGradesList()">
+                        <i class="fas fa-file-excel"></i> Exporter notes Excel
+                    </button>
+                </div>
                 <div class="manage-grades-container">
                     <div class="grade-form-card">
                         <h2>Nouvelle évaluation</h2>
@@ -1226,7 +1234,7 @@
                             <i class="fas fa-user-plus"></i> Ajouter un étudiant
                         </button>
                         <button class="btn btn-secondary" onclick="exportStudentsList()">
-                            <i class="fas fa-file-excel"></i> Exporter
+                            <i class="fas fa-file-excel"></i> Exporter Excel
                         </button>
                     </div>
                 </div>
@@ -1379,7 +1387,7 @@
                             <i class="fas fa-file-pdf"></i> Générer bulletins
                         </button>
                         <button class="btn btn-secondary" onclick="exportGradesList()">
-                            <i class="fas fa-file-excel"></i> Exporter CSV
+                            <i class="fas fa-file-excel"></i> Exporter Excel
                         </button>
                     </div>
                 </div>
@@ -1570,6 +1578,107 @@
         </main>
     </div>
 
+    <!-- Modal première connexion étudiant -->
+    <div id="first-login-modal" class="modal-overlay hidden">
+        <div class="modal modal-large">
+            <div class="modal-content">
+                <div class="first-login-header">
+                    <img src="img/logo-afertes.png" alt="AFERTES" class="first-login-logo">
+                    <h2>Bienvenue sur AFERTES Connect !</h2>
+                    <p class="first-login-subtitle">Complétez votre profil pour accéder à l'application</p>
+                </div>
+
+                <div class="rgpd-info-box">
+                    <h3><i class="fas fa-shield-alt"></i> Pourquoi ces informations ?</h3>
+                    <p>L'AFERTES collecte ces données personnelles pour :</p>
+                    <ul>
+                        <li><strong>Gestion administrative</strong> : suivi de votre parcours de formation, établissement des attestations et diplômes</li>
+                        <li><strong>Contact d'urgence</strong> : pouvoir vous joindre en cas de nécessité (changement d'emploi du temps, urgence)</li>
+                        <li><strong>Obligations légales</strong> : déclarations auprès des organismes de formation et de financement</li>
+                        <li><strong>Sécurité sociale étudiante</strong> : affiliation et couverture sociale pendant votre formation</li>
+                    </ul>
+                    <p class="rgpd-notice-text">
+                        <i class="fas fa-lock"></i> Conformément au RGPD (Règlement Général sur la Protection des Données),
+                        vos données sont sécurisées et ne seront jamais partagées à des fins commerciales.
+                        Vous disposez d'un droit d'accès, de rectification et de suppression de vos données.
+                        <a href="#" onclick="showRGPD()">En savoir plus sur notre politique de confidentialité</a>
+                    </p>
+                </div>
+
+                <form id="first-login-form" class="first-login-form">
+                    <h3><i class="fas fa-user"></i> Informations personnelles</h3>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="fl-lastname">Nom *</label>
+                            <input type="text" id="fl-lastname" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="fl-firstname">Prénom *</label>
+                            <input type="text" id="fl-firstname" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="fl-birthdate">Date de naissance *</label>
+                            <input type="date" id="fl-birthdate" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="fl-phone">Téléphone *</label>
+                            <input type="tel" id="fl-phone" placeholder="06 12 34 56 78" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="fl-email">Adresse email *</label>
+                        <input type="email" id="fl-email" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="fl-social-security">Numéro de sécurité sociale *</label>
+                        <input type="text" id="fl-social-security" placeholder="1 XX XX XX XXX XXX XX"
+                               pattern="[12][0-9]{2}[0-1][0-9][0-9]{2}[0-9]{3}[0-9]{3}[0-9]{2}"
+                               maxlength="15" required>
+                        <small class="form-help">15 chiffres sans espaces</small>
+                    </div>
+
+                    <h3><i class="fas fa-map-marker-alt"></i> Adresse postale</h3>
+
+                    <div class="form-group">
+                        <label for="fl-address">Adresse *</label>
+                        <input type="text" id="fl-address" placeholder="Numéro et nom de rue" required>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="fl-postal-code">Code postal *</label>
+                            <input type="text" id="fl-postal-code" placeholder="62000" pattern="[0-9]{5}" maxlength="5" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="fl-city">Ville *</label>
+                            <input type="text" id="fl-city" placeholder="Arras" required>
+                        </div>
+                    </div>
+
+                    <div class="rgpd-consent-box">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="fl-rgpd-consent" required>
+                            <span>J'ai lu et j'accepte que mes données personnelles soient traitées par l'AFERTES
+                            conformément au <a href="#" onclick="showRGPD()">Règlement Général sur la Protection des Données (RGPD)</a>.
+                            Je comprends que ces informations sont nécessaires à ma scolarité et seront conservées
+                            pendant la durée de ma formation et les délais légaux d'archivage. *</span>
+                        </label>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-block btn-large">
+                        <i class="fas fa-check"></i> Valider et accéder à l'application
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal générique -->
     <div id="modal-overlay" class="modal-overlay hidden">
         <div class="modal" id="modal">
@@ -1588,6 +1697,7 @@
     <!-- Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="js/app.js"></script>
     <script src="js/data.js"></script>
     <script>

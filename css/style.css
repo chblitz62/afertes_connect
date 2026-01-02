@@ -1692,6 +1692,215 @@ img {
     margin-bottom: 16px;
 }
 
+/* Modal large (première connexion) */
+.modal.modal-large {
+    max-width: 700px;
+    max-height: 95vh;
+}
+
+/* Première connexion - Header */
+.first-login-header {
+    text-align: center;
+    padding-bottom: 20px;
+    border-bottom: 2px solid var(--bg-tertiary);
+    margin-bottom: 20px;
+}
+
+.first-login-logo {
+    width: 80px;
+    height: auto;
+    margin-bottom: 12px;
+}
+
+.first-login-header h2 {
+    color: var(--primary-color);
+    font-size: 1.5rem;
+    margin-bottom: 8px;
+}
+
+.first-login-subtitle {
+    color: var(--text-light);
+    font-size: 0.95rem;
+}
+
+/* RGPD Info Box */
+.rgpd-info-box {
+    background: linear-gradient(135deg, #e8f4f8 0%, #f0f8ff 100%);
+    border: 1px solid var(--secondary-color);
+    border-left: 4px solid var(--secondary-color);
+    border-radius: var(--border-radius-sm);
+    padding: 16px;
+    margin-bottom: 24px;
+}
+
+.rgpd-info-box h3 {
+    color: var(--primary-color);
+    font-size: 1rem;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.rgpd-info-box h3 i {
+    color: var(--secondary-color);
+}
+
+.rgpd-info-box p {
+    font-size: 0.9rem;
+    color: var(--text-medium);
+    margin-bottom: 8px;
+}
+
+.rgpd-info-box ul {
+    margin: 12px 0;
+    padding-left: 20px;
+}
+
+.rgpd-info-box li {
+    font-size: 0.85rem;
+    color: var(--text-medium);
+    margin-bottom: 6px;
+}
+
+.rgpd-info-box li strong {
+    color: var(--primary-color);
+}
+
+.rgpd-notice-text {
+    background: white;
+    border-radius: var(--border-radius-sm);
+    padding: 12px;
+    font-size: 0.8rem;
+    color: var(--text-light);
+    margin-top: 12px;
+}
+
+.rgpd-notice-text i {
+    color: var(--success-color);
+    margin-right: 4px;
+}
+
+/* First login form */
+.first-login-form h3 {
+    color: var(--primary-color);
+    font-size: 1rem;
+    margin: 20px 0 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--bg-tertiary);
+}
+
+.first-login-form h3 i {
+    color: var(--secondary-color);
+}
+
+.first-login-form .form-group {
+    margin-bottom: 14px;
+}
+
+.first-login-form .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.first-login-form label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-medium);
+    margin-bottom: 6px;
+}
+
+.first-login-form input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid #ddd;
+    border-radius: var(--border-radius-sm);
+    font-size: 0.95rem;
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.first-login-form input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(37, 54, 114, 0.1);
+    outline: none;
+}
+
+.first-login-form input:invalid:not(:placeholder-shown) {
+    border-color: var(--error-color);
+}
+
+.form-help {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
+/* RGPD consent box */
+.rgpd-consent-box {
+    background: var(--bg-tertiary);
+    border-radius: var(--border-radius-sm);
+    padding: 14px;
+    margin: 20px 0;
+}
+
+.rgpd-consent-box .checkbox-label {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    cursor: pointer;
+}
+
+.rgpd-consent-box .checkbox-label input {
+    width: auto;
+    margin-top: 4px;
+    flex-shrink: 0;
+}
+
+.rgpd-consent-box .checkbox-label span {
+    font-size: 0.8rem;
+    color: var(--text-medium);
+    line-height: 1.5;
+}
+
+.rgpd-consent-box a {
+    color: var(--primary-color);
+    text-decoration: underline;
+}
+
+/* Large button */
+.btn-large {
+    padding: 14px 24px;
+    font-size: 1rem;
+}
+
+/* Responsive first login */
+@media (max-width: 600px) {
+    .modal.modal-large {
+        max-width: 100%;
+        margin: 10px;
+        max-height: 100vh;
+    }
+
+    .first-login-form .form-row {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+
+    .first-login-header h2 {
+        font-size: 1.2rem;
+    }
+
+    .rgpd-info-box {
+        padding: 12px;
+    }
+}
+
 /* Toast notifications */
 .toast-container {
     position: fixed;
