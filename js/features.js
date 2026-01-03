@@ -1707,3 +1707,101 @@ window.updateAriaExpanded = updateAriaExpanded;
 window.trapFocus = trapFocus;
 window.announceToScreenReader = announceToScreenReader;
 window.updateNavAriaCurrentPage = updateNavAriaCurrentPage;
+
+// ==========================================
+// FONCTIONS ÉMARGEMENT COMPLÉMENTAIRES
+// ==========================================
+
+// Exporter la session d'émargement en cours
+function exportAttendanceSession() {
+    if (!activeAttendanceSession) {
+        showToast('Aucune session d\'émargement active', 'warning');
+        return;
+    }
+
+    const session = activeAttendanceSession;
+    const data = {
+        'Cours': session.courseName,
+        'Formation': APP_CONFIG.formations[session.formation] || session.formation,
+        'Promotion': session.promo,
+        'Date': new Date(session.startTime).toLocaleDateString('fr-FR'),
+        'Heure début': new Date(session.startTime).toLocaleTimeString('fr-FR'),
+        'Signatures': session.signatures.length
+    };
+
+    // Créer le tableau des signatures
+    const signaturesData = session.signatures.map(s => ({
+        'Nom': s.name,
+        'Heure': new Date(s.time).toLocaleTimeString('fr-FR')
+    }));
+
+    // Export Excel
+    const ws = XLSX.utils.json_to_sheet(signaturesData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Émargement');
+    XLSX.writeFile(wb, `emargement_${session.courseName.replace(/\s/g, '_')}_${new Date().toISOString().split('T')[0]}.xlsx`);
+
+    showToast('Export téléchargé', 'success');
+}
+
+// Charger le rapport d'émargement
+function loadAttendanceReport() {
+    const sessions = JSON.parse(localStorage.getItem('afertes_attendance_sessions') || '[]');
+    const container = document.getElementById('attendance-report-list');
+
+    if (!container) return;
+
+    if (sessions.length === 0) {
+        container.innerHTML = '<p class="empty-message">Aucun historique d\'émargement</p>';
+        return;
+    }
+
+    container.innerHTML = sessions.slice(-20).reverse().map(s => `
+        <div class="attendance-report-item">
+            <div class="report-info">
+                <strong>${escapeHtml(s.courseName)}</strong>
+                <span>${new Date(s.startTime).toLocaleDateString('fr-FR')}</span>
+            </div>
+            <div class="report-stats">
+                <span class="badge badge-success">${s.signatures?.length || 0} signatures</span>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Exporter le rapport d'émargement complet
+function exportAttendanceReport() {
+    const sessions = JSON.parse(localStorage.getItem('afertes_attendance_sessions') || '[]');
+
+    if (sessions.length === 0) {
+        showToast('Aucune donnée à exporter', 'warning');
+        return;
+    }
+
+    const data = sessions.map(s => ({
+        'Date': new Date(s.startTime).toLocaleDateString('fr-FR'),
+        'Heure': new Date(s.startTime).toLocaleTimeString('fr-FR'),
+        'Cours': s.courseName,
+        'Formation': APP_CONFIG.formations[s.formation] || s.formation,
+        'Promotion': s.promo,
+        'Signatures': s.signatures?.length || 0
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Rapport émargement');
+    XLSX.writeFile(wb, `rapport_emargement_${new Date().toISOString().split('T')[0]}.xlsx`);
+
+    showToast('Rapport téléchargé', 'success');
+}
+
+// Afficher la banque de questions
+function showQuestionBank() {
+    showToast('Banque de questions en cours de développement', 'info');
+}
+
+// Exports
+window.exportAttendanceSession = exportAttendanceSession;
+window.loadAttendanceReport = loadAttendanceReport;
+window.exportAttendanceReport = exportAttendanceReport;
+window.showQuestionBank = showQuestionBank;
