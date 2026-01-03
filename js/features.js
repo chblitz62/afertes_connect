@@ -484,8 +484,8 @@ function saveEvaluation(asDraft = false) {
 
 // Sauvegarder comme brouillon
 function saveEvaluationDraft() {
-    const eval = saveEvaluation(true);
-    if (eval) {
+    const savedEval = saveEvaluation(true);
+    if (savedEval) {
         showToast('Brouillon enregistré', 'success');
         closeCreateEvaluation();
         loadTrainerEvaluations();
@@ -495,8 +495,8 @@ function saveEvaluationDraft() {
 // Publier l'évaluation
 document.getElementById('create-evaluation-form')?.addEventListener('submit', function(e) {
     e.preventDefault();
-    const eval = saveEvaluation(false);
-    if (eval) {
+    const savedEval = saveEvaluation(false);
+    if (savedEval) {
         showToast('Évaluation publiée !', 'success');
         closeCreateEvaluation();
         loadTrainerEvaluations();
@@ -505,8 +505,8 @@ document.getElementById('create-evaluation-form')?.addEventListener('submit', fu
         addNotification({
             type: 'eval',
             title: 'Nouvelle évaluation',
-            message: `${eval.title} disponible jusqu'au ${new Date(eval.endDate).toLocaleDateString('fr-FR')}`,
-            evalId: eval.id
+            message: `${savedEval.title} disponible jusqu'au ${new Date(savedEval.endDate).toLocaleDateString('fr-FR')}`,
+            evalId: savedEval.id
         });
     }
 });
@@ -846,7 +846,7 @@ function shuffleArray(array) {
 // ==========================================
 
 function loadTrainerDashboard() {
-    if (!currentUser || currentUser.role !== 'trainer') return;
+    if (!currentUser || currentUser.role !== 'teacher') return;
 
     loadTrainerStats();
     loadUpcomingCourses();
@@ -888,7 +888,7 @@ function loadUpcomingCourses() {
                 <h4>${c.title}</h4>
                 <p>${c.group} - ${c.room}</p>
             </div>
-            <button class="btn btn-sm btn-primary" onclick="navigateTo('attendance')">
+            <button class="btn btn-sm btn-primary" onclick="showPage('attendance')">
                 <i class="fas fa-user-check"></i>
             </button>
         </div>
@@ -1209,3 +1209,501 @@ window.markNotificationRead = markNotificationRead;
 window.markAllNotificationsRead = markAllNotificationsRead;
 window.toggleNotificationSettings = toggleNotificationSettings;
 window.filterNotifications = filterNotifications;
+
+// ==========================================
+// DOCUMENTS ÉTUDIANTS (Formateur/Secrétaire)
+// ==========================================
+
+// Charger la liste des documents étudiants
+function loadStudentsDocuments() {
+    const tbody = document.getElementById('students-documents-tbody');
+    if (!tbody) return;
+
+    const users = JSON.parse(localStorage.getItem('afertes_users') || '[]');
+    const students = users.filter(u => u.role === 'student');
+
+    let completeCount = 0;
+    let incompleteCount = 0;
+
+    tbody.innerHTML = students.map(student => {
+        // Vérifier les documents de l'étudiant
+        const docs = student.documents || {};
+        const hasIdentity = !!docs.identity;
+        const hasVitale = !!docs.vitale;
+        const hasPhoto = !!docs.photo;
+        const isComplete = hasIdentity && hasVitale && hasPhoto;
+
+        if (isComplete) completeCount++;
+        else incompleteCount++;
+
+        const docIcon = (has) => has
+            ? '<i class="fas fa-check-circle text-success"></i>'
+            : '<i class="fas fa-times-circle text-danger"></i>';
+
+        return `
+            <tr data-student-id="${student.id}" data-formation="${student.formation || ''}" data-complete="${isComplete}">
+                <td><strong>${student.lastname || '--'} ${student.firstname || '--'}</strong></td>
+                <td>${APP_CONFIG.formations[student.formation] || student.formation || '--'}</td>
+                <td class="text-center">${docIcon(hasIdentity)}</td>
+                <td class="text-center">${docIcon(hasVitale)}</td>
+                <td class="text-center">${docIcon(hasPhoto)}</td>
+                <td>
+                    <span class="badge ${isComplete ? 'badge-success' : 'badge-warning'}">
+                        ${isComplete ? 'Complet' : 'Incomplet'}
+                    </span>
+                </td>
+                <td>
+                    <button onclick="viewStudentDocsModal('${student.id}')" class="btn btn-sm btn-primary">
+                        <i class="fas fa-eye"></i> Voir
+                    </button>
+                    ${isComplete ? `
+                        <button onclick="downloadAllDocs('${student.id}')" class="btn btn-sm btn-secondary">
+                            <i class="fas fa-download"></i>
+                        </button>
+                    ` : ''}
+                </td>
+            </tr>
+        `;
+    }).join('');
+
+    // Mettre à jour les stats
+    document.getElementById('docs-total-students').textContent = students.length;
+    document.getElementById('docs-complete').textContent = completeCount;
+    document.getElementById('docs-incomplete').textContent = incompleteCount;
+    const percentage = students.length > 0 ? Math.round((completeCount / students.length) * 100) : 0;
+    document.getElementById('docs-percentage').textContent = percentage + '%';
+}
+
+// Filtrer les documents étudiants
+function filterStudentsDocuments() {
+    const formation = document.getElementById('docs-formation-filter').value;
+    const status = document.getElementById('docs-status-filter').value;
+    const search = document.getElementById('docs-search').value.toLowerCase();
+
+    const rows = document.querySelectorAll('#students-documents-tbody tr');
+
+    rows.forEach(row => {
+        const studentFormation = row.dataset.formation;
+        const isComplete = row.dataset.complete === 'true';
+        const studentName = row.querySelector('td:first-child').textContent.toLowerCase();
+
+        let show = true;
+
+        if (formation && studentFormation !== formation) show = false;
+        if (status === 'complete' && !isComplete) show = false;
+        if (status === 'incomplete' && isComplete) show = false;
+        if (search && !studentName.includes(search)) show = false;
+
+        row.style.display = show ? '' : 'none';
+    });
+}
+
+// Ouvrir le modal avec les documents d'un étudiant
+function viewStudentDocsModal(studentId) {
+    const users = JSON.parse(localStorage.getItem('afertes_users') || '[]');
+    const student = users.find(u => u.id === studentId || u.id === parseInt(studentId));
+
+    if (!student) {
+        showToast('Étudiant non trouvé', 'error');
+        return;
+    }
+
+    document.getElementById('modal-student-name').textContent = `${student.firstname} ${student.lastname}`;
+
+    const docs = student.documents || {};
+    const grid = document.getElementById('modal-docs-grid');
+
+    const docTypes = [
+        { key: 'identity', icon: 'fa-id-card', label: 'Pièce d\'identité' },
+        { key: 'vitale', icon: 'fa-heart', label: 'Carte Vitale' },
+        { key: 'photo', icon: 'fa-camera', label: 'Photo d\'identité' }
+    ];
+
+    grid.innerHTML = docTypes.map(type => {
+        const doc = docs[type.key];
+        return `
+            <div class="doc-card ${doc ? 'has-doc' : 'no-doc'}">
+                <div class="doc-icon">
+                    <i class="fas ${type.icon}"></i>
+                </div>
+                <h4>${type.label}</h4>
+                ${doc ? `
+                    <p class="doc-status success"><i class="fas fa-check"></i> Fourni</p>
+                    <div class="doc-preview">
+                        ${doc.startsWith('data:image')
+                            ? `<img src="${doc}" alt="${type.label}" onclick="openDocFullscreen('${doc}')">`
+                            : `<i class="fas fa-file-pdf"></i>`
+                        }
+                    </div>
+                    <div class="doc-actions">
+                        <button onclick="openDocFullscreen('${doc}')" class="btn btn-sm btn-primary">
+                            <i class="fas fa-expand"></i> Agrandir
+                        </button>
+                        <a href="${doc}" download="${student.lastname}_${type.key}" class="btn btn-sm btn-secondary">
+                            <i class="fas fa-download"></i> Télécharger
+                        </a>
+                    </div>
+                ` : `
+                    <p class="doc-status danger"><i class="fas fa-times"></i> Non fourni</p>
+                `}
+            </div>
+        `;
+    }).join('');
+
+    // Ajouter les informations personnelles
+    grid.innerHTML += `
+        <div class="doc-card student-info-card">
+            <div class="doc-icon">
+                <i class="fas fa-user"></i>
+            </div>
+            <h4>Informations personnelles</h4>
+            <ul class="info-list">
+                <li><strong>Email:</strong> ${student.email || '--'}</li>
+                <li><strong>Téléphone:</strong> ${student.phone || '--'}</li>
+                <li><strong>Date de naissance:</strong> ${student.birthDate || '--'}</li>
+                <li><strong>N° Sécu:</strong> ${student.socialSecurityNumber ? '•••••' + student.socialSecurityNumber.slice(-4) : '--'}</li>
+                <li><strong>Adresse:</strong> ${student.address || '--'}</li>
+                <li><strong>CP/Ville:</strong> ${student.postalCode || '--'} ${student.city || '--'}</li>
+            </ul>
+        </div>
+    `;
+
+    document.getElementById('view-student-docs-modal').classList.remove('hidden');
+}
+
+// Fermer le modal
+function closeStudentDocsModal() {
+    document.getElementById('view-student-docs-modal').classList.add('hidden');
+}
+
+// Ouvrir un document en plein écran
+function openDocFullscreen(docData) {
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay fullscreen-doc';
+    modal.onclick = () => modal.remove();
+    modal.innerHTML = `
+        <div class="fullscreen-content" onclick="event.stopPropagation()">
+            <button class="close-fullscreen" onclick="this.parentElement.parentElement.remove()">
+                <i class="fas fa-times"></i>
+            </button>
+            ${docData.startsWith('data:image')
+                ? `<img src="${docData}" alt="Document">`
+                : `<iframe src="${docData}"></iframe>`
+            }
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+// Exporter le rapport des documents
+function exportDocumentsReport() {
+    const users = JSON.parse(localStorage.getItem('afertes_users') || '[]');
+    const students = users.filter(u => u.role === 'student');
+
+    const data = students.map(s => {
+        const docs = s.documents || {};
+        return {
+            'Nom': s.lastname || '',
+            'Prénom': s.firstname || '',
+            'Email': s.email || '',
+            'Formation': APP_CONFIG.formations[s.formation] || s.formation || '',
+            'Pièce d\'identité': docs.identity ? 'Oui' : 'Non',
+            'Carte Vitale': docs.vitale ? 'Oui' : 'Non',
+            'Photo': docs.photo ? 'Oui' : 'Non',
+            'Dossier complet': (docs.identity && docs.vitale && docs.photo) ? 'Oui' : 'Non'
+        };
+    });
+
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Documents étudiants');
+    XLSX.writeFile(wb, `documents_etudiants_${new Date().toISOString().split('T')[0]}.xlsx`);
+
+    showToast('Export Excel téléchargé', 'success');
+}
+
+// ==========================================
+// FONCTIONS UTILITAIRES MANQUANTES
+// ==========================================
+
+// Déplacer une question dans le formulaire de création d'évaluation
+function moveQuestion(btn, direction) {
+    const card = btn.closest('.question-card');
+    const container = document.getElementById('questions-container');
+    const cards = Array.from(container.querySelectorAll('.question-card'));
+    const currentIndex = cards.indexOf(card);
+    const newIndex = currentIndex + direction;
+
+    if (newIndex < 0 || newIndex >= cards.length) return;
+
+    if (direction === -1 && currentIndex > 0) {
+        container.insertBefore(card, cards[currentIndex - 1]);
+    } else if (direction === 1 && currentIndex < cards.length - 1) {
+        container.insertBefore(cards[currentIndex + 1], card);
+    }
+
+    renumberQuestions();
+}
+
+// Voir les résultats d'une évaluation (étudiant)
+function viewEvalResults(evalId) {
+    const evaluations = JSON.parse(localStorage.getItem('afertes_evaluations') || '[]');
+    const evaluation = evaluations.find(e => e.id === evalId);
+
+    if (!evaluation) {
+        showToast('Évaluation non trouvée', 'error');
+        return;
+    }
+
+    const submission = evaluation.submissions?.find(s => s.studentId === currentUser.id);
+    if (!submission) {
+        showToast('Aucun résultat trouvé', 'error');
+        return;
+    }
+
+    // Créer un modal pour afficher les résultats
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.id = 'eval-results-modal';
+    modal.innerHTML = `
+        <div class="modal">
+            <div class="modal-header">
+                <h2><i class="fas fa-chart-bar"></i> Résultats - ${escapeHtml(evaluation.title)}</h2>
+                <button onclick="this.closest('.modal-overlay').remove()" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="eval-result-summary">
+                    <div class="result-score">
+                        <span class="score-value">${submission.score}</span>
+                        <span class="score-max">/ ${submission.maxScore}</span>
+                    </div>
+                    <p class="result-percentage">${Math.round((submission.score / submission.maxScore) * 100)}%</p>
+                    <p class="result-date">Soumis le ${new Date(submission.submittedAt).toLocaleDateString('fr-FR')}</p>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+// Voir les soumissions d'une évaluation (formateur)
+function viewEvalSubmissions(evalId) {
+    const evaluations = JSON.parse(localStorage.getItem('afertes_evaluations') || '[]');
+    const evaluation = evaluations.find(e => e.id === evalId);
+
+    if (!evaluation) {
+        showToast('Évaluation non trouvée', 'error');
+        return;
+    }
+
+    const submissions = evaluation.submissions || [];
+
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.id = 'eval-submissions-modal';
+    modal.innerHTML = `
+        <div class="modal modal-large">
+            <div class="modal-header">
+                <h2><i class="fas fa-list"></i> Soumissions - ${escapeHtml(evaluation.title)}</h2>
+                <button onclick="this.closest('.modal-overlay').remove()" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                ${submissions.length === 0 ? '<p class="empty-message">Aucune soumission</p>' : `
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Étudiant</th>
+                                <th>Score</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${submissions.map(s => `
+                                <tr>
+                                    <td>${escapeHtml(s.studentName)}</td>
+                                    <td><strong>${s.score}/${s.maxScore}</strong> (${Math.round((s.score / s.maxScore) * 100)}%)</td>
+                                    <td>${new Date(s.submittedAt).toLocaleDateString('fr-FR')}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `}
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+// Modifier une évaluation
+function editEvaluation(evalId) {
+    const evaluations = JSON.parse(localStorage.getItem('afertes_evaluations') || '[]');
+    const evaluation = evaluations.find(e => e.id === evalId);
+
+    if (!evaluation) {
+        showToast('Évaluation non trouvée', 'error');
+        return;
+    }
+
+    // Pour l'instant, afficher un message - implémentation complète à venir
+    showToast('Fonctionnalité de modification en cours de développement', 'info');
+}
+
+// Supprimer une évaluation
+function deleteEvaluation(evalId) {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer cette évaluation ?')) return;
+
+    const evaluations = JSON.parse(localStorage.getItem('afertes_evaluations') || '[]');
+    const idx = evaluations.findIndex(e => e.id === evalId);
+
+    if (idx !== -1) {
+        evaluations.splice(idx, 1);
+        localStorage.setItem('afertes_evaluations', JSON.stringify(evaluations));
+        showToast('Évaluation supprimée', 'success');
+        loadTrainerEvaluations();
+    }
+}
+
+// Voir un groupe d'étudiants
+function viewGroup(code, promo) {
+    showPage('manage-students');
+    setTimeout(() => {
+        const formationFilter = document.getElementById('admin-student-formation');
+        if (formationFilter) {
+            formationFilter.value = code.toLowerCase();
+            formationFilter.dispatchEvent(new Event('change'));
+        }
+    }, 100);
+}
+
+// Télécharger tous les documents d'un étudiant
+function downloadAllDocs(studentId) {
+    const users = JSON.parse(localStorage.getItem('afertes_users') || '[]');
+    const student = users.find(u => u.id === studentId || u.id === parseInt(studentId));
+
+    if (!student || !student.documents) {
+        showToast('Aucun document à télécharger', 'error');
+        return;
+    }
+
+    // Télécharger chaque document
+    const docs = student.documents;
+    const docTypes = ['identity', 'vitale', 'photo'];
+
+    docTypes.forEach(type => {
+        if (docs[type]) {
+            const link = document.createElement('a');
+            link.href = docs[type];
+            link.download = `${student.lastname}_${student.firstname}_${type}`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    });
+
+    showToast('Téléchargement des documents en cours...', 'success');
+}
+
+// Fonction utilitaire pour échapper le HTML (protection XSS)
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// ==========================================
+// FONCTIONS D'ACCESSIBILITÉ
+// ==========================================
+
+// Mettre à jour l'état aria-expanded des boutons toggle
+function updateAriaExpanded(buttonSelector, isExpanded) {
+    const button = document.querySelector(buttonSelector);
+    if (button) {
+        button.setAttribute('aria-expanded', isExpanded.toString());
+    }
+}
+
+// Gérer le focus trap dans les modals
+function trapFocus(modalElement) {
+    const focusableElements = modalElement.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    const firstFocusable = focusableElements[0];
+    const lastFocusable = focusableElements[focusableElements.length - 1];
+
+    modalElement.addEventListener('keydown', function(e) {
+        if (e.key === 'Tab') {
+            if (e.shiftKey) {
+                if (document.activeElement === firstFocusable) {
+                    lastFocusable.focus();
+                    e.preventDefault();
+                }
+            } else {
+                if (document.activeElement === lastFocusable) {
+                    firstFocusable.focus();
+                    e.preventDefault();
+                }
+            }
+        }
+
+        // Fermer avec Échap
+        if (e.key === 'Escape') {
+            const closeBtn = modalElement.querySelector('.close-btn');
+            if (closeBtn) closeBtn.click();
+        }
+    });
+
+    // Focus sur le premier élément focusable
+    if (firstFocusable) {
+        setTimeout(() => firstFocusable.focus(), 100);
+    }
+}
+
+// Annoncer un message aux lecteurs d'écran
+function announceToScreenReader(message, priority = 'polite') {
+    let announcer = document.getElementById('sr-announcer');
+    if (!announcer) {
+        announcer = document.createElement('div');
+        announcer.id = 'sr-announcer';
+        announcer.setAttribute('aria-live', priority);
+        announcer.setAttribute('aria-atomic', 'true');
+        announcer.className = 'sr-only';
+        document.body.appendChild(announcer);
+    }
+
+    announcer.textContent = '';
+    setTimeout(() => {
+        announcer.textContent = message;
+    }, 100);
+}
+
+// Mettre à jour aria-current pour la navigation
+function updateNavAriaCurrentPage(pageName) {
+    document.querySelectorAll('.nav-item').forEach(item => {
+        if (item.dataset.page === pageName) {
+            item.setAttribute('aria-current', 'page');
+        } else {
+            item.removeAttribute('aria-current');
+        }
+    });
+}
+
+// Exporter les fonctions globalement
+window.loadStudentsDocuments = loadStudentsDocuments;
+window.filterStudentsDocuments = filterStudentsDocuments;
+window.viewStudentDocsModal = viewStudentDocsModal;
+window.closeStudentDocsModal = closeStudentDocsModal;
+window.openDocFullscreen = openDocFullscreen;
+window.exportDocumentsReport = exportDocumentsReport;
+window.moveQuestion = moveQuestion;
+window.viewEvalResults = viewEvalResults;
+window.viewEvalSubmissions = viewEvalSubmissions;
+window.editEvaluation = editEvaluation;
+window.deleteEvaluation = deleteEvaluation;
+window.viewGroup = viewGroup;
+window.downloadAllDocs = downloadAllDocs;
+window.escapeHtml = escapeHtml;
+window.updateAriaExpanded = updateAriaExpanded;
+window.trapFocus = trapFocus;
+window.announceToScreenReader = announceToScreenReader;
+window.updateNavAriaCurrentPage = updateNavAriaCurrentPage;

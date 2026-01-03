@@ -243,26 +243,29 @@
 
     <!-- Application principale -->
     <div id="app" class="app hidden">
+        <!-- Lien d'accessibilité pour sauter au contenu -->
+        <a href="#main-content" class="skip-link">Aller au contenu principal</a>
+
         <!-- Header -->
-        <header class="app-header">
+        <header class="app-header" role="banner">
             <div class="header-left">
-                <button class="menu-toggle" onclick="toggleSidebar()">
-                    <i class="fas fa-bars"></i>
+                <button class="menu-toggle" onclick="toggleSidebar()" aria-label="Ouvrir le menu de navigation" aria-expanded="false" aria-controls="sidebar">
+                    <i class="fas fa-bars" aria-hidden="true"></i>
                 </button>
-                <img src="img/logo-afertes.png" alt="AFERTES" class="header-logo">
+                <img src="img/logo-afertes.png" alt="Logo AFERTES" class="header-logo">
                 <span class="header-title">AFERTES Connect</span>
             </div>
             <div class="header-right">
-                <span class="site-badge" id="current-site">Saint-Laurent-Blangy</span>
-                <button class="notification-btn" onclick="toggleNotifications()">
-                    <i class="fas fa-bell"></i>
-                    <span class="notification-badge" id="notif-count">3</span>
+                <span class="site-badge" id="current-site" aria-label="Site actuel">Saint-Laurent-Blangy</span>
+                <button class="notification-btn" onclick="toggleNotifications()" aria-label="Notifications" aria-expanded="false" aria-controls="notifications-panel">
+                    <i class="fas fa-bell" aria-hidden="true"></i>
+                    <span class="notification-badge" id="notif-count" aria-label="3 notifications non lues">3</span>
                 </button>
-                <div class="user-menu" onclick="toggleUserMenu()">
-                    <img src="img/default-avatar.svg" alt="Avatar" class="user-avatar" id="header-avatar">
+                <button class="user-menu" onclick="toggleUserMenu()" aria-label="Menu utilisateur" aria-expanded="false" aria-haspopup="true">
+                    <img src="img/default-avatar.svg" alt="" class="user-avatar" id="header-avatar">
                     <span class="user-name" id="header-username">Utilisateur</span>
-                    <i class="fas fa-chevron-down"></i>
-                </div>
+                    <i class="fas fa-chevron-down" aria-hidden="true"></i>
+                </button>
             </div>
         </header>
 
@@ -292,20 +295,20 @@
         </div>
 
         <!-- Sidebar -->
-        <nav class="sidebar" id="sidebar">
+        <nav class="sidebar" id="sidebar" aria-label="Navigation principale">
             <div class="sidebar-content">
-                <div class="nav-section">
-                    <span class="nav-section-title">Principal</span>
-                    <a href="#" class="nav-item active" data-page="dashboard" onclick="showPage('dashboard')">
-                        <i class="fas fa-home"></i>
+                <div class="nav-section" role="group" aria-labelledby="nav-principal">
+                    <span class="nav-section-title" id="nav-principal">Principal</span>
+                    <a href="#" class="nav-item active" data-page="dashboard" onclick="showPage('dashboard')" aria-current="page">
+                        <i class="fas fa-home" aria-hidden="true"></i>
                         <span>Accueil</span>
                     </a>
                     <a href="#" class="nav-item" data-page="news" onclick="showPage('news')">
-                        <i class="fas fa-newspaper"></i>
+                        <i class="fas fa-newspaper" aria-hidden="true"></i>
                         <span>Actualités</span>
                     </a>
                     <a href="#" class="nav-item" data-page="bde" onclick="showPage('bde')">
-                        <i class="fas fa-calendar-alt"></i>
+                        <i class="fas fa-calendar-alt" aria-hidden="true"></i>
                         <span>BDE Info</span>
                     </a>
                 </div>
@@ -354,7 +357,7 @@
                         <span>Notifications</span>
                         <span class="notification-badge hidden" id="nav-notif-badge">0</span>
                     </a>
-                    <a href="#" class="nav-item" data-page="my-documents" onclick="showPage('my-documents')">
+                    <a href="#" class="nav-item student-only" data-page="my-documents" onclick="showPage('my-documents')">
                         <i class="fas fa-folder-open"></i>
                         <span>Mes documents</span>
                     </a>
@@ -387,6 +390,10 @@
                         <i class="fas fa-user-graduate"></i>
                         <span>Étudiants</span>
                     </a>
+                    <a href="#" class="nav-item" data-page="students-documents" onclick="showPage('students-documents')">
+                        <i class="fas fa-folder-open"></i>
+                        <span>Documents étudiants</span>
+                    </a>
                     <a href="#" class="nav-item" data-page="manage-grades" onclick="showPage('manage-grades')">
                         <i class="fas fa-clipboard-check"></i>
                         <span>Saisie des notes</span>
@@ -411,6 +418,10 @@
                     <a href="#" class="nav-item" data-page="admin-students" onclick="showPage('admin-students')">
                         <i class="fas fa-users-cog"></i>
                         <span>Gestion étudiants</span>
+                    </a>
+                    <a href="#" class="nav-item" data-page="students-documents" onclick="showPage('students-documents')">
+                        <i class="fas fa-folder-open"></i>
+                        <span>Documents étudiants</span>
                     </a>
                     <a href="#" class="nav-item" data-page="admin-schedules" onclick="showPage('admin-schedules')">
                         <i class="fas fa-calendar-alt"></i>
@@ -1376,6 +1387,87 @@
                 </div>
             </section>
 
+            <!-- Page Documents Étudiants (Formateur/Secrétaire) -->
+            <section id="page-students-documents" class="page-content">
+                <div class="page-header">
+                    <h1><i class="fas fa-folder-open"></i> Documents étudiants</h1>
+                    <p>Consulter les documents fournis par les étudiants</p>
+                </div>
+                <div class="admin-toolbar">
+                    <div class="admin-filters">
+                        <select id="docs-formation-filter" onchange="filterStudentsDocuments()">
+                            <option value="">Toutes les formations</option>
+                            <option value="es">ES - Éducateur Spécialisé</option>
+                            <option value="me">ME - Moniteur Éducateur</option>
+                            <option value="aes">AES</option>
+                            <option value="caferuis">CAFERUIS</option>
+                        </select>
+                        <select id="docs-status-filter" onchange="filterStudentsDocuments()">
+                            <option value="">Tous les dossiers</option>
+                            <option value="complete">Dossiers complets</option>
+                            <option value="incomplete">Dossiers incomplets</option>
+                        </select>
+                        <input type="text" id="docs-search" placeholder="Rechercher un étudiant..." oninput="filterStudentsDocuments()">
+                    </div>
+                    <div class="admin-actions">
+                        <button class="btn btn-secondary" onclick="exportDocumentsReport()">
+                            <i class="fas fa-file-excel"></i> Export Excel
+                        </button>
+                    </div>
+                </div>
+                <div class="documents-stats">
+                    <div class="stat-card">
+                        <span class="stat-value" id="docs-total-students">--</span>
+                        <span class="stat-label">Étudiants</span>
+                    </div>
+                    <div class="stat-card success">
+                        <span class="stat-value" id="docs-complete">--</span>
+                        <span class="stat-label">Dossiers complets</span>
+                    </div>
+                    <div class="stat-card warning">
+                        <span class="stat-value" id="docs-incomplete">--</span>
+                        <span class="stat-label">Dossiers incomplets</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-value" id="docs-percentage">--%</span>
+                        <span class="stat-label">Taux de complétion</span>
+                    </div>
+                </div>
+                <div class="admin-table-container">
+                    <table class="admin-table" id="students-documents-table">
+                        <thead>
+                            <tr>
+                                <th>Étudiant</th>
+                                <th>Formation</th>
+                                <th>Pièce d'identité</th>
+                                <th>Carte Vitale</th>
+                                <th>Photo</th>
+                                <th>Statut</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="students-documents-tbody">
+                            <!-- Liste générée dynamiquement -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Modal visualisation documents étudiant -->
+            <div id="view-student-docs-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="modal-student-docs-title">
+                <div class="modal modal-large" role="document">
+                    <div class="modal-header">
+                        <h2 id="modal-student-docs-title"><i class="fas fa-folder-open" aria-hidden="true"></i> Documents de <span id="modal-student-name">--</span></h2>
+                        <button onclick="closeStudentDocsModal()" class="close-btn" aria-label="Fermer la fenêtre">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="student-docs-grid" id="modal-docs-grid">
+                            <!-- Documents affichés dynamiquement -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Page Gestion Emplois du temps (Secrétaire) -->
             <section id="page-admin-schedules" class="page-content">
                 <div class="page-header">
@@ -2099,11 +2191,11 @@
     </div>
 
     <!-- Modal création évaluation -->
-    <div id="create-evaluation-modal" class="modal-overlay hidden">
-        <div class="modal modal-large">
+    <div id="create-evaluation-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="create-eval-title">
+        <div class="modal modal-large" role="document">
             <div class="modal-header">
-                <h2><i class="fas fa-file-alt"></i> Créer une évaluation</h2>
-                <button onclick="closeCreateEvaluation()" class="close-btn">&times;</button>
+                <h2 id="create-eval-title"><i class="fas fa-file-alt" aria-hidden="true"></i> Créer une évaluation</h2>
+                <button onclick="closeCreateEvaluation()" class="close-btn" aria-label="Fermer la fenêtre">&times;</button>
             </div>
             <div class="modal-body">
                 <form id="create-evaluation-form">
@@ -2194,15 +2286,15 @@
     </div>
 
     <!-- Modal passation évaluation -->
-    <div id="take-evaluation-modal" class="modal-overlay hidden">
-        <div class="modal modal-fullscreen">
+    <div id="take-evaluation-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="eval-taking-title">
+        <div class="modal modal-fullscreen" role="document">
             <div class="eval-taking-header">
                 <div class="eval-info">
                     <h2 id="eval-taking-title">--</h2>
-                    <span id="eval-taking-progress">Question 1/10</span>
+                    <span id="eval-taking-progress" aria-live="polite">Question 1/10</span>
                 </div>
-                <div class="eval-timer">
-                    <i class="fas fa-clock"></i>
+                <div class="eval-timer" aria-live="polite" aria-atomic="true">
+                    <i class="fas fa-clock" aria-hidden="true"></i>
                     <span id="eval-timer-display">--:--</span>
                 </div>
                 <div class="eval-progress-bar">
@@ -2213,28 +2305,28 @@
                 <!-- Question affichée dynamiquement -->
             </div>
             <div class="eval-taking-footer">
-                <button onclick="prevEvalQuestion()" class="btn btn-secondary" id="btn-prev-question">
-                    <i class="fas fa-arrow-left"></i> Précédent
+                <button onclick="prevEvalQuestion()" class="btn btn-secondary" id="btn-prev-question" aria-label="Question précédente">
+                    <i class="fas fa-arrow-left" aria-hidden="true"></i> Précédent
                 </button>
-                <div class="question-nav" id="question-nav-dots">
+                <nav class="question-nav" id="question-nav-dots" aria-label="Navigation des questions">
                     <!-- Points de navigation -->
-                </div>
-                <button onclick="nextEvalQuestion()" class="btn btn-primary" id="btn-next-question">
-                    Suivant <i class="fas fa-arrow-right"></i>
+                </nav>
+                <button onclick="nextEvalQuestion()" class="btn btn-primary" id="btn-next-question" aria-label="Question suivante">
+                    Suivant <i class="fas fa-arrow-right" aria-hidden="true"></i>
                 </button>
-                <button onclick="submitEvaluation()" class="btn btn-success hidden" id="btn-submit-eval">
-                    <i class="fas fa-paper-plane"></i> Soumettre
+                <button onclick="submitEvaluation()" class="btn btn-success hidden" id="btn-submit-eval" aria-label="Soumettre l'évaluation">
+                    <i class="fas fa-paper-plane" aria-hidden="true"></i> Soumettre
                 </button>
             </div>
         </div>
     </div>
 
     <!-- Modal saisie rapide notes -->
-    <div id="quick-grade-modal" class="modal-overlay hidden">
-        <div class="modal modal-large">
+    <div id="quick-grade-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="quick-grade-title">
+        <div class="modal modal-large" role="document">
             <div class="modal-header">
-                <h2><i class="fas fa-edit"></i> Saisie des notes</h2>
-                <button onclick="closeQuickGradeModal()" class="close-btn">&times;</button>
+                <h2 id="quick-grade-title"><i class="fas fa-edit" aria-hidden="true"></i> Saisie des notes</h2>
+                <button onclick="closeQuickGradeModal()" class="close-btn" aria-label="Fermer la fenêtre">&times;</button>
             </div>
             <div class="modal-body">
                 <div class="quick-grade-header">
@@ -2265,12 +2357,12 @@
     </div>
 
     <!-- Modal première connexion étudiant -->
-    <div id="first-login-modal" class="modal-overlay hidden">
-        <div class="modal modal-large">
+    <div id="first-login-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="first-login-title">
+        <div class="modal modal-large" role="document">
             <div class="modal-content">
                 <div class="first-login-header">
-                    <img src="img/logo-afertes.png" alt="AFERTES" class="first-login-logo">
-                    <h2>Bienvenue sur AFERTES Connect !</h2>
+                    <img src="img/logo-afertes.png" alt="Logo AFERTES" class="first-login-logo">
+                    <h2 id="first-login-title">Bienvenue sur AFERTES Connect !</h2>
                     <p class="first-login-subtitle">Complétez votre profil pour accéder à l'application</p>
                 </div>
 

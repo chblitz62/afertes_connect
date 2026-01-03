@@ -925,6 +925,17 @@ function showApp() {
     } else if (currentUser.role === 'bde') {
         document.getElementById('bde-section').classList.remove('hidden');
     }
+
+    // Cacher les éléments réservés aux étudiants pour formateurs/secrétaires
+    if (currentUser.role === 'teacher' || currentUser.role === 'secretary') {
+        document.querySelectorAll('.student-only').forEach(el => {
+            el.classList.add('hidden');
+        });
+    } else {
+        document.querySelectorAll('.student-only').forEach(el => {
+            el.classList.remove('hidden');
+        });
+    }
 }
 
 function showPage(pageName) {
@@ -1014,6 +1025,9 @@ function showPage(pageName) {
         case 'manage-promos':
             initPromosData();
             loadPromosList();
+            break;
+        case 'students-documents':
+            loadStudentsDocuments();
             break;
     }
 
