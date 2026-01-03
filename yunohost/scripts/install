@@ -1,0 +1,70 @@
+#!/bin/bash
+# Script d'installation pour YunoHost
+
+source /usr/share/yunohost/helpers
+source _common.sh
+
+# Paramètres
+app=$YNH_APP_INSTANCE_NAME
+domain=$YNH_APP_ARG_DOMAIN
+path_url=$YNH_APP_ARG_PATH
+admin=$YNH_APP_ARG_ADMIN
+
+# Répertoires
+final_path="/var/www/$app"
+data_path="/home/yunohost.app/$app"
+
+# Vérifications
+ynh_abort_if_errors
+
+# Installation des dépendances Node.js
+ynh_install_nodejs --nodejs_version=20
+
+# Création du répertoire d'installation
+ynh_app_setting_set --app=$app --key=final_path --value=$final_path
+mkdir -p $final_path
+
+# Copie des fichiers
+cp -r ../sources/. $final_path
+
+# Installation des dépendances npm
+pushd $final_path/server
+    ynh_use_nodejs
+    ynh_exec_as $app $ynh_node_load_PATH npm install --production
+popd
+
+# Configuration de la base de données PostgreSQL
+db_name=$(ynh_sanitize_dbid --db_name=$app)
+db_user=$db_name
+db_pwd=$(ynh_string_random --length=30)
+ynh_app_setting_set --app=$app --key=db_name --value=$db_name
+ynh_app_setting_set --app=$app --key=db_pwd --value=$db_pwd
+ynh_psql_test_if_first_run
+ynh_psql_setup_db --db_user=$db_user --db_name=$db_name --db_pwd=$db_pwd
+
+# Initialisation de la base de données
+psql -U $db_user -d $db_name < $final_path/server/database/schema.sql
+
+# Configuration de l'application
+jwt_secret=$(ynh_string_random --length=64)
+ynh_add_config --template="../conf/.env" --destination="$final_path/server/.env"
+
+# Création du répertoire de données (uploads)
+mkdir -p $data_path/uploads
+chown -R $app:www-data $data_path
+chmod -R 750 $data_path
+
+# Configuration du service systemd
+ynh_add_systemd_config
+
+# Configuration nginx
+ynh_add_nginx_config
+
+# Démarrage du service
+yunohost service add $app --description="AFERTES Connect" --log="/var/log/$app/$app.log"
+ynh_systemd_action --service_name=$app --action="start" --log_path="/var/log/$app/$app.log"
+
+# Permissions
+ynh_permission_update --permission="main" --add="visitors"
+
+ynh_script_progression --message="Installation terminée" --last

@@ -1,0 +1,66 @@
+# AFERTES Connect - Configuration YunoHost
+# Ce fichier permet l'installation automatique sur YunoHost
+
+packaging_format = 2
+
+id = "afertes-connect"
+name = "AFERTES Connect"
+description.en = "Student management platform for AFERTES training center"
+description.fr = "Plateforme de gestion des étudiants pour le centre de formation AFERTES"
+
+version = "1.0.0~ynh1"
+
+maintainers = ["AFERTES"]
+
+[upstream]
+license = "MIT"
+code = "https://github.com/votre-repo/afertes-app"
+
+[integration]
+yunohost = ">= 11.0"
+architectures = "all"
+multi_instance = false
+ldap = false
+sso = false
+disk = "200M"
+ram.build = "200M"
+ram.runtime = "100M"
+
+[install]
+    [install.domain]
+    type = "domain"
+
+    [install.path]
+    type = "path"
+    default = "/afertes"
+
+    [install.admin]
+    type = "user"
+
+    [install.init_main_permission]
+    type = "group"
+    default = "visitors"
+
+[resources]
+    [resources.sources.main]
+    url = "https://github.com/votre-repo/afertes-app/archive/main.tar.gz"
+    sha256 = "TO_BE_FILLED"
+
+    [resources.system_user]
+
+    [resources.install_dir]
+
+    [resources.data_dir]
+    subdirs = ["uploads"]
+
+    [resources.permissions]
+    main.url = "/"
+
+    [resources.ports]
+    main.default = 3000
+
+    [resources.apt]
+    packages = ["nodejs", "npm", "postgresql"]
+
+    [resources.database]
+    type = "postgresql"
