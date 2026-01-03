@@ -49,7 +49,7 @@ python3 -m http.server 8000
 python3 -m http.server 8000
 
 # Ou avec Node.js
-npx http-server -p 8000
+npx http-server -p 8000’’’
 
 
 ### 💡 Inspirations

@@ -10,6 +10,7 @@
     <link rel="icon" type="image/x-icon" href="favicon.ico">
     <link rel="apple-touch-icon" href="img/icons/icon-192x192.png">
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/features.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 <body>
@@ -340,6 +341,19 @@
                         <i class="fas fa-graduation-cap"></i>
                         <span>Notes</span>
                     </a>
+                    <a href="#" class="nav-item" data-page="attendance" onclick="showPage('attendance')">
+                        <i class="fas fa-user-check"></i>
+                        <span>Émargement</span>
+                    </a>
+                    <a href="#" class="nav-item" data-page="evaluations" onclick="showPage('evaluations')">
+                        <i class="fas fa-tasks"></i>
+                        <span>Évaluations</span>
+                    </a>
+                    <a href="#" class="nav-item" data-page="notifications" onclick="showPage('notifications')">
+                        <i class="fas fa-bell"></i>
+                        <span>Notifications</span>
+                        <span class="notification-badge hidden" id="nav-notif-badge">0</span>
+                    </a>
                     <a href="#" class="nav-item" data-page="my-documents" onclick="showPage('my-documents')">
                         <i class="fas fa-folder-open"></i>
                         <span>Mes documents</span>
@@ -361,6 +375,10 @@
                 <!-- Section formateur (conditionnelle) -->
                 <div class="nav-section formateur-only hidden" id="formateur-section">
                     <span class="nav-section-title">Formateur</span>
+                    <a href="#" class="nav-item" data-page="trainer-dashboard" onclick="showPage('trainer-dashboard')">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <span>Tableau de bord</span>
+                    </a>
                     <a href="#" class="nav-item" data-page="manage-promos" onclick="showPage('manage-promos')">
                         <i class="fas fa-users-class"></i>
                         <span>Promotions</span>
@@ -1674,7 +1692,576 @@
                     </div>
                 </div>
             </section>
+
+            <!-- ========== NOUVELLES FONCTIONNALITÉS ========== -->
+
+            <!-- Page Émargement / Signature électronique -->
+            <section id="page-attendance" class="page-content">
+                <div class="page-header">
+                    <h1><i class="fas fa-user-check"></i> Émargement</h1>
+                    <p>Signez votre présence aux cours</p>
+                </div>
+                <div class="attendance-container">
+                    <!-- Vue étudiant : signer -->
+                    <div class="attendance-sign-section student-only" id="attendance-student">
+                        <div class="current-session-card" id="current-session">
+                            <div class="no-session">
+                                <i class="fas fa-clock"></i>
+                                <h3>Aucun cours en ce moment</h3>
+                                <p>L'émargement sera disponible pendant vos heures de cours</p>
+                            </div>
+                        </div>
+                        <div class="sign-form hidden" id="sign-attendance-form">
+                            <h3><i class="fas fa-signature"></i> Signer ma présence</h3>
+                            <p class="current-course-name" id="current-course-name">--</p>
+                            <div class="sign-method-tabs">
+                                <button class="sign-tab active" data-method="code">Code PIN</button>
+                                <button class="sign-tab" data-method="qr">Scanner QR</button>
+                            </div>
+                            <div class="sign-code-input" id="sign-code-section">
+                                <input type="text" id="sign-pin-input" maxlength="4" placeholder="----" pattern="[0-9]{4}">
+                                <button onclick="submitAttendanceCode()" class="btn btn-primary btn-large">
+                                    <i class="fas fa-check"></i> Valider ma présence
+                                </button>
+                            </div>
+                            <div class="sign-qr-input hidden" id="sign-qr-section">
+                                <div id="qr-reader"></div>
+                                <p>Scannez le QR code affiché par votre formateur</p>
+                            </div>
+                        </div>
+                        <div class="attendance-history">
+                            <h3><i class="fas fa-history"></i> Mon historique de présence</h3>
+                            <div class="attendance-stats">
+                                <div class="stat-card">
+                                    <span class="stat-value" id="attendance-rate">--%</span>
+                                    <span class="stat-label">Taux de présence</span>
+                                </div>
+                                <div class="stat-card">
+                                    <span class="stat-value" id="attended-hours">--h</span>
+                                    <span class="stat-label">Heures suivies</span>
+                                </div>
+                                <div class="stat-card warning">
+                                    <span class="stat-value" id="missed-hours">--h</span>
+                                    <span class="stat-label">Heures manquées</span>
+                                </div>
+                            </div>
+                            <div class="attendance-list" id="attendance-history-list">
+                                <!-- Historique généré dynamiquement -->
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Vue formateur : lancer et voir les signatures -->
+                    <div class="attendance-manage-section formateur-only" id="attendance-trainer">
+                        <div class="start-attendance-card">
+                            <h3><i class="fas fa-play-circle"></i> Lancer un émargement</h3>
+                            <form id="start-attendance-form">
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="att-formation">Formation</label>
+                                        <select id="att-formation" required>
+                                            <option value="">Sélectionner</option>
+                                            <option value="es">ES - Éducateur Spécialisé</option>
+                                            <option value="me">ME - Moniteur Éducateur</option>
+                                            <option value="aes">AES</option>
+                                            <option value="caferuis">CAFERUIS</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="att-promo">Promotion</label>
+                                        <select id="att-promo" required>
+                                            <option value="">Sélectionner</option>
+                                            <option value="2023">2023-2026</option>
+                                            <option value="2024">2024-2027</option>
+                                            <option value="2025">2025-2028</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="att-course-name">Nom du cours</label>
+                                    <input type="text" id="att-course-name" placeholder="Ex: Psychologie du développement" required>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="att-duration">Durée de validité</label>
+                                        <select id="att-duration">
+                                            <option value="15">15 minutes</option>
+                                            <option value="30" selected>30 minutes</option>
+                                            <option value="60">1 heure</option>
+                                            <option value="120">Toute la séance</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="att-method">Méthode</label>
+                                        <select id="att-method">
+                                            <option value="code">Code PIN</option>
+                                            <option value="qr">QR Code</option>
+                                            <option value="both">Les deux</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-primary btn-large">
+                                    <i class="fas fa-play"></i> Démarrer l'émargement
+                                </button>
+                            </form>
+                        </div>
+                        <div class="active-attendance-card hidden" id="active-attendance">
+                            <div class="attendance-code-display">
+                                <h3>Émargement en cours</h3>
+                                <div class="code-display-row">
+                                    <div class="pin-display">
+                                        <span class="label">Code PIN</span>
+                                        <div class="pin-code" id="attendance-pin">----</div>
+                                    </div>
+                                    <div class="qr-display" id="qr-display">
+                                        <span class="label">QR Code</span>
+                                        <canvas id="qr-canvas" width="150" height="150"></canvas>
+                                    </div>
+                                </div>
+                                <div class="attendance-timer">
+                                    <i class="fas fa-hourglass-half"></i>
+                                    Temps restant: <span id="attendance-remaining">30:00</span>
+                                </div>
+                                <p class="attendance-course-info" id="attendance-course-info">--</p>
+                            </div>
+                            <div class="attendance-live-list">
+                                <h4><i class="fas fa-users"></i> Signatures reçues</h4>
+                                <div class="signatures-count">
+                                    <span id="signed-count">0</span> / <span id="total-students">0</span> étudiants présents
+                                </div>
+                                <ul class="signatures-list" id="live-signatures">
+                                    <!-- Liste mise à jour en temps réel -->
+                                </ul>
+                            </div>
+                            <div class="attendance-actions">
+                                <button onclick="stopAttendance()" class="btn btn-danger">
+                                    <i class="fas fa-stop"></i> Terminer
+                                </button>
+                                <button onclick="exportAttendanceSession()" class="btn btn-secondary">
+                                    <i class="fas fa-file-export"></i> Exporter
+                                </button>
+                            </div>
+                        </div>
+                        <div class="attendance-reports">
+                            <h3><i class="fas fa-chart-bar"></i> Historique des émargements</h3>
+                            <div class="report-filters">
+                                <select id="report-formation">
+                                    <option value="">Toutes formations</option>
+                                    <option value="es">ES</option>
+                                    <option value="me">ME</option>
+                                    <option value="aes">AES</option>
+                                </select>
+                                <input type="date" id="report-date-from" placeholder="Du">
+                                <input type="date" id="report-date-to" placeholder="Au">
+                                <button onclick="loadAttendanceReport()" class="btn btn-secondary">
+                                    <i class="fas fa-search"></i> Filtrer
+                                </button>
+                                <button onclick="exportAttendanceReport()" class="btn btn-secondary">
+                                    <i class="fas fa-file-excel"></i> Excel
+                                </button>
+                            </div>
+                            <div class="attendance-report-table" id="attendance-report">
+                                <!-- Tableau généré dynamiquement -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Page Évaluations en ligne -->
+            <section id="page-evaluations" class="page-content">
+                <div class="page-header">
+                    <h1><i class="fas fa-tasks"></i> Évaluations</h1>
+                    <p>QCM et questionnaires en ligne</p>
+                </div>
+                <div class="evaluations-container">
+                    <!-- Vue étudiant -->
+                    <div class="evaluations-student student-only">
+                        <div class="evaluations-tabs">
+                            <button class="eval-tab active" onclick="filterEvaluations('pending')">
+                                <i class="fas fa-hourglass-half"></i> À faire
+                                <span class="badge" id="pending-evals-count">0</span>
+                            </button>
+                            <button class="eval-tab" onclick="filterEvaluations('completed')">
+                                <i class="fas fa-check-circle"></i> Terminées
+                            </button>
+                        </div>
+                        <div class="evaluations-list" id="student-evaluations">
+                            <!-- Liste des évaluations -->
+                        </div>
+                    </div>
+                    <!-- Vue formateur -->
+                    <div class="evaluations-trainer formateur-only">
+                        <div class="eval-actions-bar">
+                            <button onclick="showCreateEvaluation()" class="btn btn-primary">
+                                <i class="fas fa-plus"></i> Créer une évaluation
+                            </button>
+                            <button onclick="showQuestionBank()" class="btn btn-secondary">
+                                <i class="fas fa-database"></i> Banque de questions
+                            </button>
+                        </div>
+                        <div class="evaluations-tabs">
+                            <button class="eval-tab active" onclick="filterTrainerEvaluations('active')">
+                                <i class="fas fa-play"></i> Actives
+                            </button>
+                            <button class="eval-tab" onclick="filterTrainerEvaluations('draft')">
+                                <i class="fas fa-pencil-alt"></i> Brouillons
+                            </button>
+                            <button class="eval-tab" onclick="filterTrainerEvaluations('completed')">
+                                <i class="fas fa-archive"></i> Terminées
+                            </button>
+                        </div>
+                        <div class="evaluations-list trainer-list" id="trainer-evaluations">
+                            <!-- Liste des évaluations du formateur -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Page Tableau de bord formateur -->
+            <section id="page-trainer-dashboard" class="page-content formateur-only">
+                <div class="page-header">
+                    <h1><i class="fas fa-chalkboard-teacher"></i> Tableau de bord</h1>
+                    <p>Vue d'ensemble de votre activité</p>
+                </div>
+                <div class="trainer-dashboard">
+                    <div class="dashboard-stats-row">
+                        <div class="stat-card large primary">
+                            <div class="stat-icon"><i class="fas fa-users"></i></div>
+                            <div class="stat-info">
+                                <span class="stat-value" id="trainer-total-students">--</span>
+                                <span class="stat-label">Étudiants suivis</span>
+                            </div>
+                        </div>
+                        <div class="stat-card large info">
+                            <div class="stat-icon"><i class="fas fa-calendar-check"></i></div>
+                            <div class="stat-info">
+                                <span class="stat-value" id="trainer-sessions-week">--</span>
+                                <span class="stat-label">Cours cette semaine</span>
+                            </div>
+                        </div>
+                        <div class="stat-card large warning">
+                            <div class="stat-icon"><i class="fas fa-clipboard-list"></i></div>
+                            <div class="stat-info">
+                                <span class="stat-value" id="trainer-pending-grades">--</span>
+                                <span class="stat-label">Notes à saisir</span>
+                            </div>
+                        </div>
+                        <div class="stat-card large success">
+                            <div class="stat-icon"><i class="fas fa-percentage"></i></div>
+                            <div class="stat-info">
+                                <span class="stat-value" id="trainer-avg-attendance">--%</span>
+                                <span class="stat-label">Présence moyenne</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="dashboard-grid">
+                        <div class="dashboard-card">
+                            <div class="card-header">
+                                <h3><i class="fas fa-clock"></i> Prochains cours</h3>
+                                <a href="#" onclick="navigateTo('schedule')">Voir tout</a>
+                            </div>
+                            <div class="card-content" id="trainer-upcoming-courses">
+                                <!-- Cours générés dynamiquement -->
+                            </div>
+                        </div>
+                        <div class="dashboard-card">
+                            <div class="card-header">
+                                <h3><i class="fas fa-exclamation-triangle"></i> Alertes</h3>
+                            </div>
+                            <div class="card-content" id="trainer-alerts">
+                                <!-- Alertes -->
+                            </div>
+                        </div>
+                        <div class="dashboard-card">
+                            <div class="card-header">
+                                <h3><i class="fas fa-users-class"></i> Mes groupes</h3>
+                            </div>
+                            <div class="card-content groups-list" id="trainer-groups">
+                                <!-- Groupes du formateur -->
+                            </div>
+                        </div>
+                        <div class="dashboard-card">
+                            <div class="card-header">
+                                <h3><i class="fas fa-edit"></i> Saisie rapide</h3>
+                            </div>
+                            <div class="card-content">
+                                <div class="quick-action-form">
+                                    <select id="quick-grade-group">
+                                        <option value="">Groupe...</option>
+                                    </select>
+                                    <select id="quick-grade-subject">
+                                        <option value="">Matière...</option>
+                                    </select>
+                                    <button onclick="openQuickGradeModal()" class="btn btn-primary">
+                                        <i class="fas fa-pen"></i> Saisir
+                                    </button>
+                                </div>
+                                <div class="quick-action-buttons">
+                                    <button onclick="navigateTo('attendance')" class="btn btn-outline">
+                                        <i class="fas fa-user-check"></i> Émargement
+                                    </button>
+                                    <button onclick="showCreateEvaluation()" class="btn btn-outline">
+                                        <i class="fas fa-tasks"></i> Évaluation
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="dashboard-card full-width">
+                        <div class="card-header">
+                            <h3><i class="fas fa-chart-line"></i> Statistiques</h3>
+                            <div class="chart-filters">
+                                <select id="stats-group-filter">
+                                    <option value="all">Tous les groupes</option>
+                                </select>
+                                <select id="stats-period-filter">
+                                    <option value="month">Ce mois</option>
+                                    <option value="semester">Ce semestre</option>
+                                    <option value="year">Cette année</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="card-content charts-container">
+                            <div class="chart-wrapper">
+                                <h4>Évolution de la présence</h4>
+                                <canvas id="attendance-chart"></canvas>
+                            </div>
+                            <div class="chart-wrapper">
+                                <h4>Distribution des notes</h4>
+                                <canvas id="grades-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Page Notifications -->
+            <section id="page-notifications" class="page-content">
+                <div class="page-header">
+                    <h1><i class="fas fa-bell"></i> Notifications</h1>
+                    <div class="header-actions">
+                        <button onclick="markAllNotificationsRead()" class="btn btn-secondary">
+                            <i class="fas fa-check-double"></i> Tout marquer lu
+                        </button>
+                        <button onclick="toggleNotificationSettings()" class="btn btn-icon">
+                            <i class="fas fa-cog"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="notifications-settings hidden" id="notification-settings-panel">
+                    <h3>Paramètres de notifications</h3>
+                    <div class="settings-grid">
+                        <label class="setting-toggle">
+                            <input type="checkbox" id="notif-grades" checked>
+                            <span class="toggle-slider"></span>
+                            <span class="toggle-label">Nouvelles notes</span>
+                        </label>
+                        <label class="setting-toggle">
+                            <input type="checkbox" id="notif-schedule" checked>
+                            <span class="toggle-slider"></span>
+                            <span class="toggle-label">Changements d'emploi du temps</span>
+                        </label>
+                        <label class="setting-toggle">
+                            <input type="checkbox" id="notif-messages" checked>
+                            <span class="toggle-slider"></span>
+                            <span class="toggle-label">Nouveaux messages</span>
+                        </label>
+                        <label class="setting-toggle">
+                            <input type="checkbox" id="notif-evals" checked>
+                            <span class="toggle-slider"></span>
+                            <span class="toggle-label">Évaluations disponibles</span>
+                        </label>
+                        <label class="setting-toggle">
+                            <input type="checkbox" id="notif-attendance" checked>
+                            <span class="toggle-slider"></span>
+                            <span class="toggle-label">Émargements</span>
+                        </label>
+                        <label class="setting-toggle">
+                            <input type="checkbox" id="notif-push" checked>
+                            <span class="toggle-slider"></span>
+                            <span class="toggle-label">Notifications push</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="notifications-filter">
+                    <button class="filter-btn active" onclick="filterNotifications('all')">Toutes</button>
+                    <button class="filter-btn" onclick="filterNotifications('unread')">Non lues</button>
+                    <button class="filter-btn" onclick="filterNotifications('grades')">Notes</button>
+                    <button class="filter-btn" onclick="filterNotifications('schedule')">Planning</button>
+                    <button class="filter-btn" onclick="filterNotifications('messages')">Messages</button>
+                </div>
+                <div class="notifications-list" id="notifications-list">
+                    <!-- Notifications générées dynamiquement -->
+                </div>
+            </section>
+
         </main>
+    </div>
+
+    <!-- Modal création évaluation -->
+    <div id="create-evaluation-modal" class="modal-overlay hidden">
+        <div class="modal modal-large">
+            <div class="modal-header">
+                <h2><i class="fas fa-file-alt"></i> Créer une évaluation</h2>
+                <button onclick="closeCreateEvaluation()" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="create-evaluation-form">
+                    <div class="form-section">
+                        <h3>Informations générales</h3>
+                        <div class="form-group">
+                            <label for="eval-title">Titre</label>
+                            <input type="text" id="eval-title" placeholder="Ex: QCM Module Psychologie" required>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="eval-formation">Formation</label>
+                                <select id="eval-formation" required>
+                                    <option value="">Sélectionner</option>
+                                    <option value="es">ES</option>
+                                    <option value="me">ME</option>
+                                    <option value="aes">AES</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="eval-promo">Promotion</label>
+                                <select id="eval-promo" required>
+                                    <option value="">Sélectionner</option>
+                                    <option value="2023">2023-2026</option>
+                                    <option value="2024">2024-2027</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="eval-duration">Durée (min)</label>
+                                <input type="number" id="eval-duration" value="30" min="5" max="180">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="eval-start-date">Disponible du</label>
+                                <input type="datetime-local" id="eval-start-date" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="eval-end-date">Jusqu'au</label>
+                                <input type="datetime-local" id="eval-end-date" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" id="eval-shuffle-questions">
+                                    Mélanger les questions
+                                </label>
+                            </div>
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" id="eval-show-results">
+                                    Afficher les résultats après soumission
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-section">
+                        <div class="section-header">
+                            <h3>Questions</h3>
+                            <div class="question-type-selector">
+                                <button type="button" onclick="addQuestion('qcm')" class="btn btn-sm">
+                                    <i class="fas fa-list"></i> QCM
+                                </button>
+                                <button type="button" onclick="addQuestion('truefalse')" class="btn btn-sm">
+                                    <i class="fas fa-check-circle"></i> Vrai/Faux
+                                </button>
+                                <button type="button" onclick="addQuestion('text')" class="btn btn-sm">
+                                    <i class="fas fa-paragraph"></i> Texte libre
+                                </button>
+                            </div>
+                        </div>
+                        <div id="questions-container">
+                            <!-- Questions ajoutées dynamiquement -->
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" onclick="saveEvaluationDraft()" class="btn btn-secondary">
+                            <i class="fas fa-save"></i> Brouillon
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane"></i> Publier
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal passation évaluation -->
+    <div id="take-evaluation-modal" class="modal-overlay hidden">
+        <div class="modal modal-fullscreen">
+            <div class="eval-taking-header">
+                <div class="eval-info">
+                    <h2 id="eval-taking-title">--</h2>
+                    <span id="eval-taking-progress">Question 1/10</span>
+                </div>
+                <div class="eval-timer">
+                    <i class="fas fa-clock"></i>
+                    <span id="eval-timer-display">--:--</span>
+                </div>
+                <div class="eval-progress-bar">
+                    <div class="progress-fill" id="eval-progress-fill"></div>
+                </div>
+            </div>
+            <div class="eval-taking-content" id="eval-question-container">
+                <!-- Question affichée dynamiquement -->
+            </div>
+            <div class="eval-taking-footer">
+                <button onclick="prevEvalQuestion()" class="btn btn-secondary" id="btn-prev-question">
+                    <i class="fas fa-arrow-left"></i> Précédent
+                </button>
+                <div class="question-nav" id="question-nav-dots">
+                    <!-- Points de navigation -->
+                </div>
+                <button onclick="nextEvalQuestion()" class="btn btn-primary" id="btn-next-question">
+                    Suivant <i class="fas fa-arrow-right"></i>
+                </button>
+                <button onclick="submitEvaluation()" class="btn btn-success hidden" id="btn-submit-eval">
+                    <i class="fas fa-paper-plane"></i> Soumettre
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal saisie rapide notes -->
+    <div id="quick-grade-modal" class="modal-overlay hidden">
+        <div class="modal modal-large">
+            <div class="modal-header">
+                <h2><i class="fas fa-edit"></i> Saisie des notes</h2>
+                <button onclick="closeQuickGradeModal()" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="quick-grade-header">
+                    <span id="qg-info">--</span>
+                    <input type="text" id="qg-eval-type" placeholder="Type d'évaluation (ex: Partiel)">
+                </div>
+                <table class="data-table" id="quick-grade-table">
+                    <thead>
+                        <tr>
+                            <th>Étudiant</th>
+                            <th>Note /20</th>
+                            <th>Absent</th>
+                            <th>Commentaire</th>
+                        </tr>
+                    </thead>
+                    <tbody id="quick-grade-tbody">
+                        <!-- Lignes générées dynamiquement -->
+                    </tbody>
+                </table>
+                <div class="form-actions">
+                    <button onclick="closeQuickGradeModal()" class="btn btn-secondary">Annuler</button>
+                    <button onclick="saveQuickGrades()" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Enregistrer
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Modal première connexion étudiant -->
@@ -1848,6 +2435,7 @@
     <script src="js/api.js"></script>
     <script src="js/app.js"></script>
     <script src="js/api-adapter.js"></script>
+    <script src="js/features.js"></script>
     <script src="js/data.js"></script>
     <script>
         // Initialisation de l'adaptateur API après le chargement
