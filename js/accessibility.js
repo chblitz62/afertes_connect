@@ -469,6 +469,35 @@ function createA11yPanel() {
 
     document.body.appendChild(panel);
 
+    // Attacher les événements (les inline handlers ne fonctionnent pas bien avec innerHTML)
+    document.getElementById('a11y-theme').addEventListener('change', function() {
+        handleThemeChange(this.value);
+    });
+    document.getElementById('a11y-colorblind').addEventListener('change', function() {
+        handleColorblindChange(this.value);
+    });
+    document.getElementById('a11y-dyslexic').addEventListener('change', function() {
+        handleDyslexicChange(this.checked);
+    });
+    document.getElementById('a11y-ruler').addEventListener('change', function() {
+        handleRulerChange(this.checked);
+    });
+    document.getElementById('a11y-falc').addEventListener('change', function() {
+        handleFalcChange(this.checked);
+    });
+    document.getElementById('a11y-fontsize').addEventListener('input', function() {
+        handleFontSizeChange(this.value);
+    });
+    document.getElementById('a11y-contrast').addEventListener('change', function() {
+        handleContrastChange(this.checked);
+    });
+    document.getElementById('a11y-underline').addEventListener('change', function() {
+        handleUnderlineChange(this.checked);
+    });
+    document.getElementById('a11y-motion').addEventListener('change', function() {
+        handleMotionChange(this.checked);
+    });
+
     // Mettre à jour l'état initial
     updateA11yPanelState();
 }
