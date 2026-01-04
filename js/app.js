@@ -1924,17 +1924,151 @@ function showForgotPassword() {
                 <label>Email</label>
                 <input type="email" id="forgot-email" required placeholder="votre.email@afertes.org">
             </div>
-            <button type="submit" class="btn btn-primary btn-block">
+            <button type="submit" class="btn btn-primary btn-block" id="forgot-submit-btn">
                 <i class="fas fa-paper-plane"></i> Envoyer le lien
             </button>
         </form>
     `);
 }
 
-function submitForgotPassword(e) {
+async function submitForgotPassword(e) {
     e.preventDefault();
-    closeModal();
-    showToast('Si cette adresse existe, un email de réinitialisation a été envoyé.', 'info');
+    const email = document.getElementById('forgot-email').value.trim();
+    const submitBtn = document.getElementById('forgot-submit-btn');
+
+    if (!email) {
+        showToast('Veuillez saisir une adresse email', 'error');
+        return;
+    }
+
+    // Désactiver le bouton pendant la requête
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Envoi en cours...';
+
+    try {
+        const response = await fetch('/api/auth/forgot-password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+        });
+
+        const data = await response.json();
+
+        closeModal();
+
+        if (response.ok) {
+            showToast('Si un compte existe avec cet email, un lien de réinitialisation a été envoyé.', 'success');
+            // En mode démo, afficher le token si disponible
+            if (data.demoToken) {
+                console.log('Token de démo:', data.demoToken);
+                setTimeout(() => {
+                    showModal(`
+                        <h2><i class="fas fa-info-circle" style="color: var(--primary-color);"></i> Mode Démo</h2>
+                        <p style="margin: 16px 0;">
+                            En production, un email serait envoyé. Pour tester, utilisez ce token :
+                        </p>
+                        <div style="background: var(--bg-secondary); padding: 12px; border-radius: 8px; word-break: break-all; font-family: monospace; font-size: 12px;">
+                            ${data.demoToken}
+                        </div>
+                        <p style="margin-top: 12px; font-size: 13px; color: var(--text-light);">
+                            Le lien a été affiché dans la console du serveur.
+                        </p>
+                        <button onclick="showResetPasswordForm('${data.demoToken}')" class="btn btn-primary btn-block" style="margin-top: 16px;">
+                            <i class="fas fa-key"></i> Réinitialiser maintenant
+                        </button>
+                    `);
+                }, 500);
+            }
+        } else {
+            showToast(data.error || 'Erreur lors de l\'envoi', 'error');
+        }
+    } catch (error) {
+        console.error('Erreur forgot-password:', error);
+        closeModal();
+        showToast('Erreur de connexion au serveur', 'error');
+    }
+}
+
+function showResetPasswordForm(token) {
+    showModal(`
+        <h2><i class="fas fa-lock" style="color: var(--primary-color);"></i> Nouveau mot de passe</h2>
+        <p style="margin: 16px 0; color: var(--text-light);">
+            Choisissez un nouveau mot de passe sécurisé.
+        </p>
+        <form onsubmit="submitResetPassword(event, '${token}')">
+            <div class="form-group">
+                <label>Nouveau mot de passe</label>
+                <input type="password" id="reset-password" required minlength="8" placeholder="8 caractères minimum">
+                <small style="color: var(--text-light);">Au moins 8 caractères, une majuscule, une minuscule et un chiffre</small>
+            </div>
+            <div class="form-group">
+                <label>Confirmer le mot de passe</label>
+                <input type="password" id="reset-password-confirm" required placeholder="Confirmez votre mot de passe">
+            </div>
+            <button type="submit" class="btn btn-primary btn-block" id="reset-submit-btn">
+                <i class="fas fa-check"></i> Réinitialiser
+            </button>
+        </form>
+    `);
+}
+
+async function submitResetPassword(e, token) {
+    e.preventDefault();
+    const newPassword = document.getElementById('reset-password').value;
+    const confirmPassword = document.getElementById('reset-password-confirm').value;
+    const submitBtn = document.getElementById('reset-submit-btn');
+
+    // Validation côté client
+    if (newPassword !== confirmPassword) {
+        showToast('Les mots de passe ne correspondent pas', 'error');
+        return;
+    }
+
+    if (newPassword.length < 8) {
+        showToast('Le mot de passe doit contenir au moins 8 caractères', 'error');
+        return;
+    }
+
+    if (!/[A-Z]/.test(newPassword)) {
+        showToast('Le mot de passe doit contenir au moins une majuscule', 'error');
+        return;
+    }
+
+    if (!/[a-z]/.test(newPassword)) {
+        showToast('Le mot de passe doit contenir au moins une minuscule', 'error');
+        return;
+    }
+
+    if (!/[0-9]/.test(newPassword)) {
+        showToast('Le mot de passe doit contenir au moins un chiffre', 'error');
+        return;
+    }
+
+    // Désactiver le bouton pendant la requête
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Réinitialisation...';
+
+    try {
+        const response = await fetch('/api/auth/reset-password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token, newPassword })
+        });
+
+        const data = await response.json();
+
+        closeModal();
+
+        if (response.ok) {
+            showToast('Mot de passe réinitialisé avec succès ! Vous pouvez maintenant vous connecter.', 'success');
+        } else {
+            showToast(data.error || 'Erreur lors de la réinitialisation', 'error');
+        }
+    } catch (error) {
+        console.error('Erreur reset-password:', error);
+        closeModal();
+        showToast('Erreur de connexion au serveur', 'error');
+    }
 }
 
 // ===========================================
@@ -4433,6 +4567,8 @@ window.confirmDeleteAccount = confirmDeleteAccount;
 window.showRGPD = showRGPD;
 window.showForgotPassword = showForgotPassword;
 window.submitForgotPassword = submitForgotPassword;
+window.showResetPasswordForm = showResetPasswordForm;
+window.submitResetPassword = submitResetPassword;
 window.closeModal = closeModal;
 
 // Export des nouvelles fonctions

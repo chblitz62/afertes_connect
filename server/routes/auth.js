@@ -4,6 +4,7 @@
 
 const express = require('express');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 const router = express.Router();
 const { query } = require('../database/db');
 const { generateToken, authenticateToken } = require('../middleware/auth');
@@ -253,6 +254,191 @@ router.post('/change-password', authenticateToken, async (req, res) => {
 
         res.json({ success: true });
     } catch (error) {
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
+// ==========================================
+// RÉINITIALISATION DE MOT DE PASSE
+// ==========================================
+
+// POST /api/auth/forgot-password - Demande de réinitialisation
+router.post('/forgot-password', async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        if (!email || typeof email !== 'string') {
+            return res.status(400).json({ error: 'Email requis' });
+        }
+
+        // Valider le format de l'email
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email.trim())) {
+            return res.status(400).json({ error: 'Format d\'email invalide' });
+        }
+
+        // Rechercher l'utilisateur par email
+        const result = await query(
+            'SELECT id, email, first_name, last_name FROM users WHERE LOWER(email) = LOWER($1)',
+            [email.trim()]
+        );
+
+        // Toujours répondre avec succès pour éviter l'énumération d'utilisateurs
+        if (result.rows.length === 0) {
+            // Log l'échec mais retourne succès
+            console.log(`Tentative de reset pour email inconnu: ${email}`);
+            return res.json({
+                success: true,
+                message: 'Si un compte existe avec cet email, un lien de réinitialisation a été envoyé.'
+            });
+        }
+
+        const user = result.rows[0];
+
+        // Invalider les anciens tokens de reset pour cet utilisateur
+        await query(
+            'UPDATE password_reset_tokens SET used = TRUE WHERE user_id = $1 AND used = FALSE',
+            [user.id]
+        );
+
+        // Générer un token sécurisé
+        const token = crypto.randomBytes(32).toString('hex');
+        const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // Expire dans 1 heure
+
+        // Stocker le token en base de données
+        await query(
+            'INSERT INTO password_reset_tokens (user_id, token, expires_at) VALUES ($1, $2, $3)',
+            [user.id, token, expiresAt]
+        );
+
+        // Log l'activité
+        await query(
+            'INSERT INTO activity_logs (user_id, action, details) VALUES ($1, $2, $3)',
+            [user.id, 'password_reset_request', JSON.stringify({ email })]
+        );
+
+        // En mode démo : afficher le lien dans la console (pas d'envoi email réel)
+        const resetLink = `http://localhost:3000/reset-password?token=${token}`;
+        console.log('');
+        console.log('╔═══════════════════════════════════════════════════════════════════╗');
+        console.log('║  LIEN DE RÉINITIALISATION DE MOT DE PASSE (MODE DÉMO)             ║');
+        console.log('╠═══════════════════════════════════════════════════════════════════╣');
+        console.log(`║  Utilisateur: ${user.first_name} ${user.last_name}`);
+        console.log(`║  Email: ${user.email}`);
+        console.log(`║  Token: ${token}`);
+        console.log(`║  Expire: ${expiresAt.toLocaleString('fr-FR')}`);
+        console.log('║');
+        console.log('║  Lien de reset:');
+        console.log(`║  ${resetLink}`);
+        console.log('╚═══════════════════════════════════════════════════════════════════╝');
+        console.log('');
+
+        res.json({
+            success: true,
+            message: 'Si un compte existe avec cet email, un lien de réinitialisation a été envoyé.',
+            // En mode démo, on renvoie le token pour faciliter les tests
+            ...(process.env.NODE_ENV !== 'production' && { demoToken: token })
+        });
+
+    } catch (error) {
+        console.error('Erreur forgot-password:', error);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
+// POST /api/auth/reset-password - Réinitialiser le mot de passe avec token
+router.post('/reset-password', async (req, res) => {
+    try {
+        const { token, newPassword } = req.body;
+
+        if (!token || !newPassword) {
+            return res.status(400).json({ error: 'Token et nouveau mot de passe requis' });
+        }
+
+        // Validation du nouveau mot de passe
+        const passwordValidation = validateNewPassword(newPassword);
+        if (!passwordValidation.valid) {
+            return res.status(400).json({ error: passwordValidation.message });
+        }
+
+        // Rechercher le token valide
+        const tokenResult = await query(
+            `SELECT prt.*, u.id as user_id, u.email, u.first_name, u.last_name
+             FROM password_reset_tokens prt
+             JOIN users u ON prt.user_id = u.id
+             WHERE prt.token = $1 AND prt.used = FALSE AND prt.expires_at > NOW()`,
+            [token]
+        );
+
+        if (tokenResult.rows.length === 0) {
+            return res.status(400).json({
+                error: 'Ce lien de réinitialisation est invalide ou a expiré. Veuillez faire une nouvelle demande.'
+            });
+        }
+
+        const resetToken = tokenResult.rows[0];
+
+        // Hasher le nouveau mot de passe
+        const hash = await bcrypt.hash(newPassword, 10);
+
+        // Mettre à jour le mot de passe
+        await query(
+            'UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2',
+            [hash, resetToken.user_id]
+        );
+
+        // Marquer le token comme utilisé
+        await query(
+            'UPDATE password_reset_tokens SET used = TRUE WHERE id = $1',
+            [resetToken.id]
+        );
+
+        // Log l'activité
+        await query(
+            'INSERT INTO activity_logs (user_id, action) VALUES ($1, $2)',
+            [resetToken.user_id, 'password_reset_complete']
+        );
+
+        console.log(`Mot de passe réinitialisé pour: ${resetToken.email}`);
+
+        res.json({
+            success: true,
+            message: 'Votre mot de passe a été réinitialisé avec succès. Vous pouvez maintenant vous connecter.'
+        });
+
+    } catch (error) {
+        console.error('Erreur reset-password:', error);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
+// GET /api/auth/verify-reset-token - Vérifier si un token de reset est valide
+router.get('/verify-reset-token/:token', async (req, res) => {
+    try {
+        const { token } = req.params;
+
+        const result = await query(
+            `SELECT prt.expires_at, u.email
+             FROM password_reset_tokens prt
+             JOIN users u ON prt.user_id = u.id
+             WHERE prt.token = $1 AND prt.used = FALSE AND prt.expires_at > NOW()`,
+            [token]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(400).json({
+                valid: false,
+                error: 'Ce lien de réinitialisation est invalide ou a expiré.'
+            });
+        }
+
+        res.json({
+            valid: true,
+            email: result.rows[0].email
+        });
+
+    } catch (error) {
+        console.error('Erreur verify-reset-token:', error);
         res.status(500).json({ error: 'Erreur serveur' });
     }
 });
