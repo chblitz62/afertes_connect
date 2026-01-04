@@ -167,7 +167,14 @@ function initApp() {
 function setupEventListeners() {
     // Formulaire de connexion
     document.getElementById('login-form').addEventListener('submit', handleLogin);
-    
+
+    // Bouton mot de passe oublié
+    document.querySelector('.forgot-password').addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        showForgotPassword();
+    });
+
     // Formulaire d'inscription
     document.getElementById('register-form').addEventListener('submit', handleRegister);
     
