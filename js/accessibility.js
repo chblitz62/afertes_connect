@@ -16,8 +16,22 @@ const A11Y_CONFIG = {
         readingRuler: false,
         falc: false,
         fontSize: 100, // pourcentage
-        reducedMotion: false
+        reducedMotion: false,
+        highContrast: false,
+        underlineLinks: false
     }
+};
+
+// Raccourcis clavier
+const KEYBOARD_SHORTCUTS = {
+    'Alt+A': { action: 'openA11yPanel', description: 'Ouvrir l\'accessibilité' },
+    'Alt+H': { action: 'goHome', description: 'Aller à l\'accueil' },
+    'Alt+M': { action: 'goMessages', description: 'Aller aux messages' },
+    'Alt+N': { action: 'goNotes', description: 'Aller aux notes' },
+    'Alt+D': { action: 'goDocs', description: 'Aller aux documents' },
+    'Ctrl+K': { action: 'openSearch', description: 'Recherche globale' },
+    'Escape': { action: 'closeModals', description: 'Fermer' },
+    '?': { action: 'showShortcuts', description: 'Afficher les raccourcis' }
 };
 
 // État courant
@@ -42,6 +56,15 @@ function initAccessibility() {
 
     // Créer le bouton flottant
     createA11yFab();
+
+    // Créer la recherche globale
+    createGlobalSearch();
+
+    // Créer le modal des raccourcis
+    createShortcutsModal();
+
+    // Initialiser les raccourcis clavier
+    initKeyboardShortcuts();
 
     // Écouter les changements de préférence système
     listenToSystemPreferences();
@@ -89,6 +112,8 @@ function applyAllA11ySettings() {
     applyFalcMode(a11ySettings.falc);
     applyFontSize(a11ySettings.fontSize);
     applyReducedMotion(a11ySettings.reducedMotion);
+    applyHighContrast(a11ySettings.highContrast);
+    applyUnderlineLinks(a11ySettings.underlineLinks);
 }
 
 /**
@@ -226,6 +251,38 @@ function applyReducedMotion(enabled) {
     updateA11yPanelState();
 }
 
+/**
+ * Applique le mode contraste élevé
+ */
+function applyHighContrast(enabled) {
+    const html = document.documentElement;
+
+    if (enabled) {
+        html.setAttribute('data-high-contrast', 'true');
+    } else {
+        html.removeAttribute('data-high-contrast');
+    }
+
+    a11ySettings.highContrast = enabled;
+    updateA11yPanelState();
+}
+
+/**
+ * Applique le soulignement des liens
+ */
+function applyUnderlineLinks(enabled) {
+    const html = document.documentElement;
+
+    if (enabled) {
+        html.setAttribute('data-underline-links', 'true');
+    } else {
+        html.removeAttribute('data-underline-links');
+    }
+
+    a11ySettings.underlineLinks = enabled;
+    updateA11yPanelState();
+}
+
 // ==========================================
 // PANNEAU D'ACCESSIBILITÉ
 // ==========================================
@@ -348,6 +405,31 @@ function createA11yPanel() {
                 </div>
             </div>
 
+            <!-- Contraste élevé -->
+            <div class="a11y-section">
+                <h3 class="a11y-section-title"><i class="fas fa-adjust" aria-hidden="true"></i> Contraste</h3>
+                <div class="a11y-option">
+                    <div class="a11y-option-label">
+                        <strong>Contraste élevé</strong>
+                        <span>Mode noir/blanc/jaune (WCAG AAA)</span>
+                    </div>
+                    <label class="a11y-toggle">
+                        <input type="checkbox" id="a11y-contrast" onchange="handleContrastChange(this.checked)">
+                        <span class="a11y-toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="a11y-option">
+                    <div class="a11y-option-label">
+                        <strong>Souligner les liens</strong>
+                        <span>Rendre tous les liens plus visibles</span>
+                    </div>
+                    <label class="a11y-toggle">
+                        <input type="checkbox" id="a11y-underline" onchange="handleUnderlineChange(this.checked)">
+                        <span class="a11y-toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+
             <!-- Animations -->
             <div class="a11y-section">
                 <h3 class="a11y-section-title"><i class="fas fa-magic" aria-hidden="true"></i> Animations</h3>
@@ -360,6 +442,20 @@ function createA11yPanel() {
                         <input type="checkbox" id="a11y-motion" onchange="handleMotionChange(this.checked)">
                         <span class="a11y-toggle-slider"></span>
                     </label>
+                </div>
+            </div>
+
+            <!-- Raccourcis clavier -->
+            <div class="a11y-section">
+                <h3 class="a11y-section-title"><i class="fas fa-keyboard" aria-hidden="true"></i> Raccourcis clavier</h3>
+                <div class="a11y-option" style="flex-direction: column; align-items: stretch;">
+                    <p style="margin: 0 0 0.5rem 0; font-size: 0.9rem; color: var(--a11y-text-secondary);">
+                        Appuyez sur <kbd style="background: var(--a11y-bg-tertiary); padding: 0.2rem 0.5rem; border-radius: 4px; font-family: monospace;">?</kbd> pour voir tous les raccourcis
+                    </p>
+                    <button class="a11y-reset-btn" onclick="showShortcutsModal()" style="margin-top: 0.5rem;">
+                        <i class="fas fa-keyboard" aria-hidden="true"></i>
+                        Voir les raccourcis
+                    </button>
                 </div>
             </div>
 
@@ -462,6 +558,14 @@ function updateA11yPanelState() {
     // Animations
     const motionCheckbox = document.getElementById('a11y-motion');
     if (motionCheckbox) motionCheckbox.checked = a11ySettings.reducedMotion;
+
+    // Contraste élevé
+    const contrastCheckbox = document.getElementById('a11y-contrast');
+    if (contrastCheckbox) contrastCheckbox.checked = a11ySettings.highContrast;
+
+    // Liens soulignés
+    const underlineCheckbox = document.getElementById('a11y-underline');
+    if (underlineCheckbox) underlineCheckbox.checked = a11ySettings.underlineLinks;
 }
 
 // ==========================================
@@ -519,6 +623,18 @@ function handleMotionChange(checked) {
     showToast(`Animations ${checked ? 'réduites' : 'activées'}`, 'success');
 }
 
+function handleContrastChange(checked) {
+    applyHighContrast(checked);
+    saveA11ySettings();
+    showToast(`Contraste élevé ${checked ? 'activé' : 'désactivé'}`, 'success');
+}
+
+function handleUnderlineChange(checked) {
+    applyUnderlineLinks(checked);
+    saveA11ySettings();
+    showToast(`Liens soulignés ${checked ? 'activés' : 'désactivés'}`, 'success');
+}
+
 /**
  * Réinitialise tous les paramètres d'accessibilité
  */
@@ -554,6 +670,432 @@ function listenToSystemPreferences() {
 }
 
 // ==========================================
+// RECHERCHE GLOBALE
+// ==========================================
+
+// Données de recherche
+const SEARCH_DATA = {
+    pages: [
+        { id: 'dashboard', title: 'Tableau de bord', icon: 'fa-tachometer-alt', keywords: ['accueil', 'home', 'dashboard'] },
+        { id: 'schedule', title: 'Emploi du temps', icon: 'fa-calendar-alt', keywords: ['planning', 'cours', 'horaires'] },
+        { id: 'grades', title: 'Notes et résultats', icon: 'fa-chart-line', keywords: ['notes', 'bulletin', 'moyenne'] },
+        { id: 'messages', title: 'Messagerie', icon: 'fa-envelope', keywords: ['messages', 'mail', 'communication'] },
+        { id: 'documents', title: 'Documents', icon: 'fa-folder', keywords: ['fichiers', 'pdf', 'attestation'] },
+        { id: 'absences', title: 'Absences', icon: 'fa-user-times', keywords: ['retard', 'présence'] },
+        { id: 'profile', title: 'Mon profil', icon: 'fa-user', keywords: ['compte', 'informations', 'paramètres'] },
+        { id: 'settings', title: 'Paramètres', icon: 'fa-cog', keywords: ['configuration', 'options'] }
+    ],
+    actions: [
+        { id: 'new-message', title: 'Nouveau message', icon: 'fa-pen', action: () => openNewMessage?.() },
+        { id: 'toggle-theme', title: 'Changer le thème', icon: 'fa-moon', action: () => handleThemeChange(a11ySettings.theme === 'dark' ? 'light' : 'dark') },
+        { id: 'toggle-contrast', title: 'Activer contraste élevé', icon: 'fa-adjust', action: () => handleContrastChange(!a11ySettings.highContrast) },
+        { id: 'logout', title: 'Déconnexion', icon: 'fa-sign-out-alt', action: () => logout?.() }
+    ]
+};
+
+let searchSelectedIndex = 0;
+let searchResults = [];
+
+/**
+ * Crée la recherche globale
+ */
+function createGlobalSearch() {
+    const overlay = document.createElement('div');
+    overlay.id = 'global-search-overlay';
+    overlay.className = 'global-search-overlay';
+    overlay.onclick = (e) => {
+        if (e.target === overlay) closeGlobalSearch();
+    };
+
+    overlay.innerHTML = `
+        <div class="global-search-container">
+            <div class="global-search-header">
+                <i class="fas fa-search" aria-hidden="true"></i>
+                <input type="text" class="global-search-input" id="global-search-input"
+                       placeholder="Rechercher une page, une action..."
+                       autocomplete="off">
+                <button class="global-search-close" onclick="closeGlobalSearch()">Échap</button>
+            </div>
+            <div class="global-search-results" id="global-search-results">
+                <div class="global-search-empty">
+                    <i class="fas fa-search" aria-hidden="true"></i>
+                    <p>Commencez à taper pour rechercher</p>
+                </div>
+            </div>
+            <div class="global-search-footer">
+                <div class="search-footer-hint">
+                    <span><kbd>↑</kbd><kbd>↓</kbd> Naviguer</span>
+                    <span><kbd>↵</kbd> Sélectionner</span>
+                    <span><kbd>Échap</kbd> Fermer</span>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    // Événements de recherche
+    const input = document.getElementById('global-search-input');
+    input.addEventListener('input', handleSearchInput);
+    input.addEventListener('keydown', handleSearchKeydown);
+}
+
+/**
+ * Ouvre la recherche globale
+ */
+function openGlobalSearch() {
+    const overlay = document.getElementById('global-search-overlay');
+    overlay.classList.add('open');
+
+    const input = document.getElementById('global-search-input');
+    input.value = '';
+    input.focus();
+
+    // Afficher les résultats par défaut
+    showDefaultSearchResults();
+    searchSelectedIndex = 0;
+}
+
+/**
+ * Ferme la recherche globale
+ */
+function closeGlobalSearch() {
+    const overlay = document.getElementById('global-search-overlay');
+    overlay.classList.remove('open');
+}
+
+/**
+ * Affiche les résultats par défaut
+ */
+function showDefaultSearchResults() {
+    const resultsContainer = document.getElementById('global-search-results');
+    searchResults = [...SEARCH_DATA.pages.slice(0, 5), ...SEARCH_DATA.actions.slice(0, 3)];
+
+    resultsContainer.innerHTML = `
+        <div class="search-result-group">
+            <div class="search-result-group-title">Pages récentes</div>
+            ${SEARCH_DATA.pages.slice(0, 5).map((item, i) => createSearchResultItem(item, 'page', i)).join('')}
+        </div>
+        <div class="search-result-group">
+            <div class="search-result-group-title">Actions rapides</div>
+            ${SEARCH_DATA.actions.slice(0, 3).map((item, i) => createSearchResultItem(item, 'action', i + 5)).join('')}
+        </div>
+    `;
+
+    updateSearchSelection();
+}
+
+/**
+ * Crée un élément de résultat de recherche
+ */
+function createSearchResultItem(item, type, index) {
+    return `
+        <div class="search-result-item" data-id="${item.id}" data-type="${type}" data-index="${index}"
+             onclick="selectSearchResult(${index})" onmouseenter="searchSelectedIndex = ${index}; updateSearchSelection()">
+            <div class="search-result-icon">
+                <i class="fas ${item.icon}" aria-hidden="true"></i>
+            </div>
+            <div class="search-result-content">
+                <div class="search-result-title">${item.title}</div>
+                <div class="search-result-subtitle">${type === 'page' ? 'Page' : 'Action'}</div>
+            </div>
+        </div>
+    `;
+}
+
+/**
+ * Gère la saisie dans la recherche
+ */
+function handleSearchInput(e) {
+    const query = e.target.value.toLowerCase().trim();
+    const resultsContainer = document.getElementById('global-search-results');
+
+    if (!query) {
+        showDefaultSearchResults();
+        return;
+    }
+
+    // Filtrer les résultats
+    const pageResults = SEARCH_DATA.pages.filter(p =>
+        p.title.toLowerCase().includes(query) ||
+        p.keywords.some(k => k.includes(query))
+    );
+
+    const actionResults = SEARCH_DATA.actions.filter(a =>
+        a.title.toLowerCase().includes(query)
+    );
+
+    searchResults = [...pageResults, ...actionResults];
+    searchSelectedIndex = 0;
+
+    if (searchResults.length === 0) {
+        resultsContainer.innerHTML = `
+            <div class="global-search-empty">
+                <i class="fas fa-search" aria-hidden="true"></i>
+                <p>Aucun résultat pour "${query}"</p>
+            </div>
+        `;
+        return;
+    }
+
+    let html = '';
+
+    if (pageResults.length > 0) {
+        html += `
+            <div class="search-result-group">
+                <div class="search-result-group-title">Pages</div>
+                ${pageResults.map((item, i) => createSearchResultItem(item, 'page', i)).join('')}
+            </div>
+        `;
+    }
+
+    if (actionResults.length > 0) {
+        html += `
+            <div class="search-result-group">
+                <div class="search-result-group-title">Actions</div>
+                ${actionResults.map((item, i) => createSearchResultItem(item, 'action', i + pageResults.length)).join('')}
+            </div>
+        `;
+    }
+
+    resultsContainer.innerHTML = html;
+    updateSearchSelection();
+}
+
+/**
+ * Gère les touches dans la recherche
+ */
+function handleSearchKeydown(e) {
+    switch(e.key) {
+        case 'ArrowDown':
+            e.preventDefault();
+            searchSelectedIndex = Math.min(searchSelectedIndex + 1, searchResults.length - 1);
+            updateSearchSelection();
+            break;
+        case 'ArrowUp':
+            e.preventDefault();
+            searchSelectedIndex = Math.max(searchSelectedIndex - 1, 0);
+            updateSearchSelection();
+            break;
+        case 'Enter':
+            e.preventDefault();
+            selectSearchResult(searchSelectedIndex);
+            break;
+        case 'Escape':
+            e.preventDefault();
+            closeGlobalSearch();
+            break;
+    }
+}
+
+/**
+ * Met à jour la sélection visuelle
+ */
+function updateSearchSelection() {
+    const items = document.querySelectorAll('.search-result-item');
+    items.forEach((item, i) => {
+        item.classList.toggle('selected', i === searchSelectedIndex);
+    });
+
+    // Scroll si nécessaire
+    const selectedItem = items[searchSelectedIndex];
+    if (selectedItem) {
+        selectedItem.scrollIntoView({ block: 'nearest' });
+    }
+}
+
+/**
+ * Sélectionne un résultat de recherche
+ */
+function selectSearchResult(index) {
+    const result = searchResults[index];
+    if (!result) return;
+
+    closeGlobalSearch();
+
+    // Naviguer vers la page ou exécuter l'action
+    if (result.action) {
+        result.action();
+    } else if (typeof navigateTo === 'function') {
+        navigateTo(result.id);
+    } else {
+        // Fallback : chercher le lien dans la navigation
+        const navItem = document.querySelector(`.nav-item[data-page="${result.id}"]`);
+        if (navItem) navItem.click();
+    }
+}
+
+// ==========================================
+// RACCOURCIS CLAVIER
+// ==========================================
+
+/**
+ * Crée le modal des raccourcis
+ */
+function createShortcutsModal() {
+    const modal = document.createElement('div');
+    modal.id = 'shortcuts-modal';
+    modal.className = 'modal-overlay';
+    modal.style.display = 'none';
+    modal.onclick = (e) => {
+        if (e.target === modal) closeShortcutsModal();
+    };
+
+    modal.innerHTML = `
+        <div class="modal shortcuts-modal">
+            <div class="modal-header">
+                <h2><i class="fas fa-keyboard" aria-hidden="true"></i> Raccourcis clavier</h2>
+                <button class="modal-close" onclick="closeShortcutsModal()" aria-label="Fermer">
+                    <i class="fas fa-times" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <ul class="shortcuts-list">
+                    <li>
+                        <span>Recherche globale</span>
+                        <span class="shortcut-key"><kbd>Ctrl</kbd><kbd>K</kbd></span>
+                    </li>
+                    <li>
+                        <span>Accessibilité</span>
+                        <span class="shortcut-key"><kbd>Alt</kbd><kbd>A</kbd></span>
+                    </li>
+                    <li>
+                        <span>Accueil</span>
+                        <span class="shortcut-key"><kbd>Alt</kbd><kbd>H</kbd></span>
+                    </li>
+                    <li>
+                        <span>Messages</span>
+                        <span class="shortcut-key"><kbd>Alt</kbd><kbd>M</kbd></span>
+                    </li>
+                    <li>
+                        <span>Notes</span>
+                        <span class="shortcut-key"><kbd>Alt</kbd><kbd>N</kbd></span>
+                    </li>
+                    <li>
+                        <span>Documents</span>
+                        <span class="shortcut-key"><kbd>Alt</kbd><kbd>D</kbd></span>
+                    </li>
+                    <li>
+                        <span>Afficher ce panneau</span>
+                        <span class="shortcut-key"><kbd>?</kbd></span>
+                    </li>
+                    <li>
+                        <span>Fermer</span>
+                        <span class="shortcut-key"><kbd>Échap</kbd></span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+}
+
+/**
+ * Affiche le modal des raccourcis
+ */
+function showShortcutsModal() {
+    const modal = document.getElementById('shortcuts-modal');
+    modal.style.display = 'flex';
+    setTimeout(() => modal.classList.add('open'), 10);
+}
+
+/**
+ * Ferme le modal des raccourcis
+ */
+function closeShortcutsModal() {
+    const modal = document.getElementById('shortcuts-modal');
+    modal.classList.remove('open');
+    setTimeout(() => modal.style.display = 'none', 300);
+}
+
+/**
+ * Initialise les raccourcis clavier
+ */
+function initKeyboardShortcuts() {
+    document.addEventListener('keydown', handleGlobalKeydown);
+}
+
+/**
+ * Gère les raccourcis clavier globaux
+ */
+function handleGlobalKeydown(e) {
+    // Ignorer si on est dans un champ de saisie (sauf pour certains raccourcis)
+    const isInputField = ['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName) || e.target.isContentEditable;
+
+    // Ctrl+K : Recherche globale (fonctionne même dans les champs)
+    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        openGlobalSearch();
+        return;
+    }
+
+    // Escape : Fermer les modals
+    if (e.key === 'Escape') {
+        const searchOverlay = document.getElementById('global-search-overlay');
+        const a11yPanel = document.getElementById('a11y-panel');
+        const shortcutsModal = document.getElementById('shortcuts-modal');
+
+        if (searchOverlay?.classList.contains('open')) {
+            closeGlobalSearch();
+        } else if (a11yPanel?.classList.contains('open')) {
+            closeA11yPanel();
+        } else if (shortcutsModal?.style.display === 'flex') {
+            closeShortcutsModal();
+        }
+        return;
+    }
+
+    // Ne pas traiter les autres raccourcis si on est dans un champ
+    if (isInputField) return;
+
+    // ? : Afficher les raccourcis
+    if (e.key === '?' && !e.ctrlKey && !e.altKey && !e.metaKey) {
+        e.preventDefault();
+        showShortcutsModal();
+        return;
+    }
+
+    // Alt + touche : Navigation
+    if (e.altKey) {
+        switch(e.key.toLowerCase()) {
+            case 'a':
+                e.preventDefault();
+                openA11yPanel();
+                break;
+            case 'h':
+                e.preventDefault();
+                navigateToPage('dashboard');
+                break;
+            case 'm':
+                e.preventDefault();
+                navigateToPage('messages');
+                break;
+            case 'n':
+                e.preventDefault();
+                navigateToPage('grades');
+                break;
+            case 'd':
+                e.preventDefault();
+                navigateToPage('documents');
+                break;
+        }
+    }
+}
+
+/**
+ * Navigation vers une page
+ */
+function navigateToPage(pageId) {
+    if (typeof navigateTo === 'function') {
+        navigateTo(pageId);
+    } else {
+        const navItem = document.querySelector(`.nav-item[data-page="${pageId}"]`);
+        if (navItem) navItem.click();
+    }
+}
+
+// ==========================================
 // INITIALISATION AU CHARGEMENT
 // ==========================================
 
@@ -573,4 +1115,11 @@ window.handleRulerChange = handleRulerChange;
 window.handleFalcChange = handleFalcChange;
 window.handleFontSizeChange = handleFontSizeChange;
 window.handleMotionChange = handleMotionChange;
+window.handleContrastChange = handleContrastChange;
+window.handleUnderlineChange = handleUnderlineChange;
 window.resetA11ySettings = resetA11ySettings;
+window.openGlobalSearch = openGlobalSearch;
+window.closeGlobalSearch = closeGlobalSearch;
+window.selectSearchResult = selectSearchResult;
+window.showShortcutsModal = showShortcutsModal;
+window.closeShortcutsModal = closeShortcutsModal;

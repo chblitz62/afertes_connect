@@ -7,6 +7,33 @@
 let APP_MODE = 'local';
 
 /**
+ * Échappe les caractères HTML pour prévenir les attaques XSS
+ * @param {string} str - La chaîne à échapper
+ * @returns {string} La chaîne échappée
+ */
+function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    const div = document.createElement('div');
+    div.textContent = String(str);
+    return div.innerHTML;
+}
+
+/**
+ * Échappe les attributs HTML
+ * @param {string} str - La chaîne à échapper
+ * @returns {string} La chaîne échappée pour les attributs
+ */
+function escapeAttr(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+}
+
+/**
  * Initialisation de l'adaptateur
  */
 async function initAPIAdapter() {
@@ -200,21 +227,21 @@ function overrideFunctions() {
                     <tbody>
                         ${students.map(s => `
                             <tr>
-                                <td>${s.last_name || '-'}</td>
-                                <td>${s.first_name || '-'}</td>
-                                <td>${s.email || '-'}</td>
-                                <td>${s.phone || '-'}</td>
-                                <td>${s.formation_name || '-'}</td>
+                                <td>${escapeHtml(s.last_name) || '-'}</td>
+                                <td>${escapeHtml(s.first_name) || '-'}</td>
+                                <td>${escapeHtml(s.email) || '-'}</td>
+                                <td>${escapeHtml(s.phone) || '-'}</td>
+                                <td>${escapeHtml(s.formation_name) || '-'}</td>
                                 <td>
                                     <span class="doc-status ${s.doc_count > 0 ? 'doc-complete' : 'doc-incomplete'}">
-                                        ${s.doc_count || 0} doc(s)
+                                        ${parseInt(s.doc_count) || 0} doc(s)
                                     </span>
                                 </td>
                                 <td>
-                                    <button onclick="viewStudentDetails(${s.id})" class="btn-small">
+                                    <button onclick="viewStudentDetails(${parseInt(s.id)})" class="btn-small">
                                         <i class="fas fa-eye"></i>
                                     </button>
-                                    <button onclick="viewStudentDocuments(${s.id})" class="btn-small">
+                                    <button onclick="viewStudentDocuments(${parseInt(s.id)})" class="btn-small">
                                         <i class="fas fa-folder"></i>
                                     </button>
                                 </td>
@@ -297,7 +324,8 @@ function overrideFunctions() {
                 card.classList.add('uploaded');
                 const statusEl = card.querySelector('.upload-status');
                 if (statusEl) {
-                    statusEl.innerHTML = `<i class="fas fa-check-circle"></i> ${file.name}`;
+                    // Sécurité : échapper le nom de fichier pour éviter XSS
+                    statusEl.innerHTML = `<i class="fas fa-check-circle"></i> ${escapeHtml(file.name)}`;
                 }
             }
 
@@ -397,16 +425,23 @@ function overrideFunctions() {
     };
 
     window.viewStudentDocuments = async function(studentId) {
+        // Valider l'ID
+        const validId = parseInt(studentId);
+        if (isNaN(validId) || validId <= 0) {
+            showToast('ID étudiant invalide', 'error');
+            return;
+        }
+
         try {
-            const documents = await API.getUserDocuments(studentId);
-            const student = await API.getStudent(studentId);
+            const documents = await API.getUserDocuments(validId);
+            const student = await API.getStudent(validId);
 
             const modal = document.createElement('div');
             modal.className = 'modal-overlay';
             modal.innerHTML = `
                 <div class="modal">
                     <div class="modal-header">
-                        <h3>Documents de ${student.first_name} ${student.last_name}</h3>
+                        <h3>Documents de ${escapeHtml(student.first_name)} ${escapeHtml(student.last_name)}</h3>
                         <button onclick="this.closest('.modal-overlay').remove()" class="close-btn">&times;</button>
                     </div>
                     <div class="modal-body">
@@ -414,8 +449,8 @@ function overrideFunctions() {
                             <ul class="doc-list">
                                 ${documents.map(d => `
                                     <li>
-                                        <span>${d.doc_type}: ${d.file_name}</span>
-                                        <button onclick="window.open('${API.getDocumentViewUrl(d.id)}', '_blank')" class="btn-small">
+                                        <span>${escapeHtml(d.doc_type)}: ${escapeHtml(d.file_name)}</span>
+                                        <button data-doc-id="${parseInt(d.id)}" class="btn-small view-doc-btn">
                                             <i class="fas fa-eye"></i>
                                         </button>
                                     </li>
@@ -425,6 +460,17 @@ function overrideFunctions() {
                     </div>
                 </div>
             `;
+
+            // Ajouter les événements de clic de manière sécurisée
+            modal.querySelectorAll('.view-doc-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const docId = parseInt(btn.dataset.docId);
+                    if (!isNaN(docId)) {
+                        window.open(API.getDocumentViewUrl(docId), '_blank');
+                    }
+                });
+            });
+
             document.body.appendChild(modal);
 
         } catch (error) {
@@ -463,16 +509,20 @@ function overrideFunctions() {
             let html = '<div class="grades-list">';
             for (const [subject, data] of Object.entries(bySubject)) {
                 const avg = data.grades.reduce((sum, g) => sum + parseFloat(g.grade), 0) / data.grades.length;
+                const coef = parseFloat(data.coefficient) || 1;
                 html += `
                     <div class="subject-card">
-                        <h4>${subject} <span class="coef">(coef. ${data.coefficient})</span></h4>
+                        <h4>${escapeHtml(subject)} <span class="coef">(coef. ${coef})</span></h4>
                         <div class="grades-row">
-                            ${data.grades.map(g => `
-                                <span class="grade-badge ${parseFloat(g.grade) >= 10 ? 'good' : 'bad'}">
-                                    ${g.grade}/20
-                                    <small>${g.grade_type}</small>
-                                </span>
-                            `).join('')}
+                            ${data.grades.map(g => {
+                                const gradeValue = parseFloat(g.grade) || 0;
+                                return `
+                                    <span class="grade-badge ${gradeValue >= 10 ? 'good' : 'bad'}">
+                                        ${gradeValue}/20
+                                        <small>${escapeHtml(g.grade_type)}</small>
+                                    </span>
+                                `;
+                            }).join('')}
                         </div>
                         <p class="subject-average">Moyenne: ${avg.toFixed(2)}/20</p>
                     </div>

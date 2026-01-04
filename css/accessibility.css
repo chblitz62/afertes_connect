@@ -569,6 +569,382 @@
 }
 
 /* ========================================
+   MODE CONTRASTE ÉLEVÉ (WCAG AAA)
+   ======================================== */
+
+[data-high-contrast="true"] {
+    --a11y-bg-primary: #000000;
+    --a11y-bg-secondary: #1a1a1a;
+    --a11y-bg-tertiary: #333333;
+    --a11y-text-primary: #ffffff;
+    --a11y-text-secondary: #ffffff;
+    --a11y-text-muted: #cccccc;
+    --a11y-brand-primary: #ffff00;
+    --a11y-brand-light: rgba(255, 255, 0, 0.2);
+    --a11y-border-color: #ffffff;
+    --a11y-card-bg: #000000;
+    --a11y-input-bg: #1a1a1a;
+    --a11y-input-border: #ffffff;
+    --a11y-success: #00ff00;
+    --a11y-warning: #ffff00;
+    --a11y-danger: #ff6666;
+    --a11y-info: #66ffff;
+}
+
+[data-high-contrast="true"] body {
+    background-color: #000000 !important;
+    color: #ffffff !important;
+}
+
+[data-high-contrast="true"] .app-header {
+    background: #000000 !important;
+    border-bottom: 2px solid #ffffff !important;
+}
+
+[data-high-contrast="true"] .sidebar {
+    background-color: #000000 !important;
+    border-right: 2px solid #ffffff !important;
+}
+
+[data-high-contrast="true"] .nav-item {
+    color: #ffffff !important;
+    border: 1px solid transparent;
+}
+
+[data-high-contrast="true"] .nav-item:hover,
+[data-high-contrast="true"] .nav-item.active {
+    background-color: #ffff00 !important;
+    color: #000000 !important;
+    border-color: #ffff00;
+}
+
+[data-high-contrast="true"] .card,
+[data-high-contrast="true"] .stat-card,
+[data-high-contrast="true"] .modal {
+    background-color: #000000 !important;
+    border: 2px solid #ffffff !important;
+    color: #ffffff !important;
+}
+
+[data-high-contrast="true"] .btn {
+    border: 2px solid currentColor !important;
+}
+
+[data-high-contrast="true"] .btn-primary {
+    background-color: #ffff00 !important;
+    color: #000000 !important;
+    border-color: #ffff00 !important;
+}
+
+[data-high-contrast="true"] .btn-primary:hover {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+}
+
+[data-high-contrast="true"] input,
+[data-high-contrast="true"] select,
+[data-high-contrast="true"] textarea {
+    background-color: #000000 !important;
+    color: #ffffff !important;
+    border: 2px solid #ffffff !important;
+}
+
+[data-high-contrast="true"] input:focus,
+[data-high-contrast="true"] select:focus,
+[data-high-contrast="true"] textarea:focus {
+    border-color: #ffff00 !important;
+    outline: 3px solid #ffff00 !important;
+}
+
+[data-high-contrast="true"] a {
+    color: #ffff00 !important;
+    text-decoration: underline !important;
+}
+
+[data-high-contrast="true"] .badge {
+    border: 1px solid currentColor;
+}
+
+[data-high-contrast="true"] .login-page,
+[data-high-contrast="true"] .register-page {
+    background: #000000 !important;
+}
+
+[data-high-contrast="true"] .login-container,
+[data-high-contrast="true"] .register-container {
+    background-color: #000000 !important;
+    border: 2px solid #ffffff !important;
+}
+
+/* Souligner tous les liens en mode contraste élevé */
+[data-underline-links="true"] a {
+    text-decoration: underline !important;
+}
+
+/* ========================================
+   RACCOURCIS CLAVIER
+   ======================================== */
+
+/* Indicateur de raccourcis clavier */
+.keyboard-shortcuts-indicator {
+    position: fixed;
+    bottom: 90px;
+    right: 20px;
+    background: var(--a11y-card-bg, #fff);
+    border: 1px solid var(--a11y-border-color, #e2e8f0);
+    border-radius: 8px;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+    color: var(--a11y-text-secondary);
+    box-shadow: var(--a11y-shadow);
+    z-index: 9999;
+    display: none;
+}
+
+.keyboard-shortcuts-indicator.visible {
+    display: block;
+    animation: fadeIn 0.3s ease;
+}
+
+/* Modal des raccourcis clavier */
+.shortcuts-modal {
+    max-width: 500px;
+}
+
+.shortcuts-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.shortcuts-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--a11y-border-color, #e2e8f0);
+}
+
+.shortcuts-list li:last-child {
+    border-bottom: none;
+}
+
+.shortcut-key {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.shortcut-key kbd {
+    background: var(--a11y-bg-tertiary, #e8ecf1);
+    border: 1px solid var(--a11y-border-color, #e2e8f0);
+    border-radius: 4px;
+    padding: 0.25rem 0.5rem;
+    font-family: monospace;
+    font-size: 0.85rem;
+    color: var(--a11y-text-primary);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+/* ========================================
+   RECHERCHE GLOBALE
+   ======================================== */
+
+.global-search-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 10002;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 15vh;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s, visibility 0.2s;
+}
+
+.global-search-overlay.open {
+    opacity: 1;
+    visibility: visible;
+}
+
+.global-search-container {
+    width: 100%;
+    max-width: 600px;
+    background: var(--a11y-card-bg, #fff);
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    transform: translateY(-20px);
+    transition: transform 0.2s;
+}
+
+.global-search-overlay.open .global-search-container {
+    transform: translateY(0);
+}
+
+.global-search-header {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 1px solid var(--a11y-border-color, #e2e8f0);
+    gap: 0.75rem;
+}
+
+.global-search-header i {
+    color: var(--a11y-text-muted);
+    font-size: 1.25rem;
+}
+
+.global-search-input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-size: 1.1rem;
+    color: var(--a11y-text-primary);
+    outline: none;
+}
+
+.global-search-input::placeholder {
+    color: var(--a11y-text-muted);
+}
+
+.global-search-close {
+    background: var(--a11y-bg-secondary);
+    border: none;
+    border-radius: 6px;
+    padding: 0.4rem 0.6rem;
+    font-size: 0.75rem;
+    color: var(--a11y-text-muted);
+    cursor: pointer;
+}
+
+.global-search-close:hover {
+    background: var(--a11y-bg-tertiary);
+}
+
+.global-search-results {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.search-result-group {
+    padding: 0.5rem 0;
+}
+
+.search-result-group-title {
+    padding: 0.5rem 1rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--a11y-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.search-result-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.search-result-item:hover,
+.search-result-item.selected {
+    background: var(--a11y-bg-secondary);
+}
+
+.search-result-item.selected {
+    background: var(--a11y-brand-light);
+}
+
+.search-result-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: var(--a11y-bg-tertiary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--a11y-brand-primary);
+}
+
+.search-result-content {
+    flex: 1;
+}
+
+.search-result-title {
+    font-weight: 500;
+    color: var(--a11y-text-primary);
+    margin-bottom: 0.15rem;
+}
+
+.search-result-title mark {
+    background: #fff3cd;
+    color: inherit;
+    padding: 0 0.15rem;
+    border-radius: 2px;
+}
+
+.search-result-subtitle {
+    font-size: 0.8rem;
+    color: var(--a11y-text-muted);
+}
+
+.search-result-shortcut {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.search-result-shortcut kbd {
+    background: var(--a11y-bg-tertiary);
+    border: 1px solid var(--a11y-border-color);
+    border-radius: 4px;
+    padding: 0.15rem 0.4rem;
+    font-size: 0.7rem;
+    font-family: monospace;
+}
+
+.global-search-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    border-top: 1px solid var(--a11y-border-color);
+    background: var(--a11y-bg-secondary);
+    font-size: 0.8rem;
+    color: var(--a11y-text-muted);
+}
+
+.search-footer-hint {
+    display: flex;
+    gap: 1rem;
+}
+
+.search-footer-hint span {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.global-search-empty {
+    padding: 2rem 1rem;
+    text-align: center;
+    color: var(--a11y-text-muted);
+}
+
+.global-search-empty i {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+/* ========================================
    PANNEAU DE PARAMÈTRES D'ACCESSIBILITÉ
    ======================================== */
 

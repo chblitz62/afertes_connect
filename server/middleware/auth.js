@@ -5,7 +5,17 @@
 const jwt = require('jsonwebtoken');
 const { query } = require('../database/db');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret_change_in_production';
+// Sécurité : Vérifier que JWT_SECRET est défini en production
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+    if (process.env.NODE_ENV === 'production') {
+        console.error('ERREUR CRITIQUE: JWT_SECRET non défini en production!');
+        process.exit(1);
+    } else {
+        console.warn('ATTENTION: JWT_SECRET non défini, utilisation d\'un secret de développement');
+    }
+}
+const SECRET = JWT_SECRET || 'dev_secret_only_for_local_development';
 
 // Vérification du token JWT
 const authenticateToken = async (req, res, next) => {
@@ -17,7 +27,7 @@ const authenticateToken = async (req, res, next) => {
     }
 
     try {
-        const decoded = jwt.verify(token, JWT_SECRET);
+        const decoded = jwt.verify(token, SECRET);
 
         // Vérifier que l'utilisateur existe toujours
         const result = await query(
@@ -81,7 +91,7 @@ const generateToken = (user) => {
             username: user.username,
             role: user.role
         },
-        JWT_SECRET,
+        SECRET,
         { expiresIn: process.env.JWT_EXPIRES_IN || '24h' }
     );
 };

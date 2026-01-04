@@ -10,11 +10,35 @@ const router = express.Router();
 const { query } = require('../database/db');
 const { authenticateToken, requireRole, requireSelfOrAdmin } = require('../middleware/auth');
 
+// Répertoire d'upload sécurisé
+const UPLOAD_DIR = path.resolve(process.env.UPLOAD_DIR || './uploads');
+
+/**
+ * Valide que le chemin du fichier est bien dans le répertoire d'upload
+ * Protection contre les attaques de path traversal
+ */
+function isPathSafe(filePath) {
+    if (!filePath) return false;
+    const resolvedPath = path.resolve(filePath);
+    return resolvedPath.startsWith(UPLOAD_DIR);
+}
+
+/**
+ * Nettoie le nom de fichier pour éviter les injections
+ */
+function sanitizeFilename(filename) {
+    if (!filename) return 'document';
+    // Supprime les caractères dangereux et les séquences de traversal
+    return filename
+        .replace(/[<>:"/\\|?*\x00-\x1f]/g, '_')
+        .replace(/\.{2,}/g, '.')
+        .substring(0, 255);
+}
+
 // Configuration du stockage des fichiers
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        const uploadDir = process.env.UPLOAD_DIR || './uploads';
-        const userDir = path.join(uploadDir, req.user.id.toString());
+        const userDir = path.join(UPLOAD_DIR, req.user.id.toString());
 
         // Créer le dossier utilisateur s'il n'existe pas
         if (!fs.existsSync(userDir)) {
@@ -98,12 +122,22 @@ router.get('/:id', authenticateToken, async (req, res) => {
         }
 
         const filePath = doc.file_path;
+
+        // Sécurité : Vérifier que le chemin est dans le répertoire d'upload
+        if (!isPathSafe(filePath)) {
+            console.error('Tentative d\'accès à un chemin non autorisé:', filePath);
+            return res.status(403).json({ error: 'Accès non autorisé' });
+        }
+
         if (!fs.existsSync(filePath)) {
             return res.status(404).json({ error: 'Fichier non trouvé' });
         }
 
-        res.download(filePath, doc.file_name);
+        // Nettoyer le nom de fichier pour le téléchargement
+        const safeFilename = sanitizeFilename(doc.file_name);
+        res.download(filePath, safeFilename);
     } catch (error) {
+        console.error('Erreur téléchargement document:', error.message);
         res.status(500).json({ error: 'Erreur serveur' });
     }
 });
@@ -111,9 +145,15 @@ router.get('/:id', authenticateToken, async (req, res) => {
 // GET /api/documents/:id/view - Afficher un document (inline)
 router.get('/:id/view', authenticateToken, async (req, res) => {
     try {
+        // Valider l'ID
+        const docId = parseInt(req.params.id);
+        if (isNaN(docId) || docId <= 0) {
+            return res.status(400).json({ error: 'ID de document invalide' });
+        }
+
         const result = await query(
             'SELECT * FROM documents WHERE id = $1',
-            [req.params.id]
+            [docId]
         );
 
         if (result.rows.length === 0) {
@@ -129,14 +169,28 @@ router.get('/:id/view', authenticateToken, async (req, res) => {
         }
 
         const filePath = doc.file_path;
+
+        // Sécurité : Vérifier que le chemin est dans le répertoire d'upload
+        if (!isPathSafe(filePath)) {
+            console.error('Tentative d\'accès à un chemin non autorisé:', filePath);
+            return res.status(403).json({ error: 'Accès non autorisé' });
+        }
+
         if (!fs.existsSync(filePath)) {
             return res.status(404).json({ error: 'Fichier non trouvé' });
         }
 
-        res.setHeader('Content-Type', doc.mime_type);
-        res.setHeader('Content-Disposition', `inline; filename="${doc.file_name}"`);
+        // Valider le type MIME
+        const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf'];
+        const mimeType = allowedMimeTypes.includes(doc.mime_type) ? doc.mime_type : 'application/octet-stream';
+
+        const safeFilename = sanitizeFilename(doc.file_name);
+        res.setHeader('Content-Type', mimeType);
+        res.setHeader('Content-Disposition', `inline; filename="${safeFilename}"`);
+        res.setHeader('X-Content-Type-Options', 'nosniff');
         fs.createReadStream(filePath).pipe(res);
     } catch (error) {
+        console.error('Erreur affichage document:', error.message);
         res.status(500).json({ error: 'Erreur serveur' });
     }
 });
