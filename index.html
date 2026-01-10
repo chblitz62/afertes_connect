@@ -258,10 +258,32 @@
                 <span class="header-title">AFERTES Connect</span>
             </div>
             <div class="header-right">
-                <span class="site-badge" id="current-site" aria-label="Site actuel">Saint-Laurent-Blangy</span>
+                <!-- Sélecteur de site avec météo -->
+                <div class="site-selector-header">
+                    <button class="site-badge-btn" onclick="toggleSiteSelector()" aria-label="Changer de site">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span id="current-site-name">Saint-Laurent-Blangy</span>
+                        <span class="site-weather" id="current-site-weather">
+                            <i class="fas fa-spinner fa-spin"></i>
+                        </span>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="site-dropdown hidden" id="site-dropdown">
+                        <div class="site-option" onclick="selectHeaderSite('slb')">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>Saint-Laurent-Blangy</span>
+                            <span class="site-weather" id="weather-slb"><i class="fas fa-spinner fa-spin"></i></span>
+                        </div>
+                        <div class="site-option" onclick="selectHeaderSite('avion')">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>Avion</span>
+                            <span class="site-weather" id="weather-avion"><i class="fas fa-spinner fa-spin"></i></span>
+                        </div>
+                    </div>
+                </div>
                 <button class="notification-btn" onclick="toggleNotifications()" aria-label="Notifications" aria-expanded="false" aria-controls="notifications-panel">
                     <i class="fas fa-bell" aria-hidden="true"></i>
-                    <span class="notification-badge" id="notif-count" aria-label="3 notifications non lues">3</span>
+                    <span class="notification-badge" id="notif-count" aria-label="Notifications non lues">0</span>
                 </button>
                 <button class="user-menu" onclick="toggleUserMenu()" aria-label="Menu utilisateur" aria-expanded="false" aria-haspopup="true">
                     <img src="img/default-avatar.svg" alt="" class="user-avatar" id="header-avatar">
@@ -284,12 +306,20 @@
 
         <!-- Menu utilisateur -->
         <div id="user-menu-dropdown" class="user-menu-dropdown hidden">
-            <a href="#" onclick="showPage('profile')">
+            <a href="#" onclick="showPage('profile'); toggleUserMenu();">
                 <i class="fas fa-user"></i> Mon profil
             </a>
-            <a href="#" onclick="showPage('settings')">
+            <a href="#" onclick="showPage('settings'); toggleUserMenu();">
                 <i class="fas fa-cog"></i> Paramètres
             </a>
+            <div class="user-menu-item theme-toggle-item" onclick="toggleDarkModeFromMenu(event)">
+                <i class="fas fa-moon" id="theme-icon"></i>
+                <span id="theme-label">Mode sombre</span>
+                <label class="theme-switch">
+                    <input type="checkbox" id="theme-toggle-menu" onchange="toggleDarkModeFromMenu(event)">
+                    <span class="theme-slider"></span>
+                </label>
+            </div>
             <hr>
             <a href="#" onclick="logout()">
                 <i class="fas fa-sign-out-alt"></i> Déconnexion

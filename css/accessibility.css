@@ -1742,3 +1742,39 @@
 [data-theme="dark"] .group-info p {
     color: var(--a11y-text-muted);
 }
+
+/* === SÉLECTEUR DE SITE - MODE SOMBRE === */
+[data-theme="dark"] .site-dropdown {
+    background-color: var(--a11y-bg-secondary);
+    border-color: var(--a11y-border-color);
+}
+
+[data-theme="dark"] .site-option {
+    color: var(--a11y-text-primary);
+}
+
+[data-theme="dark"] .site-option:hover {
+    background-color: var(--a11y-bg-tertiary);
+}
+
+[data-theme="dark"] .site-option .site-weather {
+    background-color: var(--a11y-bg-tertiary);
+    color: var(--a11y-text-primary);
+}
+
+/* === TOGGLE THÈME - MODE SOMBRE === */
+[data-theme="dark"] .user-menu-item {
+    color: var(--a11y-text-primary);
+}
+
+[data-theme="dark"] .user-menu-item:hover {
+    background-color: var(--a11y-bg-tertiary);
+}
+
+[data-theme="dark"] .theme-toggle-item i {
+    color: var(--a11y-text-muted);
+}
+
+[data-theme="dark"] .theme-slider {
+    background-color: var(--a11y-bg-tertiary);
+}

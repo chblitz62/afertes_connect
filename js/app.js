@@ -195,6 +195,179 @@ function refreshFacebookWidgets() {
     });
 }
 
+// ===========================================
+// Sélecteur de site avec météo
+// ===========================================
+
+const SITES_COORDS = {
+    slb: { name: 'Saint-Laurent-Blangy', lat: 50.2967, lon: 2.8156 },
+    avion: { name: 'Avion', lat: 50.4103, lon: 2.8308 }
+};
+
+let currentSite = localStorage.getItem('afertes_site') || 'slb';
+let weatherCache = {};
+let weatherInterval = null;
+
+function initSiteAndWeather() {
+    // Charger le site sauvegardé
+    updateCurrentSiteDisplay();
+
+    // Charger la météo
+    loadWeather();
+
+    // Actualiser la météo toutes les 30 minutes
+    if (weatherInterval) clearInterval(weatherInterval);
+    weatherInterval = setInterval(loadWeather, 30 * 60 * 1000);
+
+    // Fermer le dropdown au clic ailleurs
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.site-selector-header')) {
+            document.getElementById('site-dropdown')?.classList.add('hidden');
+        }
+    });
+}
+
+function toggleSiteSelector() {
+    const dropdown = document.getElementById('site-dropdown');
+    if (dropdown) {
+        dropdown.classList.toggle('hidden');
+    }
+}
+
+function selectHeaderSite(siteKey) {
+    currentSite = siteKey;
+    localStorage.setItem('afertes_site', siteKey);
+    updateCurrentSiteDisplay();
+    document.getElementById('site-dropdown')?.classList.add('hidden');
+
+    // Mettre à jour l'ancienne variable current-site si utilisée ailleurs
+    const oldBadge = document.getElementById('current-site');
+    if (oldBadge) oldBadge.textContent = SITES_COORDS[siteKey].name;
+}
+
+function updateCurrentSiteDisplay() {
+    const siteName = document.getElementById('current-site-name');
+    const siteWeather = document.getElementById('current-site-weather');
+
+    if (siteName) {
+        siteName.textContent = SITES_COORDS[currentSite].name;
+    }
+
+    if (siteWeather && weatherCache[currentSite]) {
+        siteWeather.innerHTML = weatherCache[currentSite];
+    }
+}
+
+async function loadWeather() {
+    for (const [key, site] of Object.entries(SITES_COORDS)) {
+        try {
+            const response = await fetch(
+                `https://api.open-meteo.com/v1/forecast?latitude=${site.lat}&longitude=${site.lon}&current=temperature_2m,weather_code&timezone=Europe/Paris`
+            );
+
+            if (response.ok) {
+                const data = await response.json();
+                const temp = Math.round(data.current.temperature_2m);
+                const weatherCode = data.current.weather_code;
+                const icon = getWeatherIcon(weatherCode);
+
+                weatherCache[key] = `<i class="fas fa-${icon}"></i> ${temp}°C`;
+
+                // Mettre à jour l'affichage
+                const weatherEl = document.getElementById(`weather-${key}`);
+                if (weatherEl) {
+                    weatherEl.innerHTML = weatherCache[key];
+                }
+
+                // Si c'est le site actuel, mettre à jour le header
+                if (key === currentSite) {
+                    const currentWeather = document.getElementById('current-site-weather');
+                    if (currentWeather) {
+                        currentWeather.innerHTML = weatherCache[key];
+                    }
+                }
+            }
+        } catch (error) {
+            console.error(`Erreur météo pour ${site.name}:`, error);
+            weatherCache[key] = '<i class="fas fa-cloud"></i> --°C';
+        }
+    }
+}
+
+function getWeatherIcon(code) {
+    // Codes météo WMO -> icônes Font Awesome
+    if (code === 0) return 'sun'; // Ciel dégagé
+    if (code >= 1 && code <= 3) return 'cloud-sun'; // Partiellement nuageux
+    if (code >= 45 && code <= 48) return 'smog'; // Brouillard
+    if (code >= 51 && code <= 57) return 'cloud-rain'; // Bruine
+    if (code >= 61 && code <= 67) return 'cloud-showers-heavy'; // Pluie
+    if (code >= 71 && code <= 77) return 'snowflake'; // Neige
+    if (code >= 80 && code <= 82) return 'cloud-showers-heavy'; // Averses
+    if (code >= 85 && code <= 86) return 'snowflake'; // Averses de neige
+    if (code >= 95 && code <= 99) return 'bolt'; // Orage
+    return 'cloud'; // Par défaut
+}
+
+// ===========================================
+// Thème sombre depuis le menu
+// ===========================================
+
+function initThemeFromMenu() {
+    const savedTheme = localStorage.getItem('theme');
+    const toggle = document.getElementById('theme-toggle-menu');
+    const icon = document.getElementById('theme-icon');
+    const label = document.getElementById('theme-label');
+
+    if (savedTheme === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        if (toggle) toggle.checked = true;
+        if (icon) icon.className = 'fas fa-sun';
+        if (label) label.textContent = 'Mode clair';
+    }
+}
+
+function toggleDarkModeFromMenu(event) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const toggle = document.getElementById('theme-toggle-menu');
+    const icon = document.getElementById('theme-icon');
+    const label = document.getElementById('theme-label');
+    const html = document.documentElement;
+
+    // Si on clique sur le div parent (pas le checkbox), inverser l'état
+    if (event.target.type !== 'checkbox') {
+        toggle.checked = !toggle.checked;
+    }
+
+    if (toggle.checked) {
+        html.setAttribute('data-theme', 'dark');
+        localStorage.setItem('theme', 'dark');
+        if (icon) icon.className = 'fas fa-sun';
+        if (label) label.textContent = 'Mode clair';
+    } else {
+        html.removeAttribute('data-theme');
+        localStorage.setItem('theme', 'light');
+        if (icon) icon.className = 'fas fa-moon';
+        if (label) label.textContent = 'Mode sombre';
+    }
+}
+
+// ===========================================
+// Badge notifications
+// ===========================================
+
+function updateNotificationBadgeHeader() {
+    const notifications = JSON.parse(localStorage.getItem('afertes_notifications') || '[]');
+    const unreadCount = notifications.filter(n => !n.read).length;
+
+    const badge = document.getElementById('notif-count');
+    if (badge) {
+        badge.textContent = unreadCount;
+        badge.style.display = unreadCount > 0 ? 'flex' : 'none';
+    }
+}
+
 function setupEventListeners() {
     // Formulaire de connexion
     document.getElementById('login-form').addEventListener('submit', handleLogin);
@@ -949,6 +1122,9 @@ function showApp() {
     updateUserInterface();
     loadDashboardData();
     updateMessageBadge();
+    updateNotificationBadgeHeader();
+    initSiteAndWeather();
+    initThemeFromMenu();
     showPage('dashboard');
 
     // Afficher les sections selon le rôle
