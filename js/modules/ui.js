@@ -140,6 +140,9 @@ function showPage(pageName) {
         case 'students-documents':
             if (typeof loadStudentsDocuments === 'function') loadStudentsDocuments();
             break;
+        case 'collaborative-docs':
+            if (typeof loadCollabDocuments === 'function') loadCollabDocuments();
+            break;
     }
 
     // Fermer les menus sur mobile

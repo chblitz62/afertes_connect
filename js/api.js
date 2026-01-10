@@ -372,6 +372,89 @@ const API = {
         } catch (e) {
             return false;
         }
+    },
+
+    // ==================== DOCUMENTS COLLABORATIFS ====================
+
+    /**
+     * Liste des documents collaboratifs accessibles
+     */
+    async getCollabDocuments(filters = {}) {
+        let query = '';
+        if (Object.keys(filters).length > 0) {
+            query = '?' + new URLSearchParams(filters).toString();
+        }
+        return await this.request('GET', `/collab/documents${query}`);
+    },
+
+    /**
+     * Créer un document collaboratif
+     */
+    async createCollabDocument(data) {
+        return await this.request('POST', '/collab/documents', data);
+    },
+
+    /**
+     * Récupérer un document collaboratif
+     */
+    async getCollabDocument(documentId) {
+        return await this.request('GET', `/collab/documents/${documentId}`);
+    },
+
+    /**
+     * Mettre à jour un document collaboratif (métadonnées)
+     */
+    async updateCollabDocument(documentId, data) {
+        return await this.request('PUT', `/collab/documents/${documentId}`, data);
+    },
+
+    /**
+     * Supprimer un document collaboratif
+     */
+    async deleteCollabDocument(documentId) {
+        return await this.request('DELETE', `/collab/documents/${documentId}`);
+    },
+
+    /**
+     * Liste des permissions d'un document
+     */
+    async getDocumentPermissions(documentId) {
+        return await this.request('GET', `/collab/documents/${documentId}/permissions`);
+    },
+
+    /**
+     * Ajouter une permission à un document
+     */
+    async addDocumentPermission(documentId, permissionData) {
+        return await this.request('POST', `/collab/documents/${documentId}/permissions`, permissionData);
+    },
+
+    /**
+     * Supprimer une permission d'un document
+     */
+    async removeDocumentPermission(documentId, permissionId) {
+        return await this.request('DELETE', `/collab/documents/${documentId}/permissions/${permissionId}`);
+    },
+
+    /**
+     * Liste des versions d'un document
+     */
+    async getDocumentVersions(documentId) {
+        return await this.request('GET', `/collab/documents/${documentId}/versions`);
+    },
+
+    /**
+     * Créer une version (snapshot) d'un document
+     */
+    async createDocumentVersion(documentId, comment = null) {
+        return await this.request('POST', `/collab/documents/${documentId}/versions`, { comment });
+    },
+
+    /**
+     * Liste des utilisateurs connectés à un document
+     */
+    async getDocumentSessions(documentId) {
+        return await this.request('GET', `/collab/documents/${documentId}/sessions`);
     }
 };
 

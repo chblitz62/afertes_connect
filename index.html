@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/features.css">
     <link rel="stylesheet" href="css/accessibility.css">
+    <link rel="stylesheet" href="css/collaborative.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 <body>
@@ -373,6 +374,10 @@
                     <a href="#" class="nav-item" data-page="documents" onclick="showPage('documents')">
                         <i class="fas fa-folder"></i>
                         <span>Ressources</span>
+                    </a>
+                    <a href="#" class="nav-item" data-page="collaborative-docs" onclick="showPage('collaborative-docs')">
+                        <i class="fas fa-file-alt"></i>
+                        <span>Docs collaboratifs</span>
                     </a>
                 </div>
 
@@ -764,6 +769,95 @@
                 </div>
                 <div class="documents-grid" id="documents-list">
                     <!-- Documents générés dynamiquement -->
+                </div>
+            </section>
+
+            <!-- Page Documents Collaboratifs -->
+            <section id="page-collaborative-docs" class="page-content">
+                <div class="collab-docs-header">
+                    <h1><i class="fas fa-file-alt"></i> Documents collaboratifs</h1>
+                    <button class="btn btn-primary" onclick="showNewDocumentModal()">
+                        <i class="fas fa-plus"></i> Nouveau document
+                    </button>
+                </div>
+                <div class="collab-docs-filters">
+                    <input type="text" id="collab-search" placeholder="Rechercher..." oninput="filterCollabDocs()">
+                    <select id="collab-visibility-filter" onchange="filterCollabDocs()">
+                        <option value="">Tous</option>
+                        <option value="private">Privés</option>
+                        <option value="formation">Formation</option>
+                        <option value="public">Publics</option>
+                    </select>
+                </div>
+                <div class="collab-docs-grid" id="collab-docs-list">
+                    <!-- Documents générés dynamiquement -->
+                    <div class="loading-placeholder">
+                        <i class="fas fa-spinner fa-spin"></i> Chargement des documents...
+                    </div>
+                </div>
+            </section>
+
+            <!-- Page Éditeur Collaboratif (pleine page) -->
+            <section id="page-editor" class="page-content editor-fullscreen hidden">
+                <div class="editor-header">
+                    <div class="editor-header-left">
+                        <button class="btn-back" onclick="closeEditor()" title="Retour">
+                            <i class="fas fa-arrow-left"></i>
+                        </button>
+                        <input type="text" id="doc-title" class="doc-title-input" placeholder="Sans titre" onchange="updateDocumentTitle()">
+                        <span id="connection-status" class="connection-status disconnected">
+                            <i class="fas fa-circle"></i> Déconnecté
+                        </span>
+                    </div>
+                    <div class="editor-header-right">
+                        <div class="presence-container" id="active-users"></div>
+                        <button class="btn btn-icon" onclick="showVersionsModal()" title="Historique">
+                            <i class="fas fa-history"></i>
+                        </button>
+                        <button class="btn btn-icon" onclick="showPermissionsModal()" title="Partager">
+                            <i class="fas fa-share-alt"></i>
+                        </button>
+                        <button class="btn btn-icon" onclick="createDocumentSnapshot()" title="Créer une version">
+                            <i class="fas fa-save"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="editor-toolbar" id="editor-toolbar-actions">
+                    <div class="toolbar-group">
+                        <button id="btn-bold" title="Gras (Ctrl+B)"><i class="fas fa-bold"></i></button>
+                        <button id="btn-italic" title="Italique (Ctrl+I)"><i class="fas fa-italic"></i></button>
+                        <button id="btn-underline" title="Souligné (Ctrl+U)"><i class="fas fa-underline"></i></button>
+                        <button id="btn-strike" title="Barré"><i class="fas fa-strikethrough"></i></button>
+                        <button id="btn-highlight" title="Surligner"><i class="fas fa-highlighter"></i></button>
+                    </div>
+                    <div class="toolbar-group">
+                        <button id="btn-heading-1" title="Titre 1">H1</button>
+                        <button id="btn-heading-2" title="Titre 2">H2</button>
+                        <button id="btn-heading-3" title="Titre 3">H3</button>
+                    </div>
+                    <div class="toolbar-group">
+                        <button id="btn-bullet-list" title="Liste à puces"><i class="fas fa-list-ul"></i></button>
+                        <button id="btn-ordered-list" title="Liste numérotée"><i class="fas fa-list-ol"></i></button>
+                        <button id="btn-task-list" title="Liste de tâches"><i class="fas fa-tasks"></i></button>
+                    </div>
+                    <div class="toolbar-group">
+                        <button id="btn-align-left" title="Aligner à gauche"><i class="fas fa-align-left"></i></button>
+                        <button id="btn-align-center" title="Centrer"><i class="fas fa-align-center"></i></button>
+                        <button id="btn-align-right" title="Aligner à droite"><i class="fas fa-align-right"></i></button>
+                    </div>
+                    <div class="toolbar-group">
+                        <button id="btn-blockquote" title="Citation"><i class="fas fa-quote-right"></i></button>
+                        <button id="btn-code-block" title="Bloc de code"><i class="fas fa-code"></i></button>
+                        <button id="btn-horizontal-rule" title="Ligne horizontale"><i class="fas fa-minus"></i></button>
+                    </div>
+                    <div class="toolbar-group">
+                        <button id="btn-link" title="Lien"><i class="fas fa-link"></i></button>
+                        <button id="btn-image" title="Image"><i class="fas fa-image"></i></button>
+                        <button id="btn-table" title="Tableau"><i class="fas fa-table"></i></button>
+                    </div>
+                </div>
+                <div class="editor-container">
+                    <div id="editor-content"></div>
                 </div>
             </section>
 
@@ -2505,6 +2599,83 @@
         </div>
     </div>
 
+    <!-- Modal Nouveau Document Collaboratif -->
+    <div id="new-doc-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="new-doc-title">
+        <div class="modal">
+            <button class="modal-close" onclick="closeNewDocModal()" aria-label="Fermer">
+                <i class="fas fa-times" aria-hidden="true"></i>
+            </button>
+            <h2 id="new-doc-title"><i class="fas fa-file-alt"></i> Nouveau document</h2>
+            <form id="new-doc-form" class="new-doc-form" onsubmit="createCollabDocument(event)">
+                <div class="form-group">
+                    <label for="new-doc-title-input">Titre du document</label>
+                    <input type="text" id="new-doc-title-input" placeholder="Mon document" required maxlength="255">
+                </div>
+                <div class="form-group">
+                    <label for="new-doc-visibility">Visibilité</label>
+                    <select id="new-doc-visibility">
+                        <option value="private">Privé (vous seul)</option>
+                        <option value="formation">Formation (votre formation)</option>
+                        <option value="public">Public (tout le monde)</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeNewDocModal()">Annuler</button>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> Créer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Permissions Document -->
+    <div id="permissions-modal" class="modal-overlay hidden permissions-modal" role="dialog" aria-modal="true" aria-labelledby="permissions-title">
+        <div class="modal" style="max-width: 600px;">
+            <button class="modal-close" onclick="closePermissionsModal()" aria-label="Fermer">
+                <i class="fas fa-times" aria-hidden="true"></i>
+            </button>
+            <h2 id="permissions-title"><i class="fas fa-share-alt"></i> Partager le document</h2>
+            <div class="permissions-list" id="permissions-list">
+                <!-- Permissions générées dynamiquement -->
+            </div>
+            <div class="add-permission-form">
+                <h3>Ajouter un accès</h3>
+                <div class="form-row">
+                    <select id="permission-type">
+                        <option value="user">Utilisateur</option>
+                        <option value="role">Rôle</option>
+                    </select>
+                    <select id="permission-level">
+                        <option value="view">Lecture seule</option>
+                        <option value="edit">Modification</option>
+                        <option value="admin">Administration</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <input type="text" id="permission-target" placeholder="Email ou nom d'utilisateur">
+                    <button type="button" class="btn btn-primary" onclick="addPermission()">
+                        <i class="fas fa-plus"></i> Ajouter
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Historique Versions -->
+    <div id="versions-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="versions-title">
+        <div class="modal" style="max-width: 500px;">
+            <button class="modal-close" onclick="closeVersionsModal()" aria-label="Fermer">
+                <i class="fas fa-times" aria-hidden="true"></i>
+            </button>
+            <h2 id="versions-title"><i class="fas fa-history"></i> Historique des versions</h2>
+            <div class="versions-list" id="versions-list">
+                <!-- Versions générées dynamiquement -->
+            </div>
+            <div class="form-actions" style="margin-top: 1rem;">
+                <button type="button" class="btn btn-secondary" onclick="closeVersionsModal()">Fermer</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal générique -->
     <div id="modal-overlay" class="modal-overlay hidden">
         <div class="modal" id="modal">
@@ -2524,6 +2695,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <!-- TipTap et Yjs pour l'édition collaborative - chargés à la demande -->
     <!-- API Client pour le backend -->
     <script src="js/api.js"></script>
     <!-- Modules refactorisés -->
@@ -2532,6 +2705,10 @@
     <script src="js/modules/messaging.js"></script>
     <script src="js/modules/grades.js"></script>
     <script src="js/modules/documents.js"></script>
+    <!-- Scripts collaboratifs désactivés temporairement pour debug -->
+    <!-- <script src="js/modules/collaborative-editor.js"></script> -->
+    <!-- <script src="js/modules/collab-presence.js"></script> -->
+    <!-- <script src="js/modules/collab-ui.js"></script> -->
     <!-- Application principale -->
     <script src="js/app.js"></script>
     <script src="js/api-adapter.js"></script>

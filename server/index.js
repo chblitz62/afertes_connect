@@ -16,6 +16,8 @@ const gradesRoutes = require('./routes/grades');
 const documentsRoutes = require('./routes/documents');
 const formationsRoutes = require('./routes/formations');
 const exportRoutes = require('./routes/export');
+const collabRoutes = require('./routes/collaborative-documents');
+const { startCollabServer } = require('./websocket/collab-server');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -26,10 +28,11 @@ app.use(helmet({
         directives: {
             defaultSrc: ["'self'"],
             scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"],
+            scriptSrcAttr: ["'unsafe-inline'"],
             styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "https://fonts.googleapis.com"],
             fontSrc: ["'self'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "https://fonts.gstatic.com"],
             imgSrc: ["'self'", "data:", "blob:"],
-            connectSrc: ["'self'"],
+            connectSrc: ["'self'", "ws:", "wss:"],
             frameSrc: ["'none'"],
             objectSrc: ["'none'"],
             baseUri: ["'self'"],
@@ -69,6 +72,7 @@ app.use('/api/grades', gradesRoutes);
 app.use('/api/documents', documentsRoutes);
 app.use('/api/formations', formationsRoutes);
 app.use('/api/export', exportRoutes);
+app.use('/api/collab', collabRoutes);
 
 // Route de santé pour YunoHost
 app.get('/api/health', (req, res) => {
@@ -91,14 +95,24 @@ app.use((err, req, res, next) => {
 });
 
 // Démarrage du serveur
-app.listen(PORT, () => {
+const COLLAB_PORT = process.env.COLLAB_WS_PORT || 1234;
+
+app.listen(PORT, async () => {
     console.log(`
     ╔═══════════════════════════════════════════╗
     ║     AFERTES Connect - Serveur API         ║
-    ║     Port: ${PORT}                            ║
+    ║     Port HTTP: ${PORT}                          ║
+    ║     Port WebSocket: ${COLLAB_PORT}                    ║
     ║     Mode: ${process.env.NODE_ENV || 'development'}                 ║
     ╚═══════════════════════════════════════════╝
     `);
+
+    // Démarrer le serveur WebSocket pour la collaboration
+    try {
+        await startCollabServer();
+    } catch (error) {
+        console.error('[Collab] Erreur démarrage serveur WebSocket:', error.message);
+    }
 });
 
 module.exports = app;

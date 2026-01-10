@@ -31,7 +31,7 @@ const APP_CONFIG = {
 let currentUser = null;
 let selectedSite = 'slb';
 let currentPage = 'dashboard';
-let activeConversation = null;
+// Variable activeConversation déplacée dans js/modules/messaging.js
 
 // ===========================================
 // Gestion des sessions actives
@@ -576,8 +576,7 @@ function downloadDocument(type) {
 // Génération attestation de scolarité
 // ===========================================
 
-// Cache pour le logo en base64
-let logoBase64Cache = null;
+// Variable logoBase64Cache déplacée dans js/modules/grades.js
 
 // Fonction pour charger le logo en base64
 function loadLogoBase64() {
@@ -3537,9 +3536,8 @@ function showAddBDEMemberModal() {
 // ESPACE DE STOCKAGE (DRIVE)
 // ===========================================
 
-let currentDrivePath = '/';
-let driveViewMode = 'grid';
-const MAX_STORAGE = 1024 * 1024 * 1024; // 1 Go
+// Variables déplacées dans js/modules/documents.js
+// currentDrivePath, driveViewMode, MAX_STORAGE
 
 function initDrive() {
     if (!localStorage.getItem('afertes_drive_' + currentUser?.id)) {
@@ -3858,7 +3856,7 @@ function loadGroups() {
     }).join('');
 }
 
-let currentGroupId = null;
+// Variable currentGroupId déplacée dans js/modules/messaging.js
 
 function openGroupChat(groupId) {
     currentGroupId = groupId;
