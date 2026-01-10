@@ -948,6 +948,7 @@ function showApp() {
     // Mettre à jour l'interface avec les données utilisateur
     updateUserInterface();
     loadDashboardData();
+    updateMessageBadge();
     showPage('dashboard');
 
     // Afficher les sections selon le rôle
@@ -1354,10 +1355,30 @@ function submitBDEInterest(e) {
 // ===========================================
 // Messages
 // ===========================================
+
+/**
+ * Met à jour le badge du nombre de messages non lus
+ */
+function updateMessageBadge() {
+    const conversations = getConversations();
+    const unreadCount = conversations.reduce((total, conv) => {
+        return total + (conv.unread ? (conv.unreadCount || 1) : 0);
+    }, 0);
+
+    const badge = document.getElementById('msg-count');
+    if (badge) {
+        badge.textContent = unreadCount;
+        badge.style.display = unreadCount > 0 ? 'flex' : 'none';
+    }
+}
+
 function loadConversations() {
     const conversations = getConversations();
     const container = document.getElementById('conversations-items');
-    
+
+    // Mettre à jour le badge
+    updateMessageBadge();
+
     container.innerHTML = conversations.map(conv => `
         <div class="conversation-item ${conv.unread ? 'unread' : ''}" onclick="openConversation(${conv.id})">
             <img src="${conv.avatar}" alt="${conv.name}" class="conversation-avatar">
@@ -1386,6 +1407,7 @@ function openConversation(id) {
         conv.unreadCount = 0;
         localStorage.setItem('afertes_conversations', JSON.stringify(conversations));
         loadConversations();
+        updateMessageBadge();
     }
     
     container.innerHTML = `
