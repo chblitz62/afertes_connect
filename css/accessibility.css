@@ -239,6 +239,23 @@
     border-color: var(--a11y-border-color);
 }
 
+/* Bouton profil dans le header */
+[data-theme="dark"] .user-menu {
+    background-color: transparent;
+}
+
+[data-theme="dark"] .user-menu:hover {
+    background-color: var(--a11y-bg-tertiary);
+}
+
+[data-theme="dark"] .user-menu .user-name {
+    color: var(--a11y-text-primary);
+}
+
+[data-theme="dark"] .user-menu i {
+    color: var(--a11y-text-secondary);
+}
+
 [data-theme="dark"] .user-menu-dropdown {
     background-color: var(--a11y-bg-secondary);
     border-color: var(--a11y-border-color);

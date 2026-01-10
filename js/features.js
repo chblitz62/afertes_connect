@@ -1009,8 +1009,20 @@ let notifications = [];
 
 // Initialiser les notifications
 function initNotifications() {
-    // Charger les notifications
-    notifications = JSON.parse(localStorage.getItem(`afertes_notifs_${currentUser?.id}`) || '[]');
+    // Charger les notifications de l'utilisateur OU les notifications globales
+    const userNotifs = JSON.parse(localStorage.getItem(`afertes_notifs_${currentUser?.id}`) || '[]');
+    const globalNotifs = JSON.parse(localStorage.getItem('afertes_notifications') || '[]');
+
+    // Fusionner les deux sources (éviter les doublons par id)
+    const allNotifs = [...userNotifs];
+    globalNotifs.forEach(n => {
+        if (!allNotifs.find(existing => existing.id === n.id)) {
+            allNotifs.push(n);
+        }
+    });
+
+    // Trier par date
+    notifications = allNotifs.sort((a, b) => new Date(b.time || b.date) - new Date(a.time || a.date));
 
     // Demander la permission pour les notifications push
     if ('Notification' in window && Notification.permission === 'default') {
@@ -1066,11 +1078,19 @@ function showPushNotification(notif) {
 // Mettre à jour le badge de notification
 function updateNotificationBadge() {
     const unreadCount = notifications.filter(n => !n.read).length;
-    const badge = document.getElementById('nav-notif-badge');
 
+    // Badge dans la sidebar
+    const badge = document.getElementById('nav-notif-badge');
     if (badge) {
         badge.textContent = unreadCount;
         badge.classList.toggle('hidden', unreadCount === 0);
+    }
+
+    // Badge dans le header
+    const headerBadge = document.getElementById('notif-count');
+    if (headerBadge) {
+        headerBadge.textContent = unreadCount;
+        headerBadge.style.display = unreadCount > 0 ? 'flex' : 'none';
     }
 }
 
@@ -1133,6 +1153,15 @@ function markNotificationRead(id) {
     if (notif) {
         notif.read = true;
         localStorage.setItem(`afertes_notifs_${currentUser.id}`, JSON.stringify(notifications));
+
+        // Mettre à jour aussi afertes_notifications pour le header
+        const globalNotifs = JSON.parse(localStorage.getItem('afertes_notifications') || '[]');
+        const globalNotif = globalNotifs.find(n => n.id === id);
+        if (globalNotif) {
+            globalNotif.read = true;
+            localStorage.setItem('afertes_notifications', JSON.stringify(globalNotifs));
+        }
+
         updateNotificationBadge();
         loadNotifications();
     }
@@ -1142,6 +1171,12 @@ function markNotificationRead(id) {
 function markAllNotificationsRead() {
     notifications.forEach(n => n.read = true);
     localStorage.setItem(`afertes_notifs_${currentUser.id}`, JSON.stringify(notifications));
+
+    // Mettre à jour aussi afertes_notifications pour le header
+    const globalNotifs = JSON.parse(localStorage.getItem('afertes_notifications') || '[]');
+    globalNotifs.forEach(n => n.read = true);
+    localStorage.setItem('afertes_notifications', JSON.stringify(globalNotifs));
+
     updateNotificationBadge();
     loadNotifications();
     showToast('Toutes les notifications marquées comme lues', 'success');

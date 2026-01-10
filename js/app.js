@@ -241,10 +241,6 @@ function selectHeaderSite(siteKey) {
     localStorage.setItem('afertes_site', siteKey);
     updateCurrentSiteDisplay();
     document.getElementById('site-dropdown')?.classList.add('hidden');
-
-    // Mettre à jour l'ancienne variable current-site si utilisée ailleurs
-    const oldBadge = document.getElementById('current-site');
-    if (oldBadge) oldBadge.textContent = SITES_COORDS[siteKey].name;
 }
 
 function updateCurrentSiteDisplay() {
@@ -1127,6 +1123,7 @@ function showApp() {
     loadDashboardData();
     updateMessageBadge();
     updateNotificationBadgeHeader();
+    if (typeof initNotifications === 'function') initNotifications();
     initSiteAndWeather();
     initThemeFromMenu();
     showPage('dashboard');
@@ -1288,7 +1285,8 @@ function updateUserInterface() {
     // Header
     document.getElementById('header-username').textContent = currentUser.firstname;
     document.getElementById('header-avatar').src = currentUser.avatar;
-    document.getElementById('current-site').textContent = APP_CONFIG.sites[currentUser.site].name;
+    const currentSiteEl = document.getElementById('current-site-name');
+    if (currentSiteEl) currentSiteEl.textContent = APP_CONFIG.sites[currentUser.site].name;
     
     // Sidebar
     document.getElementById('sidebar-site').textContent = APP_CONFIG.sites[currentUser.site].name;

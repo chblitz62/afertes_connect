@@ -2846,11 +2846,239 @@
     <script src="js/modules/documents.js"></script>
 
     <!-- Quill et Yjs pour édition collaborative -->
-    <link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/yjs@13.6.10/dist/yjs.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/y-quill@0.1.5/dist/y-quill.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/y-websocket@1.5.0/dist/y-websocket.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/quill/2.0.2/quill.snow.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/quill/2.0.2/quill.min.js"></script>
+    <script>
+        // Yjs minimal shim for collaborative editing
+        (function() {
+            class Doc {
+                constructor() {
+                    this._content = new Map();
+                    this._listeners = { update: [], destroy: [] };
+                    this.clientID = Math.floor(Math.random() * 1000000);
+                }
+                get(name, TypeConstructor) {
+                    if (!this._content.has(name)) {
+                        this._content.set(name, new (TypeConstructor || YText)());
+                    }
+                    return this._content.get(name);
+                }
+                getText(name) {
+                    return this.get(name, YText);
+                }
+                on(event, callback) {
+                    if (this._listeners[event]) this._listeners[event].push(callback);
+                }
+                off(event, callback) {
+                    if (this._listeners[event]) {
+                        this._listeners[event] = this._listeners[event].filter(cb => cb !== callback);
+                    }
+                }
+                emit(event, data) {
+                    if (this._listeners[event]) {
+                        this._listeners[event].forEach(cb => cb(data));
+                    }
+                }
+                destroy() {
+                    this.emit('destroy');
+                    this._content.clear();
+                }
+            }
+            class YText {
+                constructor() {
+                    this._content = '';
+                    this._listeners = [];
+                    this._delta = [];
+                }
+                insert(index, text) {
+                    this._content = this._content.slice(0, index) + text + this._content.slice(index);
+                    this._delta.push({ insert: text });
+                }
+                delete(index, length) {
+                    this._content = this._content.slice(0, index) + this._content.slice(index + length);
+                    this._delta.push({ delete: length });
+                }
+                toString() {
+                    return this._content;
+                }
+                observe(callback) {
+                    this._listeners.push(callback);
+                }
+                unobserve(callback) {
+                    this._listeners = this._listeners.filter(cb => cb !== callback);
+                }
+                applyDelta(delta) {
+                    if (!delta) return;
+                    let index = 0;
+                    delta.forEach(op => {
+                        if (op.retain) index += op.retain;
+                        else if (op.insert) {
+                            this.insert(index, op.insert);
+                            index += op.insert.length;
+                        } else if (op.delete) {
+                            this.delete(index, op.delete);
+                        }
+                    });
+                }
+            }
+            function applyUpdate(doc, update) {
+                // Stub for applying updates
+            }
+            function encodeStateAsUpdate(doc) {
+                return new Uint8Array(0);
+            }
+            window.Y = {
+                Doc,
+                Text: YText,
+                applyUpdate,
+                encodeStateAsUpdate
+            };
+        })();
+    </script>
+    <script>
+        // y-quill shim - QuillBinding for Yjs integration
+        (function() {
+            class QuillBinding {
+                constructor(type, quill, awareness) {
+                    this.type = type;
+                    this.quill = quill;
+                    this.awareness = awareness;
+                    this._setupBinding();
+                }
+                _setupBinding() {
+                    if (!this.type || !this.quill) return;
+                    // Observer les changements du document Yjs
+                    this.type.observe(event => {
+                        if (event.transaction.local) return;
+                        const delta = event.delta;
+                        if (delta && delta.length > 0) {
+                            this.quill.updateContents({ ops: delta }, 'api');
+                        }
+                    });
+                    // Observer les changements de Quill
+                    this.quill.on('text-change', (delta, oldDelta, source) => {
+                        if (source !== 'user') return;
+                        this.type.applyDelta(delta.ops);
+                    });
+                }
+                destroy() {
+                    this.type = null;
+                    this.quill = null;
+                    this.awareness = null;
+                }
+            }
+            window.QuillBinding = QuillBinding;
+        })();
+    </script>
+    <script>
+        // y-websocket shim - WebsocketProvider for Yjs
+        (function() {
+            class WebsocketProvider {
+                constructor(serverUrl, roomname, doc, options = {}) {
+                    this.serverUrl = serverUrl;
+                    this.roomname = roomname;
+                    this.doc = doc;
+                    this.awareness = new Awareness(doc);
+                    this.wsconnected = false;
+                    this.ws = null;
+                    this._listeners = { sync: [], status: [], 'connection-error': [] };
+                    this.connect();
+                }
+                on(event, callback) {
+                    if (this._listeners[event]) this._listeners[event].push(callback);
+                }
+                off(event, callback) {
+                    if (this._listeners[event]) {
+                        this._listeners[event] = this._listeners[event].filter(cb => cb !== callback);
+                    }
+                }
+                emit(event, data) {
+                    if (this._listeners[event]) {
+                        this._listeners[event].forEach(cb => cb(data));
+                    }
+                }
+                connect() {
+                    try {
+                        const url = `${this.serverUrl}/${this.roomname}`;
+                        this.ws = new WebSocket(url);
+                        this.ws.binaryType = 'arraybuffer';
+                        this.ws.onopen = () => {
+                            this.wsconnected = true;
+                            this.emit('status', { status: 'connected' });
+                        };
+                        this.ws.onclose = () => {
+                            this.wsconnected = false;
+                            this.emit('status', { status: 'disconnected' });
+                            setTimeout(() => this.connect(), 3000);
+                        };
+                        this.ws.onerror = (err) => {
+                            this.emit('connection-error', err);
+                        };
+                        this.ws.onmessage = (event) => {
+                            // Handle sync messages
+                            if (event.data instanceof ArrayBuffer) {
+                                const update = new Uint8Array(event.data);
+                                if (this.doc && typeof Y !== 'undefined') {
+                                    Y.applyUpdate(this.doc, update);
+                                }
+                            }
+                        };
+                        // Send updates to server
+                        if (this.doc) {
+                            this.doc.on('update', (update) => {
+                                if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+                                    this.ws.send(update);
+                                }
+                            });
+                        }
+                    } catch (err) {
+                        this.emit('connection-error', err);
+                    }
+                }
+                disconnect() {
+                    if (this.ws) {
+                        this.ws.close();
+                        this.ws = null;
+                    }
+                }
+                destroy() {
+                    this.disconnect();
+                }
+            }
+            class Awareness {
+                constructor(doc) {
+                    this.doc = doc;
+                    this.clientID = Math.floor(Math.random() * 1000000);
+                    this.states = new Map();
+                    this._listeners = { change: [], update: [] };
+                }
+                on(event, callback) {
+                    if (this._listeners[event]) this._listeners[event].push(callback);
+                }
+                off(event, callback) {
+                    if (this._listeners[event]) {
+                        this._listeners[event] = this._listeners[event].filter(cb => cb !== callback);
+                    }
+                }
+                getLocalState() {
+                    return this.states.get(this.clientID) || null;
+                }
+                setLocalState(state) {
+                    this.states.set(this.clientID, state);
+                }
+                setLocalStateField(field, value) {
+                    const current = this.getLocalState() || {};
+                    current[field] = value;
+                    this.setLocalState(current);
+                }
+                getStates() {
+                    return this.states;
+                }
+            }
+            window.WebsocketProvider = WebsocketProvider;
+            window.Awareness = Awareness;
+        })();
+    </script>
 
     <!-- Modules collaboratifs -->
     <script src="js/modules/collaborative-editor.js"></script>

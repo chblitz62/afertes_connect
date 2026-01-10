@@ -32,7 +32,7 @@ app.use(helmet({
             styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "https://fonts.googleapis.com"],
             fontSrc: ["'self'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "https://fonts.gstatic.com"],
             imgSrc: ["'self'", "data:", "blob:"],
-            connectSrc: ["'self'", "ws:", "wss:"],
+            connectSrc: ["'self'", "ws:", "wss:", "https://api.open-meteo.com"],
             frameSrc: ["'none'"],
             objectSrc: ["'none'"],
             baseUri: ["'self'"],
@@ -41,6 +41,14 @@ app.use(helmet({
         }
     },
     crossOriginEmbedderPolicy: false,
+    permissionsPolicy: {
+        features: {
+            geolocation: ["'self'"],
+            camera: ["'none'"],
+            microphone: ["'none'"],
+            fullscreen: ["'self'"]
+        }
+    },
     hsts: {
         maxAge: 31536000, // 1 an
         includeSubDomains: true,
