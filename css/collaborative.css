@@ -655,6 +655,50 @@
     border-color: var(--border-color, #444);
 }
 
+[data-theme="dark"] .collab-doc-card .doc-title {
+    color: #ffffff;
+}
+
+[data-theme="dark"] .collab-doc-card .doc-title i {
+    color: #7c9eff;
+}
+
+[data-theme="dark"] .collab-doc-card .doc-meta {
+    color: #b0b0b0;
+}
+
+[data-theme="dark"] .collab-doc-card .doc-meta span {
+    color: #b0b0b0;
+}
+
+[data-theme="dark"] .collab-doc-card .doc-footer {
+    border-color: var(--border-color, #444);
+}
+
+[data-theme="dark"] .collab-doc-card .active-users {
+    color: #81c784;
+}
+
+[data-theme="dark"] .collab-docs-header h1 {
+    color: #ffffff;
+}
+
+[data-theme="dark"] .collab-docs-header h1 i {
+    color: #7c9eff;
+}
+
+[data-theme="dark"] .empty-state {
+    color: #b0b0b0;
+}
+
+[data-theme="dark"] .empty-state h3 {
+    color: #ffffff;
+}
+
+[data-theme="dark"] .empty-state i {
+    color: #7c9eff;
+}
+
 [data-theme="dark"] .editor-fullscreen {
     background: var(--bg-color, #1e1e1e);
 }
@@ -665,29 +709,61 @@
     border-color: var(--border-color, #444);
 }
 
+[data-theme="dark"] .editor-header .btn-back {
+    color: #b0b0b0;
+}
+
+[data-theme="dark"] .editor-header .btn-back:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .doc-title-input {
+    color: #ffffff;
+}
+
+[data-theme="dark"] .doc-title-input::placeholder {
+    color: #888888;
+}
+
 [data-theme="dark"] .editor-container {
     background: var(--bg-color, #1e1e1e);
 }
 
 [data-theme="dark"] .editor-container .ProseMirror {
     background: var(--card-bg, #2d2d2d);
+    color: #e8e8e8;
 }
 
 [data-theme="dark"] .doc-title-input:focus {
     background: var(--hover-bg, #3d3d3d);
 }
 
+[data-theme="dark"] .editor-toolbar button {
+    color: #c0c0c0;
+}
+
 [data-theme="dark"] .editor-toolbar button:hover:not(:disabled) {
     background: var(--hover-bg, #3d3d3d);
+    color: #ffffff;
 }
 
 [data-theme="dark"] .editor-container .ProseMirror code {
     background: var(--hover-bg, #3d3d3d);
+    color: #ff9800;
 }
 
 [data-theme="dark"] .editor-container .ProseMirror mark {
     background: #665c00;
     color: #fff;
+}
+
+[data-theme="dark"] .connection-status {
+    color: #b0b0b0;
+}
+
+[data-theme="dark"] .presence-count {
+    color: #b0b0b0;
 }
 
 /* ==================== Styles Quill ==================== */
@@ -780,7 +856,26 @@
 }
 
 [data-theme="dark"] .editor-container .ql-editor {
-    color: var(--text-primary, #e0e0e0);
+    color: #ffffff;
+}
+
+[data-theme="dark"] .editor-container .ql-editor.ql-blank::before {
+    color: #888888;
+}
+
+[data-theme="dark"] .editor-container .ql-editor p,
+[data-theme="dark"] .editor-container .ql-editor li,
+[data-theme="dark"] .editor-container .ql-editor span {
+    color: #ffffff;
+}
+
+[data-theme="dark"] .editor-container .ql-editor h1,
+[data-theme="dark"] .editor-container .ql-editor h2,
+[data-theme="dark"] .editor-container .ql-editor h3,
+[data-theme="dark"] .editor-container .ql-editor h4,
+[data-theme="dark"] .editor-container .ql-editor h5,
+[data-theme="dark"] .editor-container .ql-editor h6 {
+    color: #ffffff;
 }
 
 [data-theme="dark"] .editor-container .ql-editor a {
@@ -855,4 +950,226 @@
 
 [data-theme="dark"] .permission-item .permission-level {
     background: rgba(255, 255, 255, 0.1);
+}
+
+/* ==================== Actions documents ==================== */
+
+.collab-doc-card {
+    position: relative;
+}
+
+.doc-card-content {
+    cursor: pointer;
+}
+
+.doc-actions {
+    display: flex;
+    gap: 0.5rem;
+    padding-top: 0.75rem;
+    margin-top: 0.75rem;
+    border-top: 1px solid var(--border-color, #e0e0e0);
+    justify-content: flex-end;
+}
+
+.doc-actions .btn-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    background: var(--hover-bg, #f5f5f5);
+    color: var(--text-secondary, #666);
+}
+
+.doc-actions .btn-icon:hover {
+    transform: scale(1.1);
+}
+
+.doc-actions .btn-archive:hover {
+    background: rgba(255, 152, 0, 0.15);
+    color: #f57c00;
+}
+
+.doc-actions .btn-delete:hover {
+    background: rgba(244, 67, 54, 0.15);
+    color: #d32f2f;
+}
+
+.archived-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 0.5rem;
+    padding: 0.125rem 0.375rem;
+    background: rgba(255, 152, 0, 0.15);
+    color: #f57c00;
+    border-radius: 4px;
+    font-size: 0.7rem;
+}
+
+/* Modale de confirmation suppression */
+.delete-confirm-modal {
+    max-width: 480px;
+}
+
+.delete-warning {
+    background: rgba(244, 67, 54, 0.1);
+    color: var(--error-color, #d32f2f);
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    border-left: 4px solid var(--error-color, #d32f2f);
+}
+
+.delete-doc-title {
+    background: var(--hover-bg, #f5f5f5);
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 1rem 0;
+}
+
+.delete-doc-title i {
+    color: var(--primary-color, #253672);
+}
+
+.delete-suggestion {
+    background: rgba(255, 193, 7, 0.1);
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    color: var(--text-secondary, #666);
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+}
+
+.delete-suggestion i {
+    color: #ffc107;
+    margin-top: 0.125rem;
+}
+
+.modal-footer {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+}
+
+.btn-warning {
+    background: #ff9800;
+    color: #fff;
+}
+
+.btn-warning:hover {
+    background: #f57c00;
+}
+
+.btn-danger {
+    background: var(--error-color, #f44336);
+    color: #fff;
+}
+
+.btn-danger:hover {
+    background: #d32f2f;
+}
+
+/* Filtre documents archivés */
+.archive-filter {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: var(--text-secondary, #666);
+}
+
+.archive-filter input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+/* Mode sombre - Actions */
+[data-theme="dark"] .doc-actions {
+    border-color: var(--border-color, #444);
+}
+
+[data-theme="dark"] .doc-actions .btn-icon {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-secondary, #aaa);
+}
+
+[data-theme="dark"] .archived-badge {
+    background: rgba(255, 152, 0, 0.2);
+}
+
+[data-theme="dark"] .delete-warning {
+    background: rgba(244, 67, 54, 0.15);
+}
+
+[data-theme="dark"] .delete-doc-title {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .delete-suggestion {
+    background: rgba(255, 193, 7, 0.15);
+    color: #d0d0d0;
+}
+
+[data-theme="dark"] .delete-suggestion em {
+    color: #d0d0d0;
+}
+
+/* Labels et textes mode sombre */
+[data-theme="dark"] .new-doc-form label {
+    color: #ffffff;
+}
+
+[data-theme="dark"] .archive-filter {
+    color: #b0b0b0;
+}
+
+[data-theme="dark"] .archive-filter span {
+    color: #b0b0b0;
+}
+
+[data-theme="dark"] .modal-content {
+    background: var(--card-bg, #2d2d2d);
+    color: #ffffff;
+}
+
+[data-theme="dark"] .modal-content h2 {
+    color: #ffffff;
+}
+
+[data-theme="dark"] .modal-content p {
+    color: #d0d0d0;
+}
+
+[data-theme="dark"] .modal-content .modal-close {
+    color: #b0b0b0;
+}
+
+[data-theme="dark"] .modal-content .modal-close:hover {
+    color: #ffffff;
+}
+
+[data-theme="dark"] .delete-doc-title {
+    color: #ffffff;
+}
+
+[data-theme="dark"] .btn-secondary {
+    background: #555;
+    color: #ffffff;
+}
+
+[data-theme="dark"] .btn-secondary:hover {
+    background: #666;
 }

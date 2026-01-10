@@ -33,7 +33,8 @@ const DemoCollabAPI = {
             ownerName: doc.owner_id === currentUser.id
                 ? `${currentUser.firstName || ''} ${currentUser.lastName || ''}`.trim() || currentUser.email
                 : 'Utilisateur',
-            canEdit: doc.owner_id === currentUser.id || doc.visibility === 'public',
+            // En mode démo, tous les documents sont éditables/supprimables
+            canEdit: true,
             active_users: 0
         }));
     },
@@ -116,6 +117,26 @@ const DemoCollabAPI = {
             docs[index].updated_at = new Date().toISOString();
             this.saveDocuments(docs);
         }
+    },
+
+    archive(id) {
+        const docs = this.getDocuments();
+        const index = docs.findIndex(d => d.id === id);
+        if (index !== -1) {
+            docs[index].archived = true;
+            docs[index].archived_at = new Date().toISOString();
+            this.saveDocuments(docs);
+        }
+    },
+
+    unarchive(id) {
+        const docs = this.getDocuments();
+        const index = docs.findIndex(d => d.id === id);
+        if (index !== -1) {
+            docs[index].archived = false;
+            docs[index].archived_at = null;
+            this.saveDocuments(docs);
+        }
     }
 };
 
@@ -137,14 +158,14 @@ async function loadCollabDocuments() {
         }
 
         currentCollabDocuments = documents;
-        renderCollabDocuments(documents);
+        filterCollabDocs(); // Appliquer le filtre (masque les archivés par défaut)
     } catch (error) {
         console.error('Erreur chargement documents collaboratifs:', error);
         // En cas d'erreur, essayer le mode démo
         if (!isDemoMode()) {
             console.log('Basculement vers le mode démo');
             currentCollabDocuments = DemoCollabAPI.getAll();
-            renderCollabDocuments(currentCollabDocuments);
+            filterCollabDocs();
         } else {
             container.innerHTML = `
                 <div class="error-message">
@@ -179,23 +200,36 @@ function renderCollabDocuments(documents) {
     }
 
     container.innerHTML = documents.map(doc => `
-        <div class="collab-doc-card" onclick="openDocument('${doc.id}', '${escapeHtml(doc.slug)}')" data-id="${doc.id}">
-            <div class="doc-title">
-                <i class="fas fa-file-alt"></i>
-                ${escapeHtml(doc.title)}
+        <div class="collab-doc-card" data-id="${doc.id}">
+            <div class="doc-card-content" onclick="openDocument('${doc.id}', '${escapeHtml(doc.slug)}')">
+                <div class="doc-title">
+                    <i class="fas fa-file-alt"></i>
+                    ${escapeHtml(doc.title)}
+                    ${doc.archived ? '<span class="archived-badge"><i class="fas fa-archive"></i></span>' : ''}
+                </div>
+                <div class="doc-meta">
+                    <span><i class="fas fa-user"></i> ${escapeHtml(doc.ownerName || 'Inconnu')}</span>
+                    <span><i class="fas fa-clock"></i> ${formatDate(doc.updated_at)}</span>
+                </div>
+                <div class="doc-footer">
+                    <span class="doc-visibility ${doc.visibility}">
+                        ${getVisibilityLabel(doc.visibility)}
+                    </span>
+                    <span class="active-users ${doc.active_users > 0 ? 'has-users' : ''}">
+                        <i class="fas fa-users"></i> ${doc.active_users || 0}
+                    </span>
+                </div>
             </div>
-            <div class="doc-meta">
-                <span><i class="fas fa-user"></i> ${escapeHtml(doc.ownerName || 'Inconnu')}</span>
-                <span><i class="fas fa-clock"></i> ${formatDate(doc.updated_at)}</span>
+            ${doc.canEdit ? `
+            <div class="doc-actions">
+                <button class="btn-icon btn-archive" onclick="event.stopPropagation(); ${doc.archived ? `unarchiveDocument('${doc.id}')` : `archiveDocument('${doc.id}')`}" title="${doc.archived ? 'Désarchiver' : 'Archiver'}">
+                    <i class="fas fa-${doc.archived ? 'box-open' : 'archive'}"></i>
+                </button>
+                <button class="btn-icon btn-delete" onclick="event.stopPropagation(); confirmDeleteDocument('${doc.id}', '${escapeHtml(doc.title)}')" title="Supprimer">
+                    <i class="fas fa-trash"></i>
+                </button>
             </div>
-            <div class="doc-footer">
-                <span class="doc-visibility ${doc.visibility}">
-                    ${getVisibilityLabel(doc.visibility)}
-                </span>
-                <span class="active-users ${doc.active_users > 0 ? 'has-users' : ''}">
-                    <i class="fas fa-users"></i> ${doc.active_users || 0}
-                </span>
-            </div>
+            ` : ''}
         </div>
     `).join('');
 }
@@ -206,6 +240,7 @@ function renderCollabDocuments(documents) {
 function filterCollabDocs() {
     const search = document.getElementById('collab-search')?.value.toLowerCase() || '';
     const visibility = document.getElementById('collab-visibility-filter')?.value || '';
+    const showArchived = document.getElementById('show-archived')?.checked || false;
 
     const filtered = currentCollabDocuments.filter(doc => {
         const matchesSearch = !search ||
@@ -214,7 +249,9 @@ function filterCollabDocs() {
 
         const matchesVisibility = !visibility || doc.visibility === visibility;
 
-        return matchesSearch && matchesVisibility;
+        const matchesArchived = showArchived || !doc.archived;
+
+        return matchesSearch && matchesVisibility && matchesArchived;
     });
 
     renderCollabDocuments(filtered);
@@ -659,6 +696,135 @@ if (typeof escapeHtml !== 'function') {
     }
 }
 
+// ==================== Archivage et Suppression ====================
+
+/**
+ * Archive un document
+ */
+async function archiveDocument(documentId) {
+    try {
+        if (isDemoMode()) {
+            DemoCollabAPI.archive(documentId);
+        } else {
+            await API.updateCollabDocument(documentId, { archived: true });
+        }
+        showToast('Document archivé', 'success');
+        loadCollabDocuments();
+    } catch (error) {
+        console.error('Erreur archivage:', error);
+        showToast(error.message || 'Erreur lors de l\'archivage', 'error');
+    }
+}
+
+/**
+ * Désarchive un document
+ */
+async function unarchiveDocument(documentId) {
+    try {
+        if (isDemoMode()) {
+            DemoCollabAPI.unarchive(documentId);
+        } else {
+            await API.updateCollabDocument(documentId, { archived: false });
+        }
+        showToast('Document restauré', 'success');
+        loadCollabDocuments();
+    } catch (error) {
+        console.error('Erreur désarchivage:', error);
+        showToast(error.message || 'Erreur lors de la restauration', 'error');
+    }
+}
+
+/**
+ * Affiche la confirmation de suppression
+ */
+function confirmDeleteDocument(documentId, documentTitle) {
+    // Créer la modale de confirmation
+    const existingModal = document.getElementById('delete-confirm-modal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+
+    const modal = document.createElement('div');
+    modal.id = 'delete-confirm-modal';
+    modal.className = 'modal';
+    modal.innerHTML = `
+        <div class="modal-content delete-confirm-modal">
+            <div class="modal-header">
+                <h2><i class="fas fa-exclamation-triangle" style="color: var(--error-color, #f44336);"></i> Supprimer le document</h2>
+                <button class="modal-close" onclick="closeDeleteModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p class="delete-warning">
+                    <strong>Attention :</strong> Cette action est irréversible !
+                </p>
+                <p>Êtes-vous sûr de vouloir supprimer définitivement le document :</p>
+                <p class="delete-doc-title"><i class="fas fa-file-alt"></i> ${escapeHtml(documentTitle)}</p>
+                <p class="delete-suggestion">
+                    <i class="fas fa-lightbulb"></i>
+                    <em>Conseil : Vous pouvez aussi archiver le document pour le conserver sans l'afficher.</em>
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeDeleteModal()">
+                    <i class="fas fa-times"></i> Annuler
+                </button>
+                <button class="btn btn-warning" onclick="closeDeleteModal(); archiveDocument('${documentId}')">
+                    <i class="fas fa-archive"></i> Archiver plutôt
+                </button>
+                <button class="btn btn-danger" onclick="deleteDocument('${documentId}')">
+                    <i class="fas fa-trash"></i> Supprimer définitivement
+                </button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+    modal.classList.remove('hidden');
+}
+
+/**
+ * Ferme la modale de confirmation
+ */
+function closeDeleteModal() {
+    const modal = document.getElementById('delete-confirm-modal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+/**
+ * Supprime définitivement un document
+ */
+async function deleteDocument(documentId) {
+    try {
+        closeDeleteModal();
+
+        if (isDemoMode()) {
+            DemoCollabAPI.delete(documentId);
+        } else {
+            await API.deleteCollabDocument(documentId);
+        }
+
+        showToast('Document supprimé définitivement', 'success');
+        loadCollabDocuments();
+    } catch (error) {
+        console.error('Erreur suppression:', error);
+        showToast(error.message || 'Erreur lors de la suppression', 'error');
+    }
+}
+
+/**
+ * Filtre pour afficher/masquer les documents archivés
+ */
+function toggleArchivedDocs() {
+    const showArchived = document.getElementById('show-archived')?.checked || false;
+    const filtered = currentCollabDocuments.filter(doc => {
+        if (showArchived) return true;
+        return !doc.archived;
+    });
+    renderCollabDocuments(filtered);
+}
+
 // Exposer les fonctions globalement
 window.loadCollabDocuments = loadCollabDocuments;
 window.filterCollabDocs = filterCollabDocs;
@@ -675,3 +841,9 @@ window.removePermission = removePermission;
 window.showVersionsModal = showVersionsModal;
 window.closeVersionsModal = closeVersionsModal;
 window.createDocumentSnapshot = createDocumentSnapshot;
+window.archiveDocument = archiveDocument;
+window.unarchiveDocument = unarchiveDocument;
+window.confirmDeleteDocument = confirmDeleteDocument;
+window.closeDeleteModal = closeDeleteModal;
+window.deleteDocument = deleteDocument;
+window.toggleArchivedDocs = toggleArchivedDocs;

@@ -788,6 +788,10 @@
                         <option value="formation">Formation</option>
                         <option value="public">Publics</option>
                     </select>
+                    <label class="archive-filter">
+                        <input type="checkbox" id="show-archived" onchange="toggleArchivedDocs()">
+                        <span><i class="fas fa-archive"></i> Afficher archivés</span>
+                    </label>
                 </div>
                 <div class="collab-docs-grid" id="collab-docs-list">
                     <!-- Documents générés dynamiquement -->
