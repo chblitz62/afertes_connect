@@ -16,12 +16,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 <body>
-    <!-- SDK Facebook pour les widgets de pages -->
-    <div id="fb-root"></div>
-    <script async defer crossorigin="anonymous"
-            src="https://connect.facebook.net/fr_FR/sdk.js#xfbml=1&version=v18.0"
-            nonce="facebook"></script>
-
     <!-- Écran de chargement -->
     <div id="loading-screen" class="loading-screen">
         <div class="loader">
@@ -597,24 +591,21 @@
                         <div class="facebook-feed-header">
                             <i class="fab fa-facebook"></i>
                             <span>Page Facebook AFERTES</span>
-                            <span class="fb-refresh-info" id="fb-afertes-refresh">Actualisation auto: 1h</span>
+                            <a href="https://www.facebook.com/afertesofficiel" target="_blank" class="fb-external-link">
+                                <i class="fas fa-external-link-alt"></i>
+                            </a>
                         </div>
-                        <div class="fb-page"
-                             data-href="https://www.facebook.com/afertesofficiel"
-                             data-tabs="timeline"
-                             data-width=""
-                             data-height="700"
-                             data-small-header="false"
-                             data-adapt-container-width="true"
-                             data-hide-cover="false"
-                             data-show-facepile="true">
-                            <blockquote cite="https://www.facebook.com/afertesofficiel" class="fb-xfbml-parse-ignore">
-                                <a href="https://www.facebook.com/afertesofficiel">AFERTES Officiel</a>
-                            </blockquote>
-                        </div>
-                        <div class="fb-loading" id="fb-afertes-loading">
-                            <i class="fas fa-spinner fa-spin"></i> Chargement du flux Facebook...
-                        </div>
+                        <iframe
+                            src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2Fafertesofficiel&tabs=timeline&width=500&height=700&small_header=false&adapt_container_width=true&hide_cover=false&show_facepile=true&appId"
+                            width="100%"
+                            height="700"
+                            style="border:none;overflow:hidden"
+                            scrolling="no"
+                            frameborder="0"
+                            allowfullscreen="true"
+                            allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+                            loading="lazy">
+                        </iframe>
                     </div>
                     <!-- Autres actualités locales -->
                     <div class="news-local-section">
@@ -644,24 +635,21 @@
                             <div class="facebook-feed-header">
                                 <i class="fab fa-facebook"></i>
                                 <span>Page Facebook BDE AFERTES</span>
-                                <span class="fb-refresh-info" id="fb-bde-refresh">Actualisation auto: 1h</span>
+                                <a href="https://www.facebook.com/profile.php?id=61554389123946" target="_blank" class="fb-external-link">
+                                    <i class="fas fa-external-link-alt"></i>
+                                </a>
                             </div>
-                            <div class="fb-page"
-                                 data-href="https://www.facebook.com/profile.php?id=61554389123946"
-                                 data-tabs="timeline,events"
-                                 data-width=""
-                                 data-height="600"
-                                 data-small-header="false"
-                                 data-adapt-container-width="true"
-                                 data-hide-cover="false"
-                                 data-show-facepile="true">
-                                <blockquote cite="https://www.facebook.com/profile.php?id=61554389123946" class="fb-xfbml-parse-ignore">
-                                    <a href="https://www.facebook.com/profile.php?id=61554389123946">BDE AFERTES</a>
-                                </blockquote>
-                            </div>
-                            <div class="fb-loading" id="fb-bde-loading">
-                                <i class="fas fa-spinner fa-spin"></i> Chargement du flux Facebook...
-                            </div>
+                            <iframe
+                                src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2Fprofile.php%3Fid%3D61554389123946&tabs=timeline%2Cevents&width=500&height=600&small_header=false&adapt_container_width=true&hide_cover=false&show_facepile=true&appId"
+                                width="100%"
+                                height="600"
+                                style="border:none;overflow:hidden"
+                                scrolling="no"
+                                frameborder="0"
+                                allowfullscreen="true"
+                                allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+                                loading="lazy">
+                            </iframe>
                         </div>
                         <!-- Événements locaux -->
                         <div class="bde-upcoming">

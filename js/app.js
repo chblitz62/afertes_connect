@@ -174,79 +174,25 @@ function initApp() {
 let facebookRefreshInterval = null;
 
 function initFacebookWidgets() {
-    // Attendre que le SDK Facebook soit chargé
-    if (typeof FB !== 'undefined') {
-        parseFacebookWidgets();
-    } else {
-        // Si FB n'est pas encore chargé, attendre
-        window.fbAsyncInit = function() {
-            parseFacebookWidgets();
-        };
-    }
-
-    // Rafraîchir les widgets toutes les heures (3600000 ms)
+    // Rafraîchir les iframes Facebook toutes les heures (3600000 ms)
     if (facebookRefreshInterval) {
         clearInterval(facebookRefreshInterval);
     }
     facebookRefreshInterval = setInterval(refreshFacebookWidgets, 3600000);
-
-    // Mettre à jour l'heure de dernière actualisation
-    updateFacebookRefreshTime();
-}
-
-function parseFacebookWidgets() {
-    if (typeof FB !== 'undefined' && FB.XFBML) {
-        FB.XFBML.parse(document.getElementById('fb-afertes-container'));
-        FB.XFBML.parse(document.getElementById('fb-bde-container'));
-
-        // Masquer le loader après un délai
-        setTimeout(() => {
-            const afertesLoading = document.getElementById('fb-afertes-loading');
-            const bdeLoading = document.getElementById('fb-bde-loading');
-            if (afertesLoading) afertesLoading.classList.add('hidden');
-            if (bdeLoading) bdeLoading.classList.add('hidden');
-        }, 3000);
-    }
 }
 
 function refreshFacebookWidgets() {
     console.log('Rafraîchissement des widgets Facebook...');
 
-    // Reparser les widgets Facebook
-    if (typeof FB !== 'undefined' && FB.XFBML) {
-        // Afficher les loaders
-        const afertesLoading = document.getElementById('fb-afertes-loading');
-        const bdeLoading = document.getElementById('fb-bde-loading');
-        if (afertesLoading) afertesLoading.classList.remove('hidden');
-        if (bdeLoading) bdeLoading.classList.remove('hidden');
-
-        // Recharger les widgets
-        FB.XFBML.parse(document.getElementById('fb-afertes-container'));
-        FB.XFBML.parse(document.getElementById('fb-bde-container'));
-
-        // Masquer les loaders
-        setTimeout(() => {
-            if (afertesLoading) afertesLoading.classList.add('hidden');
-            if (bdeLoading) bdeLoading.classList.add('hidden');
-        }, 3000);
-    }
-
-    updateFacebookRefreshTime();
-}
-
-function updateFacebookRefreshTime() {
-    const now = new Date();
-    const timeStr = now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-
-    const afertesRefresh = document.getElementById('fb-afertes-refresh');
-    const bdeRefresh = document.getElementById('fb-bde-refresh');
-
-    if (afertesRefresh) {
-        afertesRefresh.textContent = `Dernière maj: ${timeStr} | Auto: 1h`;
-    }
-    if (bdeRefresh) {
-        bdeRefresh.textContent = `Dernière maj: ${timeStr} | Auto: 1h`;
-    }
+    // Recharger les iframes en ajoutant un timestamp
+    const iframes = document.querySelectorAll('#fb-afertes-container iframe, #fb-bde-container iframe');
+    iframes.forEach(iframe => {
+        const src = iframe.src;
+        // Supprimer l'ancien timestamp s'il existe
+        const baseUrl = src.replace(/&_t=\d+/, '');
+        // Ajouter un nouveau timestamp pour forcer le rechargement
+        iframe.src = baseUrl + '&_t=' + Date.now();
+    });
 }
 
 function setupEventListeners() {
