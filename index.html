@@ -815,15 +815,18 @@
                     </div>
                     <div class="editor-header-right">
                         <div class="presence-container" id="active-users"></div>
-                        <button class="btn btn-icon" onclick="showVersionsModal()" title="Historique">
-                            <i class="fas fa-history"></i>
-                        </button>
-                        <button class="btn btn-icon" onclick="showPermissionsModal()" title="Partager">
-                            <i class="fas fa-share-alt"></i>
-                        </button>
-                        <button class="btn btn-icon" onclick="createDocumentSnapshot()" title="Créer une version">
-                            <i class="fas fa-save"></i>
-                        </button>
+                        <!-- Import -->
+                        <div class="dropdown">
+                            <button class="btn btn-icon" onclick="toggleImportMenu()" title="Importer">
+                                <i class="fas fa-folder-open"></i>
+                            </button>
+                            <div id="import-menu" class="dropdown-menu hidden">
+                                <button onclick="importFromPC()"><i class="fas fa-laptop"></i> Depuis mon PC</button>
+                                <button onclick="importFromDrive()"><i class="fas fa-cloud"></i> Depuis mon Drive</button>
+                            </div>
+                        </div>
+                        <input type="file" id="file-import-input" accept=".html,.htm,.txt,.doc,.docx,.rtf" style="display:none" onchange="handleFileImport(event)">
+                        <!-- Télécharger -->
                         <div class="dropdown">
                             <button class="btn btn-icon" onclick="toggleDownloadMenu()" title="Télécharger">
                                 <i class="fas fa-download"></i>
@@ -834,6 +837,20 @@
                                 <button onclick="downloadDocument('html')"><i class="fas fa-file-code"></i> HTML</button>
                             </div>
                         </div>
+                        <!-- Imprimer -->
+                        <button class="btn btn-icon" onclick="printDocument()" title="Imprimer">
+                            <i class="fas fa-print"></i>
+                        </button>
+                        <!-- Autres actions -->
+                        <button class="btn btn-icon" onclick="showVersionsModal()" title="Historique">
+                            <i class="fas fa-history"></i>
+                        </button>
+                        <button class="btn btn-icon" onclick="showPermissionsModal()" title="Partager">
+                            <i class="fas fa-share-alt"></i>
+                        </button>
+                        <button class="btn btn-icon" onclick="createDocumentSnapshot()" title="Créer une version">
+                            <i class="fas fa-save"></i>
+                        </button>
                     </div>
                 </div>
                 <div class="editor-toolbar" id="editor-toolbar-actions">

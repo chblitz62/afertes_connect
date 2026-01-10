@@ -1065,8 +1065,164 @@ function sanitizeFilename(name) {
 }
 
 // ============================================
+// IMPORT DE DOCUMENTS
+// ============================================
+
+/**
+ * Affiche/masque le menu d'import
+ */
+function toggleImportMenu() {
+    const menu = document.getElementById('import-menu');
+    const downloadMenu = document.getElementById('download-menu');
+
+    // Fermer l'autre menu
+    if (downloadMenu) downloadMenu.classList.add('hidden');
+
+    if (menu) {
+        menu.classList.toggle('hidden');
+        if (!menu.classList.contains('hidden')) {
+            setTimeout(() => {
+                document.addEventListener('click', closeImportMenuOnClickOutside);
+            }, 0);
+        }
+    }
+}
+
+function closeImportMenuOnClickOutside(e) {
+    const menu = document.getElementById('import-menu');
+    const dropdown = e.target.closest('.dropdown');
+    if (!dropdown && menu) {
+        menu.classList.add('hidden');
+        document.removeEventListener('click', closeImportMenuOnClickOutside);
+    }
+}
+
+/**
+ * Import depuis le PC
+ */
+function importFromPC() {
+    document.getElementById('import-menu')?.classList.add('hidden');
+    document.getElementById('file-import-input')?.click();
+}
+
+/**
+ * Import depuis Google Drive (placeholder)
+ */
+function importFromDrive() {
+    document.getElementById('import-menu')?.classList.add('hidden');
+    showToast('Fonctionnalité Google Drive bientôt disponible. Utilisez "Depuis mon PC" pour l\'instant.', 'info');
+}
+
+/**
+ * Gère l'import d'un fichier
+ */
+async function handleFileImport(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const quill = window.demoQuill;
+    if (!quill) {
+        showToast('Éditeur non disponible', 'error');
+        return;
+    }
+
+    showToast('Import en cours...', 'info');
+
+    try {
+        const text = await file.text();
+        let content = '';
+
+        if (file.name.endsWith('.html') || file.name.endsWith('.htm')) {
+            // Extraire le contenu du body si présent
+            const match = text.match(/<body[^>]*>([\s\S]*)<\/body>/i);
+            content = match ? match[1] : text;
+        } else if (file.name.endsWith('.txt')) {
+            // Convertir le texte brut en paragraphes
+            content = text.split('\n').map(line => `<p>${escapeHtml(line) || '<br>'}</p>`).join('');
+        } else {
+            // Pour .doc/.docx, on essaie de lire comme texte (limité)
+            content = `<p>${escapeHtml(text).replace(/\n/g, '</p><p>')}</p>`;
+        }
+
+        // Ajouter le contenu à l'éditeur
+        const currentContent = quill.root.innerHTML;
+        quill.root.innerHTML = currentContent + content;
+
+        showToast(`Fichier "${file.name}" importé`, 'success');
+    } catch (error) {
+        console.error('Erreur import:', error);
+        showToast('Erreur lors de l\'import du fichier', 'error');
+    }
+
+    // Reset l'input
+    event.target.value = '';
+}
+
+// ============================================
+// IMPRESSION
+// ============================================
+
+/**
+ * Imprime le document
+ */
+function printDocument() {
+    const quill = window.demoQuill;
+    if (!quill) {
+        showToast('Éditeur non disponible', 'error');
+        return;
+    }
+
+    const title = document.getElementById('doc-title')?.value || 'Document';
+    const content = quill.root.innerHTML;
+
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+        showToast('Veuillez autoriser les popups pour imprimer', 'warning');
+        return;
+    }
+
+    printWindow.document.write(`<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>${escapeHtml(title)}</title>
+    <style>
+        @page { margin: 2cm; }
+        @media print {
+            .page-break { page-break-after: always; height: 0; visibility: hidden; }
+            .section-break { page-break-before: always; }
+        }
+        body { font-family: 'Times New Roman', serif; font-size: 12pt; line-height: 1.6; color: #000; max-width: 800px; margin: 0 auto; }
+        h1 { font-size: 24pt; color: #253672; }
+        h2 { font-size: 18pt; color: #253672; }
+        h3 { font-size: 14pt; color: #253672; }
+        .page-break { border-top: 2px dashed #ccc; margin: 30px 0; padding-top: 30px; }
+        .section-break { border-top: 3px solid #253672; margin: 30px 0; padding-top: 20px; }
+        .section-break::before { content: attr(data-section); display: block; font-weight: bold; color: #253672; margin-bottom: 10px; }
+        .table-of-contents { background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        .table-of-contents-title { font-size: 16pt; font-weight: bold; margin-bottom: 15px; }
+        .toc-item { padding: 5px 0; }
+        .toc-item.level-2 { padding-left: 20px; }
+        .toc-item.level-3 { padding-left: 40px; }
+        table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+        th, td { border: 1px solid #ddd; padding: 8px; }
+        img { max-width: 100%; }
+    </style>
+</head>
+<body>
+    <h1>${escapeHtml(title)}</h1>
+    ${content}
+    <script>window.onload = function() { window.print(); }</script>
+</body>
+</html>`);
+    printWindow.document.close();
+}
+
+// ============================================
 // SAUT DE PAGE ET SAUT DE SECTION
 // ============================================
+
+let sectionCounter = 1;
 
 /**
  * Insère un saut de page à la position du curseur
@@ -1078,65 +1234,45 @@ function insertPageBreak() {
         return;
     }
 
-    const range = quill.getSelection();
+    // Créer l'élément de saut de page
+    const pageBreakHtml = '<p><br></p><div class="page-break" contenteditable="false">--- Saut de page ---</div><p><br></p>';
+
+    // Insérer dans l'éditeur
+    const range = quill.getSelection(true);
     if (range) {
-        quill.insertEmbed(range.index, 'divider', { type: 'page-break' });
-        quill.setSelection(range.index + 1);
+        // Insérer à la position courante
+        quill.clipboard.dangerouslyPasteHTML(range.index, pageBreakHtml);
+        quill.setSelection(range.index + 3);
     } else {
         // Insérer à la fin
-        const length = quill.getLength();
-        quill.insertEmbed(length - 1, 'divider', { type: 'page-break' });
+        quill.clipboard.dangerouslyPasteHTML(quill.getLength(), pageBreakHtml);
     }
 
-    // Fallback: insérer directement du HTML
-    insertHtmlAtCursor('<div class="page-break" contenteditable="false"></div><p><br></p>');
     showToast('Saut de page inséré', 'success');
 }
 
 /**
  * Insère un saut de section avec numérotation
  */
-let sectionCounter = 1;
-
 function insertSectionBreak() {
-    const sectionNumber = sectionCounter++;
-    insertHtmlAtCursor(`<div class="section-break" data-section="Section ${sectionNumber}" contenteditable="false"></div><p><br></p>`);
-    showToast(`Section ${sectionNumber} créée`, 'success');
-}
-
-/**
- * Insère du HTML à la position du curseur
- */
-function insertHtmlAtCursor(html) {
     const quill = window.demoQuill;
-    if (!quill) return;
-
-    const range = quill.getSelection();
-    const position = range ? range.index : quill.getLength() - 1;
-
-    // Méthode simple : manipuler directement le DOM
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = html;
-
-    // Insérer après le paragraphe courant
-    const selection = window.getSelection();
-    if (selection.rangeCount > 0) {
-        const selRange = selection.getRangeAt(0);
-        let container = selRange.commonAncestorContainer;
-
-        // Trouver le paragraphe parent
-        while (container && container !== quill.root && container.nodeName !== 'P') {
-            container = container.parentNode;
-        }
-
-        if (container && container !== quill.root) {
-            container.parentNode.insertBefore(tempDiv.firstChild, container.nextSibling);
-        } else {
-            quill.root.appendChild(tempDiv.firstChild);
-        }
-    } else {
-        quill.root.appendChild(tempDiv.firstChild);
+    if (!quill) {
+        showToast('Éditeur non disponible', 'error');
+        return;
     }
+
+    const sectionNumber = sectionCounter++;
+    const sectionBreakHtml = `<p><br></p><div class="section-break" data-section="Section ${sectionNumber}" contenteditable="false">═══ Section ${sectionNumber} ═══</div><p><br></p>`;
+
+    const range = quill.getSelection(true);
+    if (range) {
+        quill.clipboard.dangerouslyPasteHTML(range.index, sectionBreakHtml);
+        quill.setSelection(range.index + 3);
+    } else {
+        quill.clipboard.dangerouslyPasteHTML(quill.getLength(), sectionBreakHtml);
+    }
+
+    showToast(`Section ${sectionNumber} créée`, 'success');
 }
 
 // ============================================
@@ -1364,6 +1500,11 @@ window.toggleArchivedDocs = toggleArchivedDocs;
 // Nouvelles fonctions document
 window.toggleDownloadMenu = toggleDownloadMenu;
 window.downloadDocument = downloadDocument;
+window.toggleImportMenu = toggleImportMenu;
+window.importFromPC = importFromPC;
+window.importFromDrive = importFromDrive;
+window.handleFileImport = handleFileImport;
+window.printDocument = printDocument;
 window.insertPageBreak = insertPageBreak;
 window.insertSectionBreak = insertSectionBreak;
 window.insertTableOfContents = insertTableOfContents;
