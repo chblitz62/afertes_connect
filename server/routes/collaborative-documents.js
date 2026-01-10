@@ -39,11 +39,11 @@ router.get('/documents', async (req, res) => {
     try {
         const userId = req.user.id;
         const userRole = req.user.role;
-        const { visibility, formation_id, search, limit = 50, offset = 0 } = req.query;
+        const { visibility, formation_id, search, limit = 50, offset = 0, include_archived } = req.query;
 
         let sql = `
             SELECT DISTINCT cd.id, cd.title, cd.slug, cd.visibility, cd.formation_id,
-                   cd.created_at, cd.updated_at, cd.owner_id,
+                   cd.created_at, cd.updated_at, cd.owner_id, cd.archived,
                    u.first_name as owner_first_name, u.last_name as owner_last_name,
                    u.username as owner_username,
                    f.name as formation_name,
@@ -65,6 +65,11 @@ router.get('/documents', async (req, res) => {
                 ))
             )
         `;
+
+        // Par défaut, exclure les documents archivés
+        if (include_archived !== 'true') {
+            sql += ` AND (cd.archived = FALSE OR cd.archived IS NULL)`;
+        }
 
         const params = [userId, userRole];
         let paramIndex = 3;
@@ -261,6 +266,76 @@ router.put('/documents/:id', requireDocumentAccess('admin'), async (req, res) =>
         res.json(result.rows[0]);
     } catch (error) {
         console.error('Erreur mise à jour document:', error);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
+/**
+ * PUT /api/collab/documents/:id/archive
+ * Archiver un document
+ */
+router.put('/documents/:id/archive', requireDocumentOwner, async (req, res) => {
+    try {
+        const documentId = req.params.id;
+        const userId = req.user.id;
+
+        const result = await query(
+            `UPDATE collaborative_documents
+             SET archived = TRUE, updated_at = CURRENT_TIMESTAMP
+             WHERE id = $1
+             RETURNING id, title, archived`,
+            [documentId]
+        );
+
+        if (result.rowCount === 0) {
+            return res.status(404).json({ error: 'Document non trouvé' });
+        }
+
+        // Log de l'activité
+        await query(
+            `INSERT INTO activity_logs (user_id, action, details, ip_address)
+             VALUES ($1, 'archive_collaborative_document', $2, $3)`,
+            [userId, JSON.stringify({ documentId, title: result.rows[0].title }), req.ip]
+        );
+
+        res.json({ message: 'Document archivé', document: result.rows[0] });
+    } catch (error) {
+        console.error('Erreur archivage document:', error);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
+/**
+ * PUT /api/collab/documents/:id/unarchive
+ * Désarchiver un document
+ */
+router.put('/documents/:id/unarchive', requireDocumentOwner, async (req, res) => {
+    try {
+        const documentId = req.params.id;
+        const userId = req.user.id;
+
+        const result = await query(
+            `UPDATE collaborative_documents
+             SET archived = FALSE, updated_at = CURRENT_TIMESTAMP
+             WHERE id = $1
+             RETURNING id, title, archived`,
+            [documentId]
+        );
+
+        if (result.rowCount === 0) {
+            return res.status(404).json({ error: 'Document non trouvé' });
+        }
+
+        // Log de l'activité
+        await query(
+            `INSERT INTO activity_logs (user_id, action, details, ip_address)
+             VALUES ($1, 'unarchive_collaborative_document', $2, $3)`,
+            [userId, JSON.stringify({ documentId, title: result.rows[0].title }), req.ip]
+        );
+
+        res.json({ message: 'Document désarchivé', document: result.rows[0] });
+    } catch (error) {
+        console.error('Erreur désarchivage document:', error);
         res.status(500).json({ error: 'Erreur serveur' });
     }
 });
