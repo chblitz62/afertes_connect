@@ -1,0 +1,28 @@
+[Unit]
+Description=AFERTES Connect - Plateforme de gestion de formation
+After=network.target postgresql.service
+
+[Service]
+Type=simple
+User=__APP__
+Group=www-data
+WorkingDirectory=__FINALPATH__/server
+Environment=NODE_ENV=production
+ExecStart=__YNH_NODE__ index.js
+Restart=on-failure
+RestartSec=10
+
+# Logs
+StandardOutput=append:/var/log/__APP__/__APP__.log
+StandardError=append:/var/log/__APP__/__APP__.log
+
+# Sécurité
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=__DATADIR__
+ReadWritePaths=/var/log/__APP__
+
+[Install]
+WantedBy=multi-user.target

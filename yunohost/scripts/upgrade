@@ -1,0 +1,48 @@
+#!/bin/bash
+# Script de mise à jour pour YunoHost
+
+source /usr/share/yunohost/helpers
+source _common.sh
+
+app=$YNH_APP_INSTANCE_NAME
+final_path=$(ynh_app_setting_get --app=$app --key=final_path)
+
+ynh_abort_if_errors
+
+# Arrêt du service
+ynh_systemd_action --service_name=$app --action="stop"
+
+# Mise à jour de Node.js si nécessaire
+ynh_install_nodejs --nodejs_version=$NODEJS_VERSION
+
+# Sauvegarde de la configuration
+cp "$final_path/server/.env" /tmp/afertes_env_backup
+
+# Mise à jour des fichiers
+ynh_secure_remove --file="$final_path"
+mkdir -p $final_path
+cp -r ../sources/. $final_path
+
+# Restauration de la configuration
+mv /tmp/afertes_env_backup "$final_path/server/.env"
+
+# Mise à jour des dépendances npm
+pushd $final_path/server
+    ynh_use_nodejs
+    ynh_exec_as $app $ynh_node_load_PATH npm install --production
+popd
+
+# Mise à jour des permissions
+chown -R $app:www-data $final_path
+chmod -R 750 $final_path
+
+# Mise à jour de la configuration systemd
+ynh_add_systemd_config
+
+# Mise à jour de la configuration nginx
+ynh_add_nginx_config
+
+# Redémarrage du service
+ynh_systemd_action --service_name=$app --action="start" --log_path="/var/log/$app/$app.log"
+
+ynh_script_progression --message="Mise à jour terminée" --last

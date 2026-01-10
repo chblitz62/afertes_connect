@@ -1,0 +1,41 @@
+#!/bin/bash
+# Script de restauration pour YunoHost
+
+source /usr/share/yunohost/helpers
+source _common.sh
+
+app=$YNH_APP_INSTANCE_NAME
+final_path=$(ynh_app_setting_get --app=$app --key=final_path)
+db_name=$(ynh_app_setting_get --app=$app --key=db_name)
+db_user=$db_name
+db_pwd=$(ynh_app_setting_get --app=$app --key=db_pwd)
+
+ynh_abort_if_errors
+
+# Installation de Node.js
+ynh_install_nodejs --nodejs_version=$NODEJS_VERSION
+
+# Restauration des fichiers
+ynh_restore_file --origin_path="$final_path"
+
+# Restauration des données
+ynh_restore_file --origin_path="/home/yunohost.app/$app"
+
+# Recréation de la base de données
+ynh_psql_test_if_first_run
+ynh_psql_setup_db --db_user=$db_user --db_name=$db_name --db_pwd=$db_pwd
+ynh_psql_execute_file_as_root --file="db.sql" --database=$db_name
+
+# Restauration de la configuration nginx
+ynh_restore_file --origin_path="/etc/nginx/conf.d/$domain.d/$app.conf"
+
+# Restauration de la configuration systemd
+ynh_restore_file --origin_path="/etc/systemd/system/$app.service"
+systemctl daemon-reload
+systemctl enable $app
+
+# Démarrage du service
+yunohost service add $app --description="AFERTES Connect" --log="/var/log/$app/$app.log"
+ynh_systemd_action --service_name=$app --action="start" --log_path="/var/log/$app/$app.log"
+
+ynh_script_progression --message="Restauration terminée" --last

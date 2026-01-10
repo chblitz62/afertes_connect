@@ -1,0 +1,34 @@
+#!/bin/bash
+# Script de suppression pour YunoHost
+
+source /usr/share/yunohost/helpers
+source _common.sh
+
+app=$YNH_APP_INSTANCE_NAME
+final_path=$(ynh_app_setting_get --app=$app --key=final_path)
+db_name=$(ynh_app_setting_get --app=$app --key=db_name)
+db_user=$db_name
+
+# Arrêt du service
+ynh_systemd_action --service_name=$app --action="stop"
+
+# Suppression du service
+yunohost service remove $app
+
+# Suppression de la configuration systemd
+ynh_remove_systemd_config
+
+# Suppression de la configuration nginx
+ynh_remove_nginx_config
+
+# Suppression de la base de données
+ynh_psql_remove_db --db_user=$db_user --db_name=$db_name
+
+# Suppression des fichiers
+ynh_secure_remove --file="$final_path"
+ynh_secure_remove --file="/home/yunohost.app/$app"
+
+# Suppression de Node.js
+ynh_remove_nodejs
+
+ynh_script_progression --message="Suppression terminée" --last

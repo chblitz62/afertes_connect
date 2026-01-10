@@ -5,16 +5,16 @@ packaging_format = 2
 
 id = "afertes-connect"
 name = "AFERTES Connect"
-description.en = "Student management platform for AFERTES training center"
-description.fr = "Plateforme de gestion des étudiants pour le centre de formation AFERTES"
+description.en = "Student management platform for AFERTES training center with collaborative documents"
+description.fr = "Plateforme de gestion des étudiants avec documents collaboratifs pour le centre de formation AFERTES"
 
-version = "1.0.0~ynh1"
+version = "1.1.0~ynh1"
 
 maintainers = ["AFERTES"]
 
 [upstream]
-license = "MIT"
-code = "https://github.com/votre-repo/afertes-app"
+license = "Apache-2.0"
+code = "https://github.com/chblitz62/afertes_connect"
 
 [integration]
 yunohost = ">= 11.0"
@@ -43,8 +43,9 @@ ram.runtime = "100M"
 
 [resources]
     [resources.sources.main]
-    url = "https://github.com/votre-repo/afertes-app/archive/main.tar.gz"
-    sha256 = "TO_BE_FILLED"
+    url = "https://github.com/chblitz62/afertes_connect/archive/main.tar.gz"
+    sha256 = "TO_BE_COMPUTED"
+    autoupdate.strategy = "latest_github_release"
 
     [resources.system_user]
 

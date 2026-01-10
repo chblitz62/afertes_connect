@@ -1,0 +1,28 @@
+#!/bin/bash
+# Script de sauvegarde pour YunoHost
+
+source /usr/share/yunohost/helpers
+source _common.sh
+
+app=$YNH_APP_INSTANCE_NAME
+final_path=$(ynh_app_setting_get --app=$app --key=final_path)
+db_name=$(ynh_app_setting_get --app=$app --key=db_name)
+
+ynh_abort_if_errors
+
+# Sauvegarde des fichiers de l'application
+ynh_backup --src_path="$final_path"
+
+# Sauvegarde des données (uploads)
+ynh_backup --src_path="/home/yunohost.app/$app"
+
+# Sauvegarde de la base de données
+ynh_psql_dump_db --database="$db_name" > db.sql
+
+# Sauvegarde de la configuration nginx
+ynh_backup --src_path="/etc/nginx/conf.d/$domain.d/$app.conf"
+
+# Sauvegarde de la configuration systemd
+ynh_backup --src_path="/etc/systemd/system/$app.service"
+
+ynh_script_progression --message="Sauvegarde terminée" --last
