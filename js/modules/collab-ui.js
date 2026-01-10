@@ -828,6 +828,516 @@ function toggleArchivedDocs() {
     renderCollabDocuments(filtered);
 }
 
+// ============================================
+// TÉLÉCHARGEMENT DE DOCUMENTS
+// ============================================
+
+/**
+ * Affiche/masque le menu de téléchargement
+ */
+function toggleDownloadMenu() {
+    const menu = document.getElementById('download-menu');
+    if (menu) {
+        menu.classList.toggle('hidden');
+
+        // Fermer le menu si on clique ailleurs
+        if (!menu.classList.contains('hidden')) {
+            setTimeout(() => {
+                document.addEventListener('click', closeDownloadMenuOnClickOutside);
+            }, 0);
+        }
+    }
+}
+
+function closeDownloadMenuOnClickOutside(e) {
+    const menu = document.getElementById('download-menu');
+    const dropdown = e.target.closest('.dropdown');
+    if (!dropdown && menu) {
+        menu.classList.add('hidden');
+        document.removeEventListener('click', closeDownloadMenuOnClickOutside);
+    }
+}
+
+/**
+ * Télécharge le document dans le format spécifié
+ */
+async function downloadDocument(format) {
+    const menu = document.getElementById('download-menu');
+    if (menu) menu.classList.add('hidden');
+
+    if (!currentEditingDocument) {
+        showToast('Aucun document ouvert', 'error');
+        return;
+    }
+
+    const title = document.getElementById('doc-title')?.value || currentEditingDocument.title || 'document';
+    const quill = window.demoQuill;
+
+    if (!quill) {
+        showToast('Éditeur non disponible', 'error');
+        return;
+    }
+
+    showToast('Préparation du téléchargement...', 'info');
+
+    try {
+        const htmlContent = quill.root.innerHTML;
+
+        switch (format) {
+            case 'html':
+                downloadAsHtml(title, htmlContent);
+                break;
+            case 'pdf':
+                await downloadAsPdf(title, htmlContent);
+                break;
+            case 'docx':
+                await downloadAsDocx(title, htmlContent);
+                break;
+            default:
+                showToast('Format non supporté', 'error');
+        }
+    } catch (error) {
+        console.error('Erreur téléchargement:', error);
+        showToast('Erreur lors du téléchargement', 'error');
+    }
+}
+
+/**
+ * Télécharge en HTML
+ */
+function downloadAsHtml(title, content) {
+    const fullHtml = `<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${escapeHtml(title)}</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 40px auto; padding: 20px; line-height: 1.6; }
+        h1, h2, h3 { color: #253672; }
+        .page-break { page-break-after: always; border-top: 2px dashed #ccc; margin: 40px 0; }
+        .section-break { border-top: 3px solid #253672; margin: 30px 0; padding-top: 20px; }
+        .table-of-contents { background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        .table-of-contents h2 { margin-top: 0; }
+        .toc-item { padding: 5px 0; }
+        .toc-item.level-2 { padding-left: 20px; }
+        .toc-item.level-3 { padding-left: 40px; }
+    </style>
+</head>
+<body>
+    <h1>${escapeHtml(title)}</h1>
+    ${content}
+</body>
+</html>`;
+
+    const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8' });
+    downloadBlob(blob, `${sanitizeFilename(title)}.html`);
+    showToast('Document HTML téléchargé', 'success');
+}
+
+/**
+ * Télécharge en PDF (utilise html2pdf.js ou print)
+ */
+async function downloadAsPdf(title, content) {
+    // Créer une fenêtre d'impression avec le contenu formaté
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+        showToast('Veuillez autoriser les popups pour télécharger en PDF', 'warning');
+        return;
+    }
+
+    printWindow.document.write(`<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>${escapeHtml(title)}</title>
+    <style>
+        @page {
+            margin: 2cm;
+            @bottom-center { content: counter(page); }
+        }
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 12pt;
+            line-height: 1.6;
+            color: #000;
+        }
+        h1 { font-size: 24pt; color: #253672; margin-bottom: 1em; }
+        h2 { font-size: 18pt; color: #253672; margin-top: 1.5em; }
+        h3 { font-size: 14pt; color: #253672; margin-top: 1em; }
+        .page-break { page-break-after: always; height: 0; margin: 0; border: none; }
+        .section-break { page-break-before: always; border-top: 2px solid #253672; padding-top: 20px; margin-top: 30px; }
+        .table-of-contents {
+            background: #f8f8f8;
+            padding: 20px;
+            border: 1px solid #ddd;
+            margin: 20px 0;
+            page-break-inside: avoid;
+        }
+        .toc-item { padding: 3px 0; }
+        .toc-item.level-2 { padding-left: 20px; }
+        .toc-item.level-3 { padding-left: 40px; }
+        img { max-width: 100%; height: auto; }
+        table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background: #f5f5f5; }
+        @media print {
+            .no-print { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <h1>${escapeHtml(title)}</h1>
+    ${content}
+    <script>
+        window.onload = function() {
+            setTimeout(function() {
+                window.print();
+                window.close();
+            }, 500);
+        };
+    </script>
+</body>
+</html>`);
+    printWindow.document.close();
+    showToast('Utilisez "Enregistrer en PDF" dans la boîte de dialogue', 'info');
+}
+
+/**
+ * Télécharge en DOCX (format simplifié)
+ */
+async function downloadAsDocx(title, content) {
+    // Créer un document Word avec le contenu HTML
+    const docContent = `
+        <html xmlns:o="urn:schemas-microsoft-com:office:office"
+              xmlns:w="urn:schemas-microsoft-com:office:word"
+              xmlns="http://www.w3.org/TR/REC-html40">
+        <head>
+            <meta charset="utf-8">
+            <title>${escapeHtml(title)}</title>
+            <!--[if gte mso 9]>
+            <xml>
+                <w:WordDocument>
+                    <w:View>Print</w:View>
+                    <w:Zoom>100</w:Zoom>
+                </w:WordDocument>
+            </xml>
+            <![endif]-->
+            <style>
+                body { font-family: Calibri, sans-serif; font-size: 11pt; }
+                h1 { font-size: 24pt; color: #253672; }
+                h2 { font-size: 18pt; color: #253672; }
+                h3 { font-size: 14pt; color: #253672; }
+                .page-break { page-break-after: always; }
+                .section-break { page-break-before: always; }
+            </style>
+        </head>
+        <body>
+            <h1>${escapeHtml(title)}</h1>
+            ${content}
+        </body>
+        </html>`;
+
+    const blob = new Blob(['\ufeff', docContent], { type: 'application/msword' });
+    downloadBlob(blob, `${sanitizeFilename(title)}.doc`);
+    showToast('Document Word téléchargé', 'success');
+}
+
+/**
+ * Télécharge un blob
+ */
+function downloadBlob(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+/**
+ * Nettoie un nom de fichier
+ */
+function sanitizeFilename(name) {
+    return name.replace(/[^a-zA-Z0-9àâäéèêëïîôùûüç\s-_]/g, '').trim().replace(/\s+/g, '_');
+}
+
+// ============================================
+// SAUT DE PAGE ET SAUT DE SECTION
+// ============================================
+
+/**
+ * Insère un saut de page à la position du curseur
+ */
+function insertPageBreak() {
+    const quill = window.demoQuill;
+    if (!quill) {
+        showToast('Éditeur non disponible', 'error');
+        return;
+    }
+
+    const range = quill.getSelection();
+    if (range) {
+        quill.insertEmbed(range.index, 'divider', { type: 'page-break' });
+        quill.setSelection(range.index + 1);
+    } else {
+        // Insérer à la fin
+        const length = quill.getLength();
+        quill.insertEmbed(length - 1, 'divider', { type: 'page-break' });
+    }
+
+    // Fallback: insérer directement du HTML
+    insertHtmlAtCursor('<div class="page-break" contenteditable="false"></div><p><br></p>');
+    showToast('Saut de page inséré', 'success');
+}
+
+/**
+ * Insère un saut de section avec numérotation
+ */
+let sectionCounter = 1;
+
+function insertSectionBreak() {
+    const sectionNumber = sectionCounter++;
+    insertHtmlAtCursor(`<div class="section-break" data-section="Section ${sectionNumber}" contenteditable="false"></div><p><br></p>`);
+    showToast(`Section ${sectionNumber} créée`, 'success');
+}
+
+/**
+ * Insère du HTML à la position du curseur
+ */
+function insertHtmlAtCursor(html) {
+    const quill = window.demoQuill;
+    if (!quill) return;
+
+    const range = quill.getSelection();
+    const position = range ? range.index : quill.getLength() - 1;
+
+    // Méthode simple : manipuler directement le DOM
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = html;
+
+    // Insérer après le paragraphe courant
+    const selection = window.getSelection();
+    if (selection.rangeCount > 0) {
+        const selRange = selection.getRangeAt(0);
+        let container = selRange.commonAncestorContainer;
+
+        // Trouver le paragraphe parent
+        while (container && container !== quill.root && container.nodeName !== 'P') {
+            container = container.parentNode;
+        }
+
+        if (container && container !== quill.root) {
+            container.parentNode.insertBefore(tempDiv.firstChild, container.nextSibling);
+        } else {
+            quill.root.appendChild(tempDiv.firstChild);
+        }
+    } else {
+        quill.root.appendChild(tempDiv.firstChild);
+    }
+}
+
+// ============================================
+// TABLE DES MATIÈRES
+// ============================================
+
+/**
+ * Génère et insère une table des matières
+ */
+function insertTableOfContents() {
+    const quill = window.demoQuill;
+    if (!quill) {
+        showToast('Éditeur non disponible', 'error');
+        return;
+    }
+
+    // Collecter tous les titres
+    const headings = collectHeadings();
+
+    if (headings.length === 0) {
+        showToast('Aucun titre trouvé. Utilisez H1, H2, H3 pour créer des titres.', 'warning');
+        return;
+    }
+
+    // Générer le HTML de la table des matières
+    const tocHtml = generateTocHtml(headings);
+
+    // Insérer au début du document
+    const currentContent = quill.root.innerHTML;
+    quill.root.innerHTML = tocHtml + currentContent;
+
+    showToast('Table des matières insérée', 'success');
+}
+
+/**
+ * Collecte tous les titres du document
+ */
+function collectHeadings() {
+    const quill = window.demoQuill;
+    if (!quill) return [];
+
+    const headings = [];
+    const content = quill.root;
+    const elements = content.querySelectorAll('h1, h2, h3');
+
+    elements.forEach((el, index) => {
+        const level = parseInt(el.tagName.charAt(1));
+        const text = el.textContent.trim();
+        const id = `heading-${index}`;
+
+        // Ajouter un ID au titre pour le lien
+        el.id = id;
+
+        headings.push({ level, text, id });
+    });
+
+    return headings;
+}
+
+/**
+ * Génère le HTML de la table des matières
+ */
+function generateTocHtml(headings) {
+    let tocItems = headings.map(h => {
+        return `<div class="toc-item level-${h.level}">
+            <a href="#${h.id}">${escapeHtml(h.text)}</a>
+            <span class="toc-dots"></span>
+        </div>`;
+    }).join('');
+
+    return `<div class="table-of-contents" contenteditable="false">
+        <div class="table-of-contents-title">Table des matières</div>
+        ${tocItems}
+    </div><p><br></p>`;
+}
+
+/**
+ * Met à jour la table des matières existante
+ */
+function updateTableOfContents() {
+    const quill = window.demoQuill;
+    if (!quill) return;
+
+    const toc = quill.root.querySelector('.table-of-contents');
+    if (!toc) return;
+
+    const headings = collectHeadings();
+    const tocItems = headings.map(h => {
+        return `<div class="toc-item level-${h.level}">
+            <a href="#${h.id}">${escapeHtml(h.text)}</a>
+            <span class="toc-dots"></span>
+        </div>`;
+    }).join('');
+
+    toc.innerHTML = `<div class="table-of-contents-title">Table des matières</div>${tocItems}`;
+}
+
+// ============================================
+// NUMÉROTATION DES PAGES
+// ============================================
+
+/**
+ * Affiche la modal de configuration de numérotation
+ */
+function showPageNumbersModal() {
+    const existingModal = document.getElementById('page-numbers-modal');
+    if (existingModal) existingModal.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'page-numbers-modal';
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+        <div class="modal page-numbers-modal">
+            <button class="modal-close" onclick="closePageNumbersModal()">&times;</button>
+            <div class="modal-content">
+                <h2><i class="fas fa-sort-numeric-down"></i> Numérotation des pages</h2>
+                <div class="modal-body">
+                    <div class="page-numbers-option selected" onclick="selectPageNumberOption(this, 'all')">
+                        <input type="radio" name="page-numbering" value="all" checked>
+                        <label>Numéroter toutes les pages</label>
+                    </div>
+                    <div class="page-numbers-option" onclick="selectPageNumberOption(this, 'from-section')">
+                        <input type="radio" name="page-numbering" value="from-section">
+                        <label>Commencer la numérotation à partir d'une section</label>
+                    </div>
+                    <div class="page-numbers-option" onclick="selectPageNumberOption(this, 'custom')">
+                        <input type="radio" name="page-numbering" value="custom">
+                        <label>Commencer à un numéro spécifique</label>
+                        <div class="start-page-input">
+                            <span>Commencer à la page :</span>
+                            <input type="number" id="start-page-number" value="1" min="1">
+                        </div>
+                    </div>
+                    <div class="page-numbers-option" onclick="selectPageNumberOption(this, 'none')">
+                        <input type="radio" name="page-numbering" value="none">
+                        <label>Pas de numérotation</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" onclick="closePageNumbersModal()">Annuler</button>
+                    <button class="btn btn-primary" onclick="applyPageNumbers()">
+                        <i class="fas fa-check"></i> Appliquer
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closePageNumbersModal();
+    });
+
+    document.body.appendChild(modal);
+}
+
+function closePageNumbersModal() {
+    const modal = document.getElementById('page-numbers-modal');
+    if (modal) modal.remove();
+}
+
+function selectPageNumberOption(element, value) {
+    document.querySelectorAll('.page-numbers-option').forEach(el => el.classList.remove('selected'));
+    element.classList.add('selected');
+    element.querySelector('input[type="radio"]').checked = true;
+}
+
+function applyPageNumbers() {
+    const selected = document.querySelector('input[name="page-numbering"]:checked');
+    if (!selected) return;
+
+    const value = selected.value;
+    let message = '';
+
+    switch (value) {
+        case 'all':
+            message = 'Toutes les pages seront numérotées';
+            break;
+        case 'from-section':
+            message = 'La numérotation commencera à la prochaine section';
+            break;
+        case 'custom':
+            const startNum = document.getElementById('start-page-number')?.value || 1;
+            message = `La numérotation commencera à ${startNum}`;
+            break;
+        case 'none':
+            message = 'Numérotation désactivée';
+            break;
+    }
+
+    // Stocker le paramètre pour l'export PDF
+    if (currentEditingDocument) {
+        currentEditingDocument.pageNumbering = {
+            type: value,
+            startNumber: parseInt(document.getElementById('start-page-number')?.value || 1)
+        };
+    }
+
+    closePageNumbersModal();
+    showToast(message, 'success');
+}
+
 // Exposer les fonctions globalement
 window.loadCollabDocuments = loadCollabDocuments;
 window.filterCollabDocs = filterCollabDocs;
@@ -850,3 +1360,15 @@ window.confirmDeleteDocument = confirmDeleteDocument;
 window.closeDeleteModal = closeDeleteModal;
 window.deleteDocument = deleteDocument;
 window.toggleArchivedDocs = toggleArchivedDocs;
+
+// Nouvelles fonctions document
+window.toggleDownloadMenu = toggleDownloadMenu;
+window.downloadDocument = downloadDocument;
+window.insertPageBreak = insertPageBreak;
+window.insertSectionBreak = insertSectionBreak;
+window.insertTableOfContents = insertTableOfContents;
+window.updateTableOfContents = updateTableOfContents;
+window.showPageNumbersModal = showPageNumbersModal;
+window.closePageNumbersModal = closePageNumbersModal;
+window.selectPageNumberOption = selectPageNumberOption;
+window.applyPageNumbers = applyPageNumbers;

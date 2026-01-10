@@ -1197,3 +1197,302 @@
 [data-theme="dark"] .btn-secondary:hover {
     background: #666;
 }
+
+/* ==================== Menu Téléchargement ==================== */
+
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: var(--card-bg, #fff);
+    border: 1px solid var(--border-color, #e0e0e0);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    min-width: 150px;
+    z-index: 1000;
+    padding: 0.5rem 0;
+}
+
+.dropdown-menu.hidden {
+    display: none;
+}
+
+.dropdown-menu button {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: var(--text-color, #333);
+    transition: background 0.2s;
+}
+
+.dropdown-menu button:hover {
+    background: var(--hover-bg, #f5f5f5);
+}
+
+.dropdown-menu button i {
+    width: 20px;
+    text-align: center;
+}
+
+.dropdown-menu button .fa-file-pdf {
+    color: #e53935;
+}
+
+.dropdown-menu button .fa-file-word {
+    color: #2196f3;
+}
+
+.dropdown-menu button .fa-file-code {
+    color: #4caf50;
+}
+
+/* ==================== Saut de page et section ==================== */
+
+.page-break {
+    page-break-after: always;
+    break-after: page;
+    display: block;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #999, transparent);
+    margin: 2rem 0;
+    position: relative;
+}
+
+.page-break::before {
+    content: "Saut de page";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--card-bg, #fff);
+    padding: 0.25rem 0.75rem;
+    font-size: 0.75rem;
+    color: #999;
+    border: 1px dashed #999;
+    border-radius: 4px;
+}
+
+.section-break {
+    display: block;
+    width: 100%;
+    height: 3px;
+    background: linear-gradient(90deg, var(--primary-color, #253672), transparent, var(--primary-color, #253672));
+    margin: 2rem 0;
+    position: relative;
+}
+
+.section-break::before {
+    content: attr(data-section);
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--card-bg, #fff);
+    padding: 0.25rem 0.75rem;
+    font-size: 0.75rem;
+    color: var(--primary-color, #253672);
+    border: 1px solid var(--primary-color, #253672);
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+/* ==================== Table des matières ==================== */
+
+.table-of-contents {
+    background: var(--hover-bg, #f8f9fa);
+    border: 1px solid var(--border-color, #e0e0e0);
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin: 1.5rem 0;
+}
+
+.table-of-contents-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--primary-color, #253672);
+    color: var(--primary-color, #253672);
+}
+
+.toc-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.toc-item {
+    padding: 0.35rem 0;
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+}
+
+.toc-item a {
+    color: var(--text-color, #333);
+    text-decoration: none;
+    transition: color 0.2s;
+    flex: 1;
+}
+
+.toc-item a:hover {
+    color: var(--primary-color, #253672);
+    text-decoration: underline;
+}
+
+.toc-item.level-1 {
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.toc-item.level-2 {
+    padding-left: 1.5rem;
+    font-size: 0.95rem;
+}
+
+.toc-item.level-3 {
+    padding-left: 3rem;
+    font-size: 0.9rem;
+    color: var(--text-secondary, #666);
+}
+
+.toc-page-number {
+    color: var(--text-secondary, #666);
+    font-size: 0.85rem;
+}
+
+.toc-dots {
+    flex: 1;
+    border-bottom: 1px dotted var(--border-color, #ccc);
+    margin: 0 0.5rem;
+    min-width: 20px;
+}
+
+/* ==================== Modal numérotation pages ==================== */
+
+.page-numbers-modal .modal-body {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.page-numbers-option {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    border: 1px solid var(--border-color, #e0e0e0);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+}
+
+.page-numbers-option:hover {
+    border-color: var(--primary-color, #253672);
+    background: var(--hover-bg, #f5f5f5);
+}
+
+.page-numbers-option.selected {
+    border-color: var(--primary-color, #253672);
+    background: rgba(37, 54, 114, 0.1);
+}
+
+.page-numbers-option input[type="radio"] {
+    margin: 0;
+}
+
+.page-numbers-option label {
+    flex: 1;
+    cursor: pointer;
+}
+
+.start-page-input {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.start-page-input input {
+    width: 80px;
+    padding: 0.5rem;
+    border: 1px solid var(--border-color, #e0e0e0);
+    border-radius: 4px;
+    text-align: center;
+}
+
+/* ==================== Toolbar document ==================== */
+
+.toolbar-document {
+    border-left: 2px solid var(--border-color, #e0e0e0);
+    margin-left: 0.5rem;
+    padding-left: 0.5rem;
+}
+
+.toolbar-document button {
+    color: var(--primary-color, #253672);
+}
+
+/* ==================== Dark mode pour nouvelles fonctionnalités ==================== */
+
+[data-theme="dark"] .dropdown-menu {
+    background: #2d2d2d;
+    border-color: #444;
+}
+
+[data-theme="dark"] .dropdown-menu button {
+    color: #e0e0e0;
+}
+
+[data-theme="dark"] .dropdown-menu button:hover {
+    background: #3d3d3d;
+}
+
+[data-theme="dark"] .page-break::before,
+[data-theme="dark"] .section-break::before {
+    background: #2d2d2d;
+}
+
+[data-theme="dark"] .table-of-contents {
+    background: #2a2a2a;
+    border-color: #444;
+}
+
+[data-theme="dark"] .table-of-contents-title {
+    border-bottom-color: #4a7cc9;
+    color: #6b9eff;
+}
+
+[data-theme="dark"] .toc-item a {
+    color: #e0e0e0;
+}
+
+[data-theme="dark"] .toc-item a:hover {
+    color: #6b9eff;
+}
+
+[data-theme="dark"] .page-numbers-option {
+    border-color: #444;
+}
+
+[data-theme="dark"] .page-numbers-option:hover {
+    background: #3d3d3d;
+    border-color: #6b9eff;
+}
+
+[data-theme="dark"] .page-numbers-option.selected {
+    background: rgba(107, 158, 255, 0.15);
+    border-color: #6b9eff;
+}

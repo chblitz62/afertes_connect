@@ -824,6 +824,16 @@
                         <button class="btn btn-icon" onclick="createDocumentSnapshot()" title="Créer une version">
                             <i class="fas fa-save"></i>
                         </button>
+                        <div class="dropdown">
+                            <button class="btn btn-icon" onclick="toggleDownloadMenu()" title="Télécharger">
+                                <i class="fas fa-download"></i>
+                            </button>
+                            <div id="download-menu" class="dropdown-menu hidden">
+                                <button onclick="downloadDocument('pdf')"><i class="fas fa-file-pdf"></i> PDF</button>
+                                <button onclick="downloadDocument('docx')"><i class="fas fa-file-word"></i> Word</button>
+                                <button onclick="downloadDocument('html')"><i class="fas fa-file-code"></i> HTML</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="editor-toolbar" id="editor-toolbar-actions">
@@ -858,6 +868,12 @@
                         <button id="btn-link" title="Lien"><i class="fas fa-link"></i></button>
                         <button id="btn-image" title="Image"><i class="fas fa-image"></i></button>
                         <button id="btn-table" title="Tableau"><i class="fas fa-table"></i></button>
+                    </div>
+                    <div class="toolbar-group toolbar-document">
+                        <button id="btn-page-break" onclick="insertPageBreak()" title="Saut de page"><i class="fas fa-file-export"></i></button>
+                        <button id="btn-section-break" onclick="insertSectionBreak()" title="Saut de section"><i class="fas fa-columns"></i></button>
+                        <button id="btn-toc" onclick="insertTableOfContents()" title="Table des matières"><i class="fas fa-list-alt"></i></button>
+                        <button id="btn-page-numbers" onclick="showPageNumbersModal()" title="Numérotation des pages"><i class="fas fa-sort-numeric-down"></i></button>
                     </div>
                 </div>
                 <div class="editor-container">
