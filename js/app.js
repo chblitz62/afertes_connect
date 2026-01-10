@@ -4139,12 +4139,13 @@ function initGroupMessages() {
     loadGroups();
 }
 
-function loadGroups() {
-    const groups = JSON.parse(localStorage.getItem('afertes_groups') || '[]');
+function loadGroups(showArchived = false) {
+    const allGroups = JSON.parse(localStorage.getItem('afertes_groups') || '[]');
     const container = document.getElementById('groups-items');
     if (!container) return;
 
-    const userGroups = groups.filter(g => {
+    // Filtrer par utilisateur
+    let userGroups = allGroups.filter(g => {
         if (g.type === 'promo') {
             return (currentUser?.formation === g.formation && currentUser?.promo === g.promo) ||
                    currentUser?.role === 'teacher' ||
@@ -4153,24 +4154,281 @@ function loadGroups() {
         return g.members?.includes(currentUser?.id);
     });
 
+    // Filtrer par archivé ou non
+    userGroups = userGroups.filter(g => showArchived ? g.archived : !g.archived);
+
     if (userGroups.length === 0) {
-        container.innerHTML = '<p style="padding: 16px; color: var(--text-muted);">Aucun groupe disponible</p>';
+        container.innerHTML = `
+            <div class="empty-conversations">
+                <i class="fas fa-${showArchived ? 'archive' : 'users'}"></i>
+                <p>${showArchived ? 'Aucun groupe archivé' : 'Aucun groupe disponible'}</p>
+            </div>
+        `;
         return;
     }
 
     container.innerHTML = userGroups.map(group => {
         const lastMsg = group.messages?.[group.messages.length - 1];
+        const isPromo = group.type === 'promo';
         return `
-            <div class="group-item" onclick="openGroupChat(${group.id})">
-                <div class="group-avatar">
-                    <i class="fas fa-users"></i>
+            <div class="group-item" data-id="${group.id}">
+                <div class="group-content" onclick="openGroupChat(${group.id})">
+                    <div class="group-avatar">
+                        <i class="fas fa-${isPromo ? 'graduation-cap' : 'users'}"></i>
+                    </div>
+                    <div class="group-info">
+                        <h4>${group.name}</h4>
+                        <p>${lastMsg ? lastMsg.text.substring(0, 30) + '...' : 'Aucun message'}</p>
+                    </div>
+                    <div class="group-meta">
+                        <span class="time">${lastMsg ? formatTimeAgo(lastMsg.timestamp) : ''}</span>
+                    </div>
                 </div>
-                <div class="group-info">
-                    <h4>${group.name}</h4>
-                    <p>${lastMsg ? lastMsg.text.substring(0, 30) + '...' : 'Aucun message'}</p>
+                <div class="group-actions">
+                    <button class="btn-icon-sm" onclick="event.stopPropagation(); toggleGroupMenu(${group.id})" title="Options">
+                        <i class="fas fa-ellipsis-v"></i>
+                    </button>
+                    <div class="group-menu hidden" id="group-menu-${group.id}">
+                        ${group.archived ? `
+                            <button onclick="unarchiveGroup(${group.id})">
+                                <i class="fas fa-box-open"></i> Restaurer
+                            </button>
+                        ` : `
+                            <button onclick="archiveGroup(${group.id})">
+                                <i class="fas fa-archive"></i> Archiver
+                            </button>
+                        `}
+                        ${!isPromo ? `
+                            <button onclick="confirmDeleteGroup(${group.id}, '${group.name.replace(/'/g, "\\'")}')">
+                                <i class="fas fa-trash"></i> Supprimer
+                            </button>
+                        ` : ''}
+                    </div>
                 </div>
-                <div class="group-meta">
-                    <span class="time">${lastMsg ? formatTimeAgo(lastMsg.timestamp) : ''}</span>
+            </div>
+        `;
+    }).join('');
+}
+
+/**
+ * Affiche/masque le menu d'un groupe
+ */
+function toggleGroupMenu(groupId) {
+    document.querySelectorAll('.group-menu').forEach(menu => {
+        if (menu.id !== `group-menu-${groupId}`) {
+            menu.classList.add('hidden');
+        }
+    });
+
+    const menu = document.getElementById(`group-menu-${groupId}`);
+    if (menu) {
+        menu.classList.toggle('hidden');
+        if (!menu.classList.contains('hidden')) {
+            setTimeout(() => {
+                document.addEventListener('click', closeAllGroupMenus, { once: true });
+            }, 0);
+        }
+    }
+}
+
+function closeAllGroupMenus() {
+    document.querySelectorAll('.group-menu').forEach(menu => {
+        menu.classList.add('hidden');
+    });
+}
+
+/**
+ * Archive un groupe
+ */
+function archiveGroup(groupId) {
+    const groups = JSON.parse(localStorage.getItem('afertes_groups') || '[]');
+    const group = groups.find(g => g.id === groupId);
+
+    if (group) {
+        group.archived = true;
+        group.archivedAt = new Date().toISOString();
+        localStorage.setItem('afertes_groups', JSON.stringify(groups));
+
+        if (currentGroupId === groupId) {
+            closeGroupChat();
+        }
+
+        loadGroups();
+        showToast('Groupe archivé', 'success');
+    }
+}
+
+/**
+ * Restaure un groupe archivé
+ */
+function unarchiveGroup(groupId) {
+    const groups = JSON.parse(localStorage.getItem('afertes_groups') || '[]');
+    const group = groups.find(g => g.id === groupId);
+
+    if (group) {
+        group.archived = false;
+        group.archivedAt = null;
+        localStorage.setItem('afertes_groups', JSON.stringify(groups));
+
+        loadGroups(true);
+        showToast('Groupe restauré', 'success');
+    }
+}
+
+/**
+ * Confirme la suppression d'un groupe
+ */
+function confirmDeleteGroup(groupId, groupName) {
+    closeAllGroupMenus();
+
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.id = 'delete-group-modal';
+    modal.innerHTML = `
+        <div class="modal delete-confirm-modal">
+            <button class="modal-close" onclick="closeDeleteGroupModal()">&times;</button>
+            <div class="modal-content">
+                <h2><i class="fas fa-exclamation-triangle" style="color: var(--error-color);"></i> Supprimer le groupe</h2>
+                <p>Êtes-vous sûr de vouloir supprimer définitivement le groupe <strong>${groupName}</strong> ?</p>
+                <p class="text-muted">Cette action supprimera tous les messages du groupe et ne peut pas être annulée.</p>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" onclick="closeDeleteGroupModal()">Annuler</button>
+                    <button class="btn btn-danger" onclick="deleteGroup(${groupId})">
+                        <i class="fas fa-trash"></i> Supprimer
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeDeleteGroupModal();
+    });
+
+    document.body.appendChild(modal);
+}
+
+function closeDeleteGroupModal() {
+    const modal = document.getElementById('delete-group-modal');
+    if (modal) modal.remove();
+}
+
+/**
+ * Supprime définitivement un groupe
+ */
+function deleteGroup(groupId) {
+    closeDeleteGroupModal();
+
+    const groups = JSON.parse(localStorage.getItem('afertes_groups') || '[]');
+    const filtered = groups.filter(g => g.id !== groupId);
+    localStorage.setItem('afertes_groups', JSON.stringify(filtered));
+
+    if (currentGroupId === groupId) {
+        closeGroupChat();
+    }
+
+    const showingArchived = document.querySelector('.group-filter-btn.active')?.dataset.filter === 'archived';
+    loadGroups(showingArchived);
+    showToast('Groupe supprimé', 'success');
+}
+
+/**
+ * Ferme le chat de groupe actif
+ */
+function closeGroupChat() {
+    currentGroupId = null;
+    const container = document.getElementById('group-chat-container');
+    if (container) {
+        container.innerHTML = `
+            <div class="chat-placeholder">
+                <i class="fas fa-users"></i>
+                <p>Sélectionnez un groupe pour démarrer une discussion</p>
+            </div>
+        `;
+    }
+    document.querySelectorAll('.group-item').forEach(item => item.classList.remove('active'));
+}
+
+/**
+ * Filtre les groupes (actifs ou archivés)
+ */
+function filterGroupsView(filter) {
+    document.querySelectorAll('.group-filter-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.filter === filter);
+    });
+    loadGroups(filter === 'archived');
+}
+
+/**
+ * Recherche dans les groupes
+ */
+function searchGroups(query) {
+    const showingArchived = document.querySelector('.group-filter-btn.active')?.dataset.filter === 'archived';
+    const allGroups = JSON.parse(localStorage.getItem('afertes_groups') || '[]');
+    const container = document.getElementById('groups-items');
+
+    let userGroups = allGroups.filter(g => {
+        if (g.type === 'promo') {
+            return (currentUser?.formation === g.formation && currentUser?.promo === g.promo) ||
+                   currentUser?.role === 'teacher' ||
+                   currentUser?.role === 'secretary';
+        }
+        return g.members?.includes(currentUser?.id);
+    });
+
+    userGroups = userGroups.filter(g => {
+        const matchesArchive = showingArchived ? g.archived : !g.archived;
+        const matchesQuery = !query || g.name.toLowerCase().includes(query.toLowerCase());
+        return matchesArchive && matchesQuery;
+    });
+
+    if (userGroups.length === 0) {
+        container.innerHTML = `
+            <div class="empty-conversations">
+                <i class="fas fa-search"></i>
+                <p>Aucun groupe trouvé</p>
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = userGroups.map(group => {
+        const lastMsg = group.messages?.[group.messages.length - 1];
+        const isPromo = group.type === 'promo';
+        return `
+            <div class="group-item" data-id="${group.id}">
+                <div class="group-content" onclick="openGroupChat(${group.id})">
+                    <div class="group-avatar">
+                        <i class="fas fa-${isPromo ? 'graduation-cap' : 'users'}"></i>
+                    </div>
+                    <div class="group-info">
+                        <h4>${group.name}</h4>
+                        <p>${lastMsg ? lastMsg.text.substring(0, 30) + '...' : 'Aucun message'}</p>
+                    </div>
+                    <div class="group-meta">
+                        <span class="time">${lastMsg ? formatTimeAgo(lastMsg.timestamp) : ''}</span>
+                    </div>
+                </div>
+                <div class="group-actions">
+                    <button class="btn-icon-sm" onclick="event.stopPropagation(); toggleGroupMenu(${group.id})" title="Options">
+                        <i class="fas fa-ellipsis-v"></i>
+                    </button>
+                    <div class="group-menu hidden" id="group-menu-${group.id}">
+                        ${group.archived ? `
+                            <button onclick="unarchiveGroup(${group.id})">
+                                <i class="fas fa-box-open"></i> Restaurer
+                            </button>
+                        ` : `
+                            <button onclick="archiveGroup(${group.id})">
+                                <i class="fas fa-archive"></i> Archiver
+                            </button>
+                        `}
+                        ${!isPromo ? `
+                            <button onclick="confirmDeleteGroup(${group.id}, '${group.name.replace(/'/g, "\\'")}')">
+                                <i class="fas fa-trash"></i> Supprimer
+                            </button>
+                        ` : ''}
+                    </div>
                 </div>
             </div>
         `;
@@ -4186,17 +4444,28 @@ function openGroupChat(groupId) {
     if (!group) return;
 
     document.querySelectorAll('.group-item').forEach(item => item.classList.remove('active'));
-    document.querySelector(`.group-item[onclick="openGroupChat(${groupId})"]`)?.classList.add('active');
+    document.querySelector(`.group-item[data-id="${groupId}"]`)?.classList.add('active');
 
+    const isPromo = group.type === 'promo';
     const container = document.getElementById('group-chat-container');
     container.innerHTML = `
         <div class="chat-header">
-            <div class="group-avatar" style="width: 40px; height: 40px;">
-                <i class="fas fa-users"></i>
+            <div class="chat-header-info">
+                <div class="group-avatar chat-group-avatar">
+                    <i class="fas fa-${isPromo ? 'graduation-cap' : 'users'}"></i>
+                </div>
+                <div class="chat-user-info">
+                    <h4>${group.name}</h4>
+                    <span>${isPromo ? 'Groupe de promotion' : 'Groupe privé'}</span>
+                </div>
             </div>
-            <div>
-                <h4>${group.name}</h4>
-                <span style="font-size: 0.85rem; color: var(--text-light);">${group.type === 'promo' ? 'Groupe de promotion' : 'Groupe privé'}</span>
+            <div class="chat-header-actions">
+                <button class="btn-icon-sm" onclick="archiveGroup(${group.id})" title="Archiver">
+                    <i class="fas fa-archive"></i>
+                </button>
+                <button class="btn-icon-sm" onclick="closeGroupChat()" title="Fermer">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
         </div>
         <div class="chat-messages" id="group-messages">

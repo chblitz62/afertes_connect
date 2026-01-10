@@ -1965,6 +1965,17 @@
                                 <i class="fas fa-plus" aria-hidden="true"></i>
                             </button>
                         </div>
+                        <div class="groups-search">
+                            <input type="text" placeholder="Rechercher un groupe..." oninput="searchGroups(this.value)">
+                        </div>
+                        <div class="groups-filters">
+                            <button class="group-filter-btn active" data-filter="active" onclick="filterGroupsView('active')">
+                                <i class="fas fa-users"></i> Actifs
+                            </button>
+                            <button class="group-filter-btn" data-filter="archived" onclick="filterGroupsView('archived')">
+                                <i class="fas fa-archive"></i> Archivés
+                            </button>
+                        </div>
                         <div class="groups-items" id="groups-items">
                             <!-- Liste des groupes -->
                         </div>

@@ -1680,3 +1680,65 @@
 [data-theme="dark"] .empty-conversations {
     color: var(--a11y-text-muted);
 }
+
+/* === GESTION GROUPES - MODE SOMBRE === */
+[data-theme="dark"] .groups-search input {
+    background-color: var(--a11y-input-bg);
+    border-color: var(--a11y-input-border);
+    color: var(--a11y-text-primary);
+}
+
+[data-theme="dark"] .groups-filters {
+    border-bottom-color: var(--a11y-border-color);
+}
+
+[data-theme="dark"] .group-filter-btn {
+    background-color: var(--a11y-bg-tertiary);
+    color: var(--a11y-text-secondary);
+}
+
+[data-theme="dark"] .group-filter-btn:hover {
+    background-color: var(--a11y-border-color);
+}
+
+[data-theme="dark"] .group-filter-btn.active {
+    background-color: var(--a11y-brand-primary);
+    color: white;
+}
+
+[data-theme="dark"] .group-item {
+    border-bottom-color: var(--a11y-border-color);
+}
+
+[data-theme="dark"] .group-item:hover {
+    background-color: var(--a11y-bg-tertiary);
+}
+
+[data-theme="dark"] .group-item.active {
+    background-color: var(--a11y-brand-light);
+}
+
+[data-theme="dark"] .group-menu {
+    background-color: var(--a11y-bg-secondary);
+    border-color: var(--a11y-border-color);
+}
+
+[data-theme="dark"] .group-menu button {
+    color: var(--a11y-text-primary);
+}
+
+[data-theme="dark"] .group-menu button:hover {
+    background-color: var(--a11y-bg-tertiary);
+}
+
+[data-theme="dark"] .group-menu button i {
+    color: var(--a11y-text-muted);
+}
+
+[data-theme="dark"] .group-info h4 {
+    color: var(--a11y-text-primary);
+}
+
+[data-theme="dark"] .group-info p {
+    color: var(--a11y-text-muted);
+}
