@@ -825,7 +825,7 @@
                                 <button onclick="importFromDrive()"><i class="fas fa-cloud"></i> Depuis mon Drive</button>
                             </div>
                         </div>
-                        <input type="file" id="file-import-input" accept=".html,.htm,.txt,.doc,.docx,.rtf" style="display:none" onchange="handleFileImport(event)">
+                        <input type="file" id="file-import-input" accept=".html,.htm,.txt,.md" style="display:none" onchange="handleFileImport(event)">
                         <!-- Télécharger -->
                         <div class="dropdown">
                             <button class="btn btn-icon" onclick="toggleDownloadMenu()" title="Télécharger">
@@ -2746,9 +2746,9 @@
     <!-- Quill et Yjs pour édition collaborative -->
     <link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
-    <script src="https://unpkg.com/yjs@13.6.10/dist/yjs.js"></script>
-    <script src="https://unpkg.com/y-quill@0.1.5/dist/y-quill.js"></script>
-    <script src="https://unpkg.com/y-websocket@1.5.0/dist/y-websocket.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/yjs@13.6.10/dist/yjs.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/y-quill@0.1.5/dist/y-quill.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/y-websocket@1.5.0/dist/y-websocket.js"></script>
 
     <!-- Modules collaboratifs -->
     <script src="js/modules/collaborative-editor.js"></script>

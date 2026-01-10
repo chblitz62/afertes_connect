@@ -1123,39 +1123,199 @@ async function handleFileImport(event) {
     const quill = window.demoQuill;
     if (!quill) {
         showToast('Éditeur non disponible', 'error');
+        event.target.value = '';
         return;
     }
 
+    const fileName = file.name.toLowerCase();
     showToast('Import en cours...', 'info');
 
     try {
+        // Vérifier le type de fichier
+        if (fileName.endsWith('.docx') || fileName.endsWith('.doc')) {
+            showToast('Les fichiers Word (.doc/.docx) ne sont pas directement supportés. Veuillez les enregistrer en HTML ou copier-coller le contenu.', 'warning');
+            event.target.value = '';
+            return;
+        }
+
+        if (fileName.endsWith('.rtf')) {
+            showToast('Les fichiers RTF ne sont pas directement supportés. Veuillez les enregistrer en HTML ou TXT.', 'warning');
+            event.target.value = '';
+            return;
+        }
+
         const text = await file.text();
         let content = '';
 
-        if (file.name.endsWith('.html') || file.name.endsWith('.htm')) {
-            // Extraire le contenu du body si présent
-            const match = text.match(/<body[^>]*>([\s\S]*)<\/body>/i);
-            content = match ? match[1] : text;
-        } else if (file.name.endsWith('.txt')) {
-            // Convertir le texte brut en paragraphes
-            content = text.split('\n').map(line => `<p>${escapeHtml(line) || '<br>'}</p>`).join('');
+        if (fileName.endsWith('.html') || fileName.endsWith('.htm')) {
+            content = cleanHtmlImport(text);
+        } else if (fileName.endsWith('.md')) {
+            content = convertMarkdownToHtml(text);
+        } else if (fileName.endsWith('.txt')) {
+            content = convertTextToHtml(text);
         } else {
-            // Pour .doc/.docx, on essaie de lire comme texte (limité)
-            content = `<p>${escapeHtml(text).replace(/\n/g, '</p><p>')}</p>`;
+            // Essayer comme texte brut
+            content = convertTextToHtml(text);
         }
 
-        // Ajouter le contenu à l'éditeur
-        const currentContent = quill.root.innerHTML;
-        quill.root.innerHTML = currentContent + content;
+        if (!content || content.trim() === '' || content === '<p><br></p>') {
+            showToast('Le fichier semble vide ou non lisible', 'warning');
+            event.target.value = '';
+            return;
+        }
 
-        showToast(`Fichier "${file.name}" importé`, 'success');
+        // Demander si on remplace ou ajoute
+        const currentContent = quill.root.innerHTML;
+        const isEmpty = !currentContent || currentContent === '<p><br></p>' || currentContent.trim() === '';
+
+        if (isEmpty) {
+            // Document vide, remplacer directement
+            quill.root.innerHTML = content;
+        } else {
+            // Document non vide, ajouter à la suite
+            quill.root.innerHTML = currentContent + '<p><br></p>' + content;
+        }
+
+        showToast(`Fichier "${file.name}" importé avec succès`, 'success');
     } catch (error) {
         console.error('Erreur import:', error);
-        showToast('Erreur lors de l\'import du fichier', 'error');
+        showToast('Erreur lors de l\'import: ' + (error.message || 'format non supporté'), 'error');
     }
 
     // Reset l'input
     event.target.value = '';
+}
+
+/**
+ * Nettoie le HTML importé
+ */
+function cleanHtmlImport(html) {
+    // Créer un élément temporaire pour parser le HTML
+    const temp = document.createElement('div');
+
+    // Extraire le body si présent
+    const bodyMatch = html.match(/<body[^>]*>([\s\S]*)<\/body>/i);
+    temp.innerHTML = bodyMatch ? bodyMatch[1] : html;
+
+    // Supprimer les scripts et styles
+    temp.querySelectorAll('script, style, link, meta, head, noscript').forEach(el => el.remove());
+
+    // Supprimer les attributs dangereux
+    temp.querySelectorAll('*').forEach(el => {
+        // Garder seulement certains attributs
+        const allowedAttrs = ['href', 'src', 'alt', 'title', 'class', 'id', 'colspan', 'rowspan'];
+        Array.from(el.attributes).forEach(attr => {
+            if (!allowedAttrs.includes(attr.name.toLowerCase())) {
+                // Supprimer les événements et styles inline
+                if (attr.name.startsWith('on') || attr.name === 'style') {
+                    el.removeAttribute(attr.name);
+                }
+            }
+        });
+    });
+
+    // Nettoyer les liens (enlever javascript:)
+    temp.querySelectorAll('a[href^="javascript:"]').forEach(el => {
+        el.removeAttribute('href');
+    });
+
+    return temp.innerHTML;
+}
+
+/**
+ * Convertit du Markdown en HTML
+ */
+function convertMarkdownToHtml(markdown) {
+    if (!markdown || markdown.trim() === '') return '';
+
+    let html = markdown;
+
+    // Titres
+    html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+    html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+    html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+
+    // Gras et italique
+    html = html.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
+    html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+    html = html.replace(/___(.+?)___/g, '<strong><em>$1</em></strong>');
+    html = html.replace(/__(.+?)__/g, '<strong>$1</strong>');
+    html = html.replace(/_(.+?)_/g, '<em>$1</em>');
+
+    // Code inline
+    html = html.replace(/`(.+?)`/g, '<code>$1</code>');
+
+    // Liens
+    html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
+
+    // Images
+    html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1">');
+
+    // Listes non ordonnées
+    html = html.replace(/^[\*\-] (.+)$/gm, '<li>$1</li>');
+
+    // Listes ordonnées
+    html = html.replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
+
+    // Regrouper les éléments de liste
+    html = html.replace(/(<li>.*<\/li>\n?)+/g, (match) => {
+        return '<ul>' + match + '</ul>';
+    });
+
+    // Blockquotes
+    html = html.replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>');
+
+    // Lignes horizontales
+    html = html.replace(/^---$/gm, '<hr>');
+    html = html.replace(/^\*\*\*$/gm, '<hr>');
+
+    // Paragraphes (lignes non vides qui ne sont pas déjà formatées)
+    const lines = html.split('\n');
+    html = lines.map(line => {
+        const trimmed = line.trim();
+        if (trimmed === '') return '<p><br></p>';
+        // Si la ligne ne commence pas par une balise HTML, l'envelopper dans <p>
+        if (!trimmed.match(/^<(h[1-6]|p|ul|ol|li|blockquote|hr|div|pre|code|img)/i)) {
+            return `<p>${trimmed}</p>`;
+        }
+        return line;
+    }).join('\n');
+
+    // Nettoyer les balises <p> vides consécutives
+    html = html.replace(/(<p><br><\/p>\n?){3,}/g, '<p><br></p><p><br></p>');
+
+    return html;
+}
+
+/**
+ * Convertit du texte brut en HTML
+ */
+function convertTextToHtml(text) {
+    if (!text || text.trim() === '') return '';
+
+    // Diviser en lignes
+    const lines = text.split(/\r?\n/);
+    let html = '';
+
+    for (const line of lines) {
+        const trimmedLine = line.trim();
+
+        if (trimmedLine === '') {
+            // Ligne vide = nouveau paragraphe
+            html += '<p><br></p>';
+        } else {
+            // Échapper les caractères HTML et créer un paragraphe
+            const escapedLine = trimmedLine
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+            html += `<p>${escapedLine}</p>`;
+        }
+    }
+
+    return html;
 }
 
 // ============================================
