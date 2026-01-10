@@ -16,6 +16,12 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 <body>
+    <!-- SDK Facebook pour les widgets de pages -->
+    <div id="fb-root"></div>
+    <script async defer crossorigin="anonymous"
+            src="https://connect.facebook.net/fr_FR/sdk.js#xfbml=1&version=v18.0"
+            nonce="facebook"></script>
+
     <!-- Écran de chargement -->
     <div id="loading-screen" class="loading-screen">
         <div class="loader">
@@ -583,14 +589,45 @@
             <section id="page-news" class="page-content">
                 <div class="page-header">
                     <h1><i class="fas fa-newspaper"></i> Actualités</h1>
-                    <div class="filter-tabs">
-                        <button class="filter-tab active" data-filter="all">Toutes</button>
-                        <button class="filter-tab" data-filter="slb">Saint-Laurent-Blangy</button>
-                        <button class="filter-tab" data-filter="avion">Avion</button>
-                    </div>
+                    <p>Les dernières nouvelles de l'AFERTES</p>
                 </div>
-                <div class="news-list" id="news-list">
-                    <!-- Actualités générées dynamiquement -->
+                <div class="news-content-wrapper">
+                    <!-- Widget Facebook AFERTES Officiel -->
+                    <div class="facebook-feed-container" id="fb-afertes-container">
+                        <div class="facebook-feed-header">
+                            <i class="fab fa-facebook"></i>
+                            <span>Page Facebook AFERTES</span>
+                            <span class="fb-refresh-info" id="fb-afertes-refresh">Actualisation auto: 1h</span>
+                        </div>
+                        <div class="fb-page"
+                             data-href="https://www.facebook.com/afertesofficiel"
+                             data-tabs="timeline"
+                             data-width=""
+                             data-height="700"
+                             data-small-header="false"
+                             data-adapt-container-width="true"
+                             data-hide-cover="false"
+                             data-show-facepile="true">
+                            <blockquote cite="https://www.facebook.com/afertesofficiel" class="fb-xfbml-parse-ignore">
+                                <a href="https://www.facebook.com/afertesofficiel">AFERTES Officiel</a>
+                            </blockquote>
+                        </div>
+                        <div class="fb-loading" id="fb-afertes-loading">
+                            <i class="fas fa-spinner fa-spin"></i> Chargement du flux Facebook...
+                        </div>
+                    </div>
+                    <!-- Autres actualités locales -->
+                    <div class="news-local-section">
+                        <h2><i class="fas fa-bullhorn"></i> Actualités internes</h2>
+                        <div class="filter-tabs">
+                            <button class="filter-tab active" data-filter="all">Toutes</button>
+                            <button class="filter-tab" data-filter="slb">Saint-Laurent-Blangy</button>
+                            <button class="filter-tab" data-filter="avion">Avion</button>
+                        </div>
+                        <div class="news-list" id="news-list">
+                            <!-- Actualités générées dynamiquement -->
+                        </div>
+                    </div>
                 </div>
             </section>
 
@@ -601,10 +638,37 @@
                     <p>Bureau Des Étudiants - Événements et activités</p>
                 </div>
                 <div class="bde-content">
-                    <div class="bde-upcoming">
-                        <h2>Événements à venir</h2>
-                        <div class="events-list" id="bde-events">
-                            <!-- Événements générés dynamiquement -->
+                    <div class="bde-main">
+                        <!-- Widget Facebook BDE -->
+                        <div class="facebook-feed-container" id="fb-bde-container">
+                            <div class="facebook-feed-header">
+                                <i class="fab fa-facebook"></i>
+                                <span>Page Facebook BDE AFERTES</span>
+                                <span class="fb-refresh-info" id="fb-bde-refresh">Actualisation auto: 1h</span>
+                            </div>
+                            <div class="fb-page"
+                                 data-href="https://www.facebook.com/profile.php?id=61554389123946"
+                                 data-tabs="timeline,events"
+                                 data-width=""
+                                 data-height="600"
+                                 data-small-header="false"
+                                 data-adapt-container-width="true"
+                                 data-hide-cover="false"
+                                 data-show-facepile="true">
+                                <blockquote cite="https://www.facebook.com/profile.php?id=61554389123946" class="fb-xfbml-parse-ignore">
+                                    <a href="https://www.facebook.com/profile.php?id=61554389123946">BDE AFERTES</a>
+                                </blockquote>
+                            </div>
+                            <div class="fb-loading" id="fb-bde-loading">
+                                <i class="fas fa-spinner fa-spin"></i> Chargement du flux Facebook...
+                            </div>
+                        </div>
+                        <!-- Événements locaux -->
+                        <div class="bde-upcoming">
+                            <h2><i class="fas fa-calendar-check"></i> Événements à venir</h2>
+                            <div class="events-list" id="bde-events">
+                                <!-- Événements générés dynamiquement -->
+                            </div>
                         </div>
                     </div>
                     <div class="bde-sidebar">
@@ -612,6 +676,7 @@
                             <h3>Contact BDE</h3>
                             <p><i class="fas fa-envelope"></i> bde@afertes.org</p>
                             <p><i class="fas fa-instagram"></i> @bde.afertes</p>
+                            <p><i class="fab fa-facebook"></i> <a href="https://www.facebook.com/profile.php?id=61554389123946" target="_blank">BDE AFERTES</a></p>
                         </div>
                         <div class="bde-join-card">
                             <h3>Rejoindre le BDE</h3>

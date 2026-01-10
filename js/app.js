@@ -144,10 +144,10 @@ document.addEventListener('DOMContentLoaded', () => {
 function initApp() {
     // Vérifier si l'utilisateur est connecté
     const savedUser = localStorage.getItem('afertes_user');
-    
+
     setTimeout(() => {
         document.getElementById('loading-screen').classList.add('hidden');
-        
+
         if (savedUser) {
             currentUser = JSON.parse(savedUser);
             registerActiveSession(currentUser.id);
@@ -155,6 +155,9 @@ function initApp() {
 
             // Mettre à jour l'activité toutes les 5 minutes
             setInterval(updateSessionActivity, 5 * 60 * 1000);
+
+            // Initialiser les widgets Facebook
+            initFacebookWidgets();
         } else {
             showLogin();
         }
@@ -162,6 +165,88 @@ function initApp() {
 
     // Event listeners
     setupEventListeners();
+}
+
+// ===========================================
+// Widgets Facebook - Actualités & BDE
+// ===========================================
+
+let facebookRefreshInterval = null;
+
+function initFacebookWidgets() {
+    // Attendre que le SDK Facebook soit chargé
+    if (typeof FB !== 'undefined') {
+        parseFacebookWidgets();
+    } else {
+        // Si FB n'est pas encore chargé, attendre
+        window.fbAsyncInit = function() {
+            parseFacebookWidgets();
+        };
+    }
+
+    // Rafraîchir les widgets toutes les heures (3600000 ms)
+    if (facebookRefreshInterval) {
+        clearInterval(facebookRefreshInterval);
+    }
+    facebookRefreshInterval = setInterval(refreshFacebookWidgets, 3600000);
+
+    // Mettre à jour l'heure de dernière actualisation
+    updateFacebookRefreshTime();
+}
+
+function parseFacebookWidgets() {
+    if (typeof FB !== 'undefined' && FB.XFBML) {
+        FB.XFBML.parse(document.getElementById('fb-afertes-container'));
+        FB.XFBML.parse(document.getElementById('fb-bde-container'));
+
+        // Masquer le loader après un délai
+        setTimeout(() => {
+            const afertesLoading = document.getElementById('fb-afertes-loading');
+            const bdeLoading = document.getElementById('fb-bde-loading');
+            if (afertesLoading) afertesLoading.classList.add('hidden');
+            if (bdeLoading) bdeLoading.classList.add('hidden');
+        }, 3000);
+    }
+}
+
+function refreshFacebookWidgets() {
+    console.log('Rafraîchissement des widgets Facebook...');
+
+    // Reparser les widgets Facebook
+    if (typeof FB !== 'undefined' && FB.XFBML) {
+        // Afficher les loaders
+        const afertesLoading = document.getElementById('fb-afertes-loading');
+        const bdeLoading = document.getElementById('fb-bde-loading');
+        if (afertesLoading) afertesLoading.classList.remove('hidden');
+        if (bdeLoading) bdeLoading.classList.remove('hidden');
+
+        // Recharger les widgets
+        FB.XFBML.parse(document.getElementById('fb-afertes-container'));
+        FB.XFBML.parse(document.getElementById('fb-bde-container'));
+
+        // Masquer les loaders
+        setTimeout(() => {
+            if (afertesLoading) afertesLoading.classList.add('hidden');
+            if (bdeLoading) bdeLoading.classList.add('hidden');
+        }, 3000);
+    }
+
+    updateFacebookRefreshTime();
+}
+
+function updateFacebookRefreshTime() {
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+
+    const afertesRefresh = document.getElementById('fb-afertes-refresh');
+    const bdeRefresh = document.getElementById('fb-bde-refresh');
+
+    if (afertesRefresh) {
+        afertesRefresh.textContent = `Dernière maj: ${timeStr} | Auto: 1h`;
+    }
+    if (bdeRefresh) {
+        bdeRefresh.textContent = `Dernière maj: ${timeStr} | Auto: 1h`;
+    }
 }
 
 function setupEventListeners() {
