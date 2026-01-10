@@ -212,8 +212,10 @@ function initSiteAndWeather() {
     // Charger le site sauvegardé
     updateCurrentSiteDisplay();
 
-    // Charger la météo
-    loadWeather();
+    // Charger la météo avec un petit délai pour s'assurer que le DOM est prêt
+    setTimeout(() => {
+        loadWeather();
+    }, 500);
 
     // Actualiser la météo toutes les 30 minutes
     if (weatherInterval) clearInterval(weatherInterval);
@@ -272,24 +274,26 @@ async function loadWeather() {
                 const icon = getWeatherIcon(weatherCode);
 
                 weatherCache[key] = `<i class="fas fa-${icon}"></i> ${temp}°C`;
-
-                // Mettre à jour l'affichage
-                const weatherEl = document.getElementById(`weather-${key}`);
-                if (weatherEl) {
-                    weatherEl.innerHTML = weatherCache[key];
-                }
-
-                // Si c'est le site actuel, mettre à jour le header
-                if (key === currentSite) {
-                    const currentWeather = document.getElementById('current-site-weather');
-                    if (currentWeather) {
-                        currentWeather.innerHTML = weatherCache[key];
-                    }
-                }
+            } else {
+                weatherCache[key] = '<i class="fas fa-cloud"></i> --°C';
             }
         } catch (error) {
             console.error(`Erreur météo pour ${site.name}:`, error);
             weatherCache[key] = '<i class="fas fa-cloud"></i> --°C';
+        }
+
+        // Mettre à jour l'affichage dans le dropdown
+        const weatherEl = document.getElementById(`weather-${key}`);
+        if (weatherEl) {
+            weatherEl.innerHTML = weatherCache[key];
+        }
+
+        // Si c'est le site actuel, mettre à jour le header
+        if (key === currentSite) {
+            const currentWeather = document.getElementById('current-site-weather');
+            if (currentWeather) {
+                currentWeather.innerHTML = weatherCache[key];
+            }
         }
     }
 }

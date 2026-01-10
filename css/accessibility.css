@@ -244,11 +244,27 @@
     border-color: var(--a11y-border-color);
 }
 
-[data-theme="dark"] .user-menu-dropdown a {
+[data-theme="dark"] .user-menu-dropdown a,
+[data-theme="dark"] .user-menu-dropdown .user-menu-item {
+    color: var(--a11y-text-primary);
+    background-color: transparent;
+}
+
+[data-theme="dark"] .user-menu-dropdown a:hover,
+[data-theme="dark"] .user-menu-dropdown .user-menu-item:hover {
+    background-color: var(--a11y-bg-tertiary);
+}
+
+[data-theme="dark"] .user-menu-dropdown hr {
+    border-color: var(--a11y-border-color);
+}
+
+[data-theme="dark"] .user-menu-dropdown .theme-toggle-item i,
+[data-theme="dark"] .user-menu-dropdown .theme-toggle-item span {
     color: var(--a11y-text-primary);
 }
 
-[data-theme="dark"] .user-menu-dropdown a:hover {
+[data-theme="dark"] .user-menu-dropdown .theme-slider {
     background-color: var(--a11y-bg-tertiary);
 }
 
