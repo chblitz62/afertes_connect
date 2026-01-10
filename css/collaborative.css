@@ -689,3 +689,170 @@
     background: #665c00;
     color: #fff;
 }
+
+/* ==================== Styles Quill ==================== */
+
+.editor-container .ql-container {
+    max-width: 800px;
+    margin: 0 auto;
+    background: var(--card-bg, #fff);
+    border-radius: 0 0 12px 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border: none;
+    font-size: 1rem;
+}
+
+.editor-container .ql-toolbar {
+    max-width: 800px;
+    margin: 0 auto;
+    background: var(--card-bg, #fff);
+    border-radius: 12px 12px 0 0;
+    border: none;
+    border-bottom: 1px solid var(--border-color, #e0e0e0);
+}
+
+.editor-container .ql-editor {
+    min-height: 400px;
+    padding: 2rem;
+    line-height: 1.6;
+}
+
+.editor-container .ql-editor.ql-blank::before {
+    color: var(--text-secondary, #999);
+    font-style: italic;
+}
+
+/* Mode sombre Quill */
+[data-theme="dark"] .editor-container .ql-container {
+    background: var(--card-bg, #2d2d2d);
+    color: var(--text-primary, #e0e0e0);
+}
+
+[data-theme="dark"] .editor-container .ql-toolbar {
+    background: var(--card-bg, #2d2d2d);
+    border-color: var(--border-color, #444);
+}
+
+[data-theme="dark"] .editor-container .ql-toolbar button,
+[data-theme="dark"] .editor-container .ql-toolbar .ql-picker-label {
+    color: var(--text-primary, #e0e0e0);
+}
+
+[data-theme="dark"] .editor-container .ql-toolbar button:hover,
+[data-theme="dark"] .editor-container .ql-toolbar .ql-picker-label:hover {
+    color: var(--primary-color, #5c7cfa);
+}
+
+[data-theme="dark"] .editor-container .ql-toolbar button.ql-active,
+[data-theme="dark"] .editor-container .ql-toolbar .ql-picker-label.ql-active {
+    color: var(--primary-color, #5c7cfa);
+}
+
+[data-theme="dark"] .editor-container .ql-toolbar .ql-stroke {
+    stroke: var(--text-primary, #e0e0e0);
+}
+
+[data-theme="dark"] .editor-container .ql-toolbar .ql-fill {
+    fill: var(--text-primary, #e0e0e0);
+}
+
+[data-theme="dark"] .editor-container .ql-toolbar button:hover .ql-stroke,
+[data-theme="dark"] .editor-container .ql-toolbar button.ql-active .ql-stroke {
+    stroke: var(--primary-color, #5c7cfa);
+}
+
+[data-theme="dark"] .editor-container .ql-toolbar button:hover .ql-fill,
+[data-theme="dark"] .editor-container .ql-toolbar button.ql-active .ql-fill {
+    fill: var(--primary-color, #5c7cfa);
+}
+
+[data-theme="dark"] .editor-container .ql-toolbar .ql-picker-options {
+    background: var(--card-bg, #2d2d2d);
+    border-color: var(--border-color, #444);
+}
+
+[data-theme="dark"] .editor-container .ql-toolbar .ql-picker-item {
+    color: var(--text-primary, #e0e0e0);
+}
+
+[data-theme="dark"] .editor-container .ql-toolbar .ql-picker-item:hover {
+    color: var(--primary-color, #5c7cfa);
+}
+
+[data-theme="dark"] .editor-container .ql-editor {
+    color: var(--text-primary, #e0e0e0);
+}
+
+[data-theme="dark"] .editor-container .ql-editor a {
+    color: var(--primary-color, #5c7cfa);
+}
+
+[data-theme="dark"] .editor-container .ql-editor blockquote {
+    border-left-color: var(--primary-color, #5c7cfa);
+    color: var(--text-secondary, #aaa);
+}
+
+[data-theme="dark"] .editor-container .ql-editor code,
+[data-theme="dark"] .editor-container .ql-editor pre {
+    background: #1e1e1e;
+    color: #f8f8f2;
+}
+
+[data-theme="dark"] .editor-container .ql-snow .ql-tooltip {
+    background: var(--card-bg, #2d2d2d);
+    border-color: var(--border-color, #444);
+    color: var(--text-primary, #e0e0e0);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .editor-container .ql-snow .ql-tooltip input[type="text"] {
+    background: #1e1e1e;
+    border-color: var(--border-color, #444);
+    color: var(--text-primary, #e0e0e0);
+}
+
+/* Visibilités en mode sombre */
+[data-theme="dark"] .collab-doc-card .doc-visibility.private {
+    background: rgba(123, 31, 162, 0.2);
+    color: #ce93d8;
+}
+
+[data-theme="dark"] .collab-doc-card .doc-visibility.formation {
+    background: rgba(21, 101, 192, 0.2);
+    color: #64b5f6;
+}
+
+[data-theme="dark"] .collab-doc-card .doc-visibility.public {
+    background: rgba(46, 125, 50, 0.2);
+    color: #81c784;
+}
+
+/* Status connexion mode sombre */
+[data-theme="dark"] .connection-status.local {
+    color: var(--text-secondary, #aaa);
+    background: rgba(150, 150, 150, 0.1);
+}
+
+/* Formulaires en mode sombre */
+[data-theme="dark"] .new-doc-form input,
+[data-theme="dark"] .new-doc-form select,
+[data-theme="dark"] .collab-docs-filters input,
+[data-theme="dark"] .collab-docs-filters select {
+    background: var(--card-bg, #2d2d2d);
+    border-color: var(--border-color, #444);
+    color: var(--text-primary, #e0e0e0);
+}
+
+[data-theme="dark"] .new-doc-form input:focus,
+[data-theme="dark"] .new-doc-form select:focus {
+    border-color: var(--primary-color, #5c7cfa);
+    box-shadow: 0 0 0 3px rgba(92, 124, 250, 0.2);
+}
+
+[data-theme="dark"] .add-permission-form {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .permission-item .permission-level {
+    background: rgba(255, 255, 255, 0.1);
+}

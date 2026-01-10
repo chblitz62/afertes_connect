@@ -1,9 +1,123 @@
 /**
  * Module d'interface utilisateur pour les documents collaboratifs
+ * Supporte le mode démo avec localStorage
  */
 
 let currentCollabDocuments = [];
 let currentEditingDocument = null;
+
+// Vérifie si on est en mode démo (pas de token JWT valide)
+function isDemoMode() {
+    const token = localStorage.getItem('token');
+    return !token || token === 'demo';
+}
+
+// ==================== API Démo (localStorage) ====================
+
+const DemoCollabAPI = {
+    STORAGE_KEY: 'afertes_collab_documents',
+
+    getDocuments() {
+        return JSON.parse(localStorage.getItem(this.STORAGE_KEY) || '[]');
+    },
+
+    saveDocuments(docs) {
+        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(docs));
+    },
+
+    getAll() {
+        const docs = this.getDocuments();
+        const currentUser = window.currentUser || {};
+        return docs.map(doc => ({
+            ...doc,
+            ownerName: doc.owner_id === currentUser.id
+                ? `${currentUser.firstName || ''} ${currentUser.lastName || ''}`.trim() || currentUser.email
+                : 'Utilisateur',
+            canEdit: doc.owner_id === currentUser.id || doc.visibility === 'public',
+            active_users: 0
+        }));
+    },
+
+    getById(id) {
+        const docs = this.getDocuments();
+        const doc = docs.find(d => d.id === id);
+        if (!doc) throw new Error('Document non trouvé');
+
+        const currentUser = window.currentUser || {};
+        return {
+            ...doc,
+            ownerName: doc.owner_id === currentUser.id
+                ? `${currentUser.firstName || ''} ${currentUser.lastName || ''}`.trim() || currentUser.email
+                : 'Utilisateur',
+            canEdit: doc.owner_id === currentUser.id || doc.visibility === 'public'
+        };
+    },
+
+    create(data) {
+        const docs = this.getDocuments();
+        const currentUser = window.currentUser || {};
+
+        const newDoc = {
+            id: 'doc_' + Date.now(),
+            slug: this.generateSlug(data.title),
+            title: data.title,
+            visibility: data.visibility || 'private',
+            owner_id: currentUser.id || 1,
+            html_content: '',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+        };
+
+        docs.push(newDoc);
+        this.saveDocuments(docs);
+
+        return {
+            ...newDoc,
+            ownerName: `${currentUser.firstName || ''} ${currentUser.lastName || ''}`.trim() || currentUser.email,
+            canEdit: true
+        };
+    },
+
+    update(id, data) {
+        const docs = this.getDocuments();
+        const index = docs.findIndex(d => d.id === id);
+        if (index === -1) throw new Error('Document non trouvé');
+
+        docs[index] = {
+            ...docs[index],
+            ...data,
+            updated_at: new Date().toISOString()
+        };
+
+        this.saveDocuments(docs);
+        return docs[index];
+    },
+
+    delete(id) {
+        const docs = this.getDocuments();
+        const filtered = docs.filter(d => d.id !== id);
+        this.saveDocuments(filtered);
+    },
+
+    generateSlug(title) {
+        return title
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-|-$/g, '') + '-' + Date.now();
+    },
+
+    saveContent(id, content) {
+        const docs = this.getDocuments();
+        const index = docs.findIndex(d => d.id === id);
+        if (index !== -1) {
+            docs[index].html_content = content;
+            docs[index].updated_at = new Date().toISOString();
+            this.saveDocuments(docs);
+        }
+    }
+};
 
 /**
  * Charge et affiche la liste des documents collaboratifs
@@ -15,19 +129,31 @@ async function loadCollabDocuments() {
     try {
         container.innerHTML = '<div class="loading-placeholder"><i class="fas fa-spinner fa-spin"></i> Chargement...</div>';
 
-        const documents = await API.getCollabDocuments();
-        currentCollabDocuments = documents;
+        let documents;
+        if (isDemoMode()) {
+            documents = DemoCollabAPI.getAll();
+        } else {
+            documents = await API.getCollabDocuments();
+        }
 
+        currentCollabDocuments = documents;
         renderCollabDocuments(documents);
     } catch (error) {
         console.error('Erreur chargement documents collaboratifs:', error);
-        container.innerHTML = `
-            <div class="error-message">
-                <i class="fas fa-exclamation-circle"></i>
-                <p>Erreur lors du chargement des documents</p>
-                <button class="btn btn-secondary" onclick="loadCollabDocuments()">Réessayer</button>
-            </div>
-        `;
+        // En cas d'erreur, essayer le mode démo
+        if (!isDemoMode()) {
+            console.log('Basculement vers le mode démo');
+            currentCollabDocuments = DemoCollabAPI.getAll();
+            renderCollabDocuments(currentCollabDocuments);
+        } else {
+            container.innerHTML = `
+                <div class="error-message">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <p>Erreur lors du chargement des documents</p>
+                    <button class="btn btn-secondary" onclick="loadCollabDocuments()">Réessayer</button>
+                </div>
+            `;
+        }
     }
 }
 
@@ -131,7 +257,13 @@ async function createCollabDocument(event) {
     }
 
     try {
-        const doc = await API.createCollabDocument({ title, visibility });
+        let doc;
+        if (isDemoMode()) {
+            doc = DemoCollabAPI.create({ title, visibility });
+        } else {
+            doc = await API.createCollabDocument({ title, visibility });
+        }
+
         closeNewDocModal();
         showToast('Document créé avec succès', 'success');
 
@@ -148,8 +280,13 @@ async function createCollabDocument(event) {
  */
 async function openDocument(documentId, documentSlug) {
     try {
-        // Récupérer les détails du document
-        const doc = await API.getCollabDocument(documentId);
+        let doc;
+        if (isDemoMode()) {
+            doc = DemoCollabAPI.getById(documentId);
+        } else {
+            doc = await API.getCollabDocument(documentId);
+        }
+
         currentEditingDocument = doc;
 
         // Mettre à jour le titre
@@ -164,16 +301,25 @@ async function openDocument(documentId, documentSlug) {
         document.getElementById('page-collaborative-docs')?.classList.add('hidden');
 
         // Initialiser l'éditeur
-        await CollaborativeEditor.open(documentSlug, 'editor-content', {
-            readOnly: !doc.canEdit,
-            onReady: () => {
-                console.log('Éditeur prêt');
-                // Initialiser la présence
-                if (CollaborativeEditor.provider) {
-                    CollabPresence.init(CollaborativeEditor.provider);
+        const editorContainer = document.getElementById('editor-content');
+        if (editorContainer) {
+            editorContainer.innerHTML = '';
+        }
+
+        // En mode démo, utiliser un éditeur Quill simple sans WebSocket
+        if (isDemoMode()) {
+            initDemoEditor(doc);
+        } else {
+            await CollaborativeEditor.open(documentSlug, 'editor-content', {
+                readOnly: !doc.canEdit,
+                onReady: () => {
+                    console.log('Éditeur prêt');
+                    if (CollaborativeEditor.provider) {
+                        CollabPresence.init(CollaborativeEditor.provider);
+                    }
                 }
-            }
-        });
+            });
+        }
 
     } catch (error) {
         console.error('Erreur ouverture document:', error);
@@ -182,11 +328,73 @@ async function openDocument(documentId, documentSlug) {
 }
 
 /**
+ * Initialise l'éditeur en mode démo (sans collaboration temps réel)
+ */
+function initDemoEditor(doc) {
+    const container = document.getElementById('editor-content');
+    if (!container || typeof Quill === 'undefined') {
+        console.error('Quill ou conteneur non disponible');
+        return;
+    }
+
+    // Créer l'éditeur Quill
+    window.demoQuill = new Quill(container, {
+        theme: 'snow',
+        readOnly: !doc.canEdit,
+        placeholder: 'Commencez à écrire...',
+        modules: {
+            toolbar: doc.canEdit ? [
+                [{ 'header': [1, 2, 3, false] }],
+                ['bold', 'italic', 'underline', 'strike'],
+                [{ 'color': [] }, { 'background': [] }],
+                [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                [{ 'align': [] }],
+                ['blockquote', 'code-block'],
+                ['link', 'image'],
+                ['clean']
+            ] : false
+        }
+    });
+
+    // Charger le contenu existant
+    if (doc.html_content) {
+        window.demoQuill.clipboard.dangerouslyPasteHTML(doc.html_content);
+    }
+
+    // Sauvegarder automatiquement les changements
+    let saveTimeout;
+    window.demoQuill.on('text-change', () => {
+        clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(() => {
+            const content = window.demoQuill.root.innerHTML;
+            DemoCollabAPI.saveContent(doc.id, content);
+            console.log('Document sauvegardé (démo)');
+        }, 1000);
+    });
+
+    // Mettre à jour le statut de connexion
+    const indicator = document.getElementById('connection-status');
+    if (indicator) {
+        indicator.className = 'connection-status local';
+        indicator.innerHTML = '<i class="fas fa-laptop"></i> Mode démo';
+    }
+}
+
+/**
  * Ferme l'éditeur et retourne à la liste
  */
 function closeEditor() {
-    CollaborativeEditor.close();
-    CollabPresence.destroy();
+    if (isDemoMode()) {
+        // Sauvegarder le contenu final en mode démo
+        if (window.demoQuill && currentEditingDocument) {
+            const content = window.demoQuill.root.innerHTML;
+            DemoCollabAPI.saveContent(currentEditingDocument.id, content);
+        }
+        window.demoQuill = null;
+    } else {
+        CollaborativeEditor.close();
+        CollabPresence.destroy();
+    }
 
     document.getElementById('page-editor')?.classList.add('hidden');
     document.getElementById('page-collaborative-docs')?.classList.remove('hidden');
@@ -209,13 +417,16 @@ async function updateDocumentTitle() {
     if (!newTitle || newTitle === currentEditingDocument.title) return;
 
     try {
-        await API.updateCollabDocument(currentEditingDocument.id, { title: newTitle });
+        if (isDemoMode()) {
+            DemoCollabAPI.update(currentEditingDocument.id, { title: newTitle });
+        } else {
+            await API.updateCollabDocument(currentEditingDocument.id, { title: newTitle });
+        }
         currentEditingDocument.title = newTitle;
         showToast('Titre mis à jour', 'success');
     } catch (error) {
         console.error('Erreur mise à jour titre:', error);
         showToast(error.message || 'Erreur', 'error');
-        // Restaurer l'ancien titre
         if (titleInput) titleInput.value = currentEditingDocument.title;
     }
 }
@@ -225,6 +436,11 @@ async function updateDocumentTitle() {
  */
 async function showPermissionsModal() {
     if (!currentEditingDocument) return;
+
+    if (isDemoMode()) {
+        showToast('Gestion des permissions non disponible en mode démo', 'info');
+        return;
+    }
 
     const modal = document.getElementById('permissions-modal');
     const list = document.getElementById('permissions-list');
@@ -269,7 +485,7 @@ function closePermissionsModal() {
  * Ajoute une permission
  */
 async function addPermission() {
-    if (!currentEditingDocument) return;
+    if (!currentEditingDocument || isDemoMode()) return;
 
     const type = document.getElementById('permission-type')?.value;
     const level = document.getElementById('permission-level')?.value;
@@ -286,7 +502,6 @@ async function addPermission() {
         if (type === 'role') {
             data.role = target;
         } else {
-            // Rechercher l'utilisateur par email/username
             const users = await API.getUsers({ search: target });
             if (users.length === 0) {
                 showToast('Utilisateur non trouvé', 'error');
@@ -297,11 +512,7 @@ async function addPermission() {
 
         await API.addDocumentPermission(currentEditingDocument.id, data);
         showToast('Permission ajoutée', 'success');
-
-        // Rafraîchir la liste
         showPermissionsModal();
-
-        // Vider le champ
         document.getElementById('permission-target').value = '';
     } catch (error) {
         console.error('Erreur ajout permission:', error);
@@ -313,7 +524,7 @@ async function addPermission() {
  * Supprime une permission
  */
 async function removePermission(permissionId) {
-    if (!currentEditingDocument) return;
+    if (!currentEditingDocument || isDemoMode()) return;
 
     if (!confirm('Supprimer cette permission ?')) return;
 
@@ -332,6 +543,11 @@ async function removePermission(permissionId) {
  */
 async function showVersionsModal() {
     if (!currentEditingDocument) return;
+
+    if (isDemoMode()) {
+        showToast('Historique des versions non disponible en mode démo', 'info');
+        return;
+    }
 
     const modal = document.getElementById('versions-modal');
     const list = document.getElementById('versions-list');
@@ -374,6 +590,11 @@ function closeVersionsModal() {
 async function createDocumentSnapshot() {
     if (!currentEditingDocument) return;
 
+    if (isDemoMode()) {
+        showToast('Sauvegarde de version non disponible en mode démo', 'info');
+        return;
+    }
+
     const comment = prompt('Commentaire pour cette version (optionnel):');
 
     try {
@@ -387,9 +608,6 @@ async function createDocumentSnapshot() {
 
 // ==================== Utilitaires ====================
 
-/**
- * Retourne le label de visibilité
- */
 function getVisibilityLabel(visibility) {
     const labels = {
         private: 'Privé',
@@ -399,9 +617,6 @@ function getVisibilityLabel(visibility) {
     return labels[visibility] || visibility;
 }
 
-/**
- * Retourne le label de permission
- */
 function getPermissionLabel(permission) {
     const labels = {
         view: 'Lecture',
@@ -412,31 +627,22 @@ function getPermissionLabel(permission) {
     return labels[permission] || permission;
 }
 
-/**
- * Formate une date
- */
 function formatDate(dateStr) {
     if (!dateStr) return '';
     const date = new Date(dateStr);
     const now = new Date();
     const diff = now - date;
 
-    // Moins d'une minute
     if (diff < 60000) return 'À l\'instant';
-
-    // Moins d'une heure
     if (diff < 3600000) {
         const mins = Math.floor(diff / 60000);
         return `Il y a ${mins} min`;
     }
-
-    // Moins d'un jour
     if (diff < 86400000) {
         const hours = Math.floor(diff / 3600000);
         return `Il y a ${hours}h`;
     }
 
-    // Sinon date complète
     return date.toLocaleDateString('fr-FR', {
         day: 'numeric',
         month: 'short',
@@ -444,9 +650,6 @@ function formatDate(dateStr) {
     });
 }
 
-/**
- * Échappe le HTML (si pas déjà défini)
- */
 if (typeof escapeHtml !== 'function') {
     function escapeHtml(str) {
         if (str === null || str === undefined) return '';

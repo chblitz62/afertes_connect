@@ -1,15 +1,15 @@
 /**
  * Module d'édition collaborative de documents
- * Utilise TipTap + Yjs pour l'édition temps réel
+ * Utilise Quill + Yjs pour l'édition temps réel
  */
 
 const CollaborativeEditor = {
-    editor: null,
+    quill: null,
     ydoc: null,
     provider: null,
+    binding: null,
     currentDocument: null,
     isReadOnly: false,
-    autoSaveTimeout: null,
 
     // Configuration WebSocket
     wsUrl: null,
@@ -40,6 +40,14 @@ const CollaborativeEditor = {
         this.close();
 
         try {
+            // Vérifier que Quill et Yjs sont chargés
+            if (typeof Quill === 'undefined') {
+                throw new Error('Quill non chargé');
+            }
+            if (typeof Y === 'undefined') {
+                throw new Error('Yjs non chargé');
+            }
+
             // Créer le document Yjs
             this.ydoc = new Y.Doc();
 
@@ -50,99 +58,93 @@ const CollaborativeEditor = {
             }
 
             // Connecter au serveur WebSocket
-            this.provider = new WebsocketProvider(
-                this.wsUrl,
-                documentSlug,
-                this.ydoc,
-                {
-                    params: { token },
-                    connect: true,
-                    awareness: new awarenessProtocol.Awareness(this.ydoc)
-                }
-            );
+            if (typeof WebsocketProvider !== 'undefined') {
+                this.provider = new WebsocketProvider(
+                    this.wsUrl,
+                    documentSlug,
+                    this.ydoc,
+                    { params: { token } }
+                );
 
-            // Gérer les événements de connexion
-            this.provider.on('status', (event) => {
-                console.log('[Collab] Status:', event.status);
-                this.updateConnectionStatus(event.status);
-            });
+                // Gérer les événements de connexion
+                this.provider.on('status', (event) => {
+                    console.log('[Collab] Status:', event.status);
+                    this.updateConnectionStatus(event.status);
+                });
 
-            this.provider.on('sync', (isSynced) => {
-                console.log('[Collab] Synced:', isSynced);
-                if (isSynced && onReady) {
-                    onReady();
-                }
-            });
+                this.provider.on('sync', (isSynced) => {
+                    console.log('[Collab] Synced:', isSynced);
+                    if (isSynced && onReady) {
+                        onReady();
+                    }
+                });
 
-            // Configurer l'awareness (présence des utilisateurs)
-            const awareness = this.provider.awareness;
-            const currentUser = window.currentUser || {};
+                // Configurer l'awareness (présence des utilisateurs)
+                const awareness = this.provider.awareness;
+                const currentUser = window.currentUser || {};
 
-            awareness.setLocalStateField('user', {
-                name: currentUser.first_name && currentUser.last_name
-                    ? `${currentUser.first_name} ${currentUser.last_name}`
-                    : currentUser.username || 'Anonyme',
-                color: this.getUserColor(currentUser.id || 0)
-            });
+                awareness.setLocalStateField('user', {
+                    name: currentUser.firstName && currentUser.lastName
+                        ? `${currentUser.firstName} ${currentUser.lastName}`
+                        : currentUser.email || 'Anonyme',
+                    color: this.getUserColor(currentUser.id || Math.floor(Math.random() * 100))
+                });
 
-            // Créer l'éditeur TipTap
+                // Observer les changements d'awareness pour la présence
+                awareness.on('change', () => {
+                    this.updatePresence(awareness);
+                });
+            }
+
+            // Créer le conteneur Quill
             const container = document.getElementById(containerId);
             if (!container) {
                 throw new Error(`Conteneur #${containerId} non trouvé`);
             }
 
-            // Configuration des extensions TipTap
-            const extensions = [
-                TipTap.StarterKit.configure({
-                    history: false // Désactivé car Yjs gère l'historique
-                }),
-                TipTap.Collaboration.configure({
-                    document: this.ydoc
-                }),
-                TipTap.CollaborationCursor.configure({
-                    provider: this.provider,
-                    user: awareness.getLocalState()?.user
-                }),
-                TipTap.Placeholder.configure({
-                    placeholder: 'Commencez à écrire...'
-                }),
-                TipTap.Image,
-                TipTap.Link.configure({
-                    openOnClick: false
-                }),
-                TipTap.TaskList,
-                TipTap.TaskItem.configure({
-                    nested: true
-                }),
-                TipTap.Table.configure({
-                    resizable: true
-                }),
-                TipTap.TableRow,
-                TipTap.TableCell,
-                TipTap.TableHeader,
-                TipTap.Highlight,
-                TipTap.TextAlign.configure({
-                    types: ['heading', 'paragraph']
-                }),
-                TipTap.Underline
-            ];
+            // Nettoyer le conteneur
+            container.innerHTML = '';
 
-            this.editor = new TipTap.Editor({
-                element: container,
-                extensions,
-                editable: !readOnly,
-                autofocus: !readOnly,
-                onUpdate: ({ editor }) => {
-                    if (onChange) {
-                        onChange(editor.getHTML());
-                    }
+            // Créer l'éditeur Quill
+            this.quill = new Quill(container, {
+                theme: 'snow',
+                readOnly: readOnly,
+                placeholder: 'Commencez à écrire...',
+                modules: {
+                    toolbar: readOnly ? false : [
+                        [{ 'header': [1, 2, 3, false] }],
+                        ['bold', 'italic', 'underline', 'strike'],
+                        [{ 'color': [] }, { 'background': [] }],
+                        [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                        [{ 'align': [] }],
+                        ['blockquote', 'code-block'],
+                        ['link', 'image'],
+                        ['clean']
+                    ]
                 }
             });
 
-            // Mettre à jour la toolbar
-            this.setupToolbar();
+            // Lier Quill à Yjs
+            const ytext = this.ydoc.getText('quill');
+            if (typeof QuillBinding !== 'undefined') {
+                this.binding = new QuillBinding(ytext, this.quill, this.provider?.awareness);
+            }
 
-            console.log('[Collab] Éditeur initialisé pour:', documentSlug);
+            // Écouter les changements
+            if (onChange) {
+                this.quill.on('text-change', () => {
+                    onChange(this.getHTML());
+                });
+            }
+
+            // Mettre à jour le statut initial
+            this.updateConnectionStatus(this.provider ? 'connecting' : 'local');
+
+            console.log('[Collab] Éditeur Quill initialisé pour:', documentSlug);
+
+            if (!this.provider && onReady) {
+                onReady();
+            }
 
         } catch (error) {
             console.error('[Collab] Erreur ouverture document:', error);
@@ -155,9 +157,9 @@ const CollaborativeEditor = {
      * Ferme l'éditeur et nettoie les ressources
      */
     close() {
-        if (this.editor) {
-            this.editor.destroy();
-            this.editor = null;
+        if (this.binding) {
+            this.binding.destroy();
+            this.binding = null;
         }
 
         if (this.provider) {
@@ -171,81 +173,37 @@ const CollaborativeEditor = {
             this.ydoc = null;
         }
 
+        if (this.quill) {
+            // Quill n'a pas de méthode destroy, on nettoie le DOM
+            const container = this.quill.container;
+            if (container && container.parentNode) {
+                container.innerHTML = '';
+            }
+            this.quill = null;
+        }
+
         this.currentDocument = null;
     },
 
     /**
-     * Configure la toolbar de l'éditeur
+     * Met à jour l'affichage de la présence des utilisateurs
      */
-    setupToolbar() {
-        const toolbar = document.getElementById('editor-toolbar-actions');
-        if (!toolbar || !this.editor) return;
+    updatePresence(awareness) {
+        const states = awareness.getStates();
+        const users = [];
 
-        // Actions de la toolbar
-        const actions = {
-            'btn-bold': () => this.editor.chain().focus().toggleBold().run(),
-            'btn-italic': () => this.editor.chain().focus().toggleItalic().run(),
-            'btn-underline': () => this.editor.chain().focus().toggleUnderline().run(),
-            'btn-strike': () => this.editor.chain().focus().toggleStrike().run(),
-            'btn-heading-1': () => this.editor.chain().focus().toggleHeading({ level: 1 }).run(),
-            'btn-heading-2': () => this.editor.chain().focus().toggleHeading({ level: 2 }).run(),
-            'btn-heading-3': () => this.editor.chain().focus().toggleHeading({ level: 3 }).run(),
-            'btn-bullet-list': () => this.editor.chain().focus().toggleBulletList().run(),
-            'btn-ordered-list': () => this.editor.chain().focus().toggleOrderedList().run(),
-            'btn-task-list': () => this.editor.chain().focus().toggleTaskList().run(),
-            'btn-blockquote': () => this.editor.chain().focus().toggleBlockquote().run(),
-            'btn-code-block': () => this.editor.chain().focus().toggleCodeBlock().run(),
-            'btn-horizontal-rule': () => this.editor.chain().focus().setHorizontalRule().run(),
-            'btn-align-left': () => this.editor.chain().focus().setTextAlign('left').run(),
-            'btn-align-center': () => this.editor.chain().focus().setTextAlign('center').run(),
-            'btn-align-right': () => this.editor.chain().focus().setTextAlign('right').run(),
-            'btn-highlight': () => this.editor.chain().focus().toggleHighlight().run(),
-            'btn-link': () => this.insertLink(),
-            'btn-image': () => this.insertImage(),
-            'btn-table': () => this.editor.chain().focus().insertTable({ rows: 3, cols: 3 }).run(),
-            'btn-undo': () => this.editor.chain().focus().undo().run(),
-            'btn-redo': () => this.editor.chain().focus().redo().run()
-        };
-
-        // Attacher les événements
-        Object.entries(actions).forEach(([id, action]) => {
-            const btn = document.getElementById(id);
-            if (btn) {
-                btn.onclick = (e) => {
-                    e.preventDefault();
-                    if (!this.isReadOnly) {
-                        action();
-                    }
-                };
+        states.forEach((state, clientId) => {
+            if (state.user && clientId !== awareness.clientID) {
+                users.push({
+                    name: state.user.name,
+                    color: state.user.color
+                });
             }
         });
 
-        // Désactiver la toolbar si lecture seule
-        if (this.isReadOnly) {
-            toolbar.querySelectorAll('button').forEach(btn => {
-                btn.disabled = true;
-                btn.classList.add('disabled');
-            });
-        }
-    },
-
-    /**
-     * Insère un lien
-     */
-    insertLink() {
-        const url = prompt('URL du lien:');
-        if (url) {
-            this.editor.chain().focus().setLink({ href: url }).run();
-        }
-    },
-
-    /**
-     * Insère une image
-     */
-    insertImage() {
-        const url = prompt('URL de l\'image:');
-        if (url) {
-            this.editor.chain().focus().setImage({ src: url }).run();
+        // Mettre à jour l'affichage
+        if (typeof CollabPresence !== 'undefined') {
+            CollabPresence.update(users);
         }
     },
 
@@ -259,7 +217,8 @@ const CollaborativeEditor = {
         const states = {
             connected: { class: 'connected', text: 'Connecté', icon: 'fa-circle' },
             connecting: { class: 'connecting', text: 'Connexion...', icon: 'fa-spinner fa-spin' },
-            disconnected: { class: 'disconnected', text: 'Déconnecté', icon: 'fa-circle' }
+            disconnected: { class: 'disconnected', text: 'Déconnecté', icon: 'fa-circle' },
+            local: { class: 'local', text: 'Mode local', icon: 'fa-laptop' }
         };
 
         const state = states[status] || states.disconnected;
@@ -287,7 +246,7 @@ const CollaborativeEditor = {
         if (typeof showToast === 'function') {
             showToast(message, 'error');
         } else {
-            alert('Erreur: ' + message);
+            console.error('Erreur éditeur:', message);
         }
     },
 
@@ -295,21 +254,33 @@ const CollaborativeEditor = {
      * Récupère le contenu HTML actuel
      */
     getHTML() {
-        return this.editor ? this.editor.getHTML() : '';
+        if (!this.quill) return '';
+        return this.quill.root.innerHTML;
     },
 
     /**
      * Récupère le contenu texte
      */
     getText() {
-        return this.editor ? this.editor.getText() : '';
+        if (!this.quill) return '';
+        return this.quill.getText();
+    },
+
+    /**
+     * Définit le contenu HTML
+     */
+    setHTML(html) {
+        if (!this.quill) return;
+        this.quill.clipboard.dangerouslyPasteHTML(html);
     },
 
     /**
      * Vérifie si l'éditeur est vide
      */
     isEmpty() {
-        return this.editor ? this.editor.isEmpty : true;
+        if (!this.quill) return true;
+        const text = this.quill.getText().trim();
+        return text.length === 0;
     }
 };
 
