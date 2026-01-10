@@ -47,10 +47,11 @@ const DemoCollabAPI = {
         const currentUser = window.currentUser || {};
         return {
             ...doc,
-            ownerName: doc.owner_id === currentUser.id
-                ? `${currentUser.firstName || ''} ${currentUser.lastName || ''}`.trim() || currentUser.email
-                : 'Utilisateur',
-            canEdit: doc.owner_id === currentUser.id || doc.visibility === 'public'
+            ownerName: currentUser.firstName
+                ? `${currentUser.firstName} ${currentUser.lastName || ''}`.trim()
+                : 'Vous',
+            canEdit: true,  // En mode démo, toujours éditable
+            permission: 'admin'
         };
     },
 
@@ -706,7 +707,7 @@ async function archiveDocument(documentId) {
         if (isDemoMode()) {
             DemoCollabAPI.archive(documentId);
         } else {
-            await API.updateCollabDocument(documentId, { archived: true });
+            await API.archiveCollabDocument(documentId);
         }
         showToast('Document archivé', 'success');
         loadCollabDocuments();
@@ -724,7 +725,7 @@ async function unarchiveDocument(documentId) {
         if (isDemoMode()) {
             DemoCollabAPI.unarchive(documentId);
         } else {
-            await API.updateCollabDocument(documentId, { archived: false });
+            await API.unarchiveCollabDocument(documentId);
         }
         showToast('Document restauré', 'success');
         loadCollabDocuments();
@@ -744,16 +745,14 @@ function confirmDeleteDocument(documentId, documentTitle) {
         existingModal.remove();
     }
 
-    const modal = document.createElement('div');
-    modal.id = 'delete-confirm-modal';
-    modal.className = 'modal';
-    modal.innerHTML = `
-        <div class="modal-content delete-confirm-modal">
-            <div class="modal-header">
+    const overlay = document.createElement('div');
+    overlay.id = 'delete-confirm-modal';
+    overlay.className = 'modal-overlay';
+    overlay.innerHTML = `
+        <div class="modal delete-confirm-modal">
+            <button class="modal-close" onclick="closeDeleteModal()">&times;</button>
+            <div class="modal-content">
                 <h2><i class="fas fa-exclamation-triangle" style="color: var(--error-color, #f44336);"></i> Supprimer le document</h2>
-                <button class="modal-close" onclick="closeDeleteModal()">&times;</button>
-            </div>
-            <div class="modal-body">
                 <p class="delete-warning">
                     <strong>Attention :</strong> Cette action est irréversible !
                 </p>
@@ -763,23 +762,27 @@ function confirmDeleteDocument(documentId, documentTitle) {
                     <i class="fas fa-lightbulb"></i>
                     <em>Conseil : Vous pouvez aussi archiver le document pour le conserver sans l'afficher.</em>
                 </p>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeDeleteModal()">
-                    <i class="fas fa-times"></i> Annuler
-                </button>
-                <button class="btn btn-warning" onclick="closeDeleteModal(); archiveDocument('${documentId}')">
-                    <i class="fas fa-archive"></i> Archiver plutôt
-                </button>
-                <button class="btn btn-danger" onclick="deleteDocument('${documentId}')">
-                    <i class="fas fa-trash"></i> Supprimer définitivement
-                </button>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" onclick="closeDeleteModal()">
+                        <i class="fas fa-times"></i> Annuler
+                    </button>
+                    <button class="btn btn-warning" onclick="closeDeleteModal(); archiveDocument('${documentId}')">
+                        <i class="fas fa-archive"></i> Archiver plutôt
+                    </button>
+                    <button class="btn btn-danger" onclick="deleteDocument('${documentId}')">
+                        <i class="fas fa-trash"></i> Supprimer définitivement
+                    </button>
+                </div>
             </div>
         </div>
     `;
 
-    document.body.appendChild(modal);
-    modal.classList.remove('hidden');
+    // Fermer en cliquant sur l'overlay
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) closeDeleteModal();
+    });
+
+    document.body.appendChild(overlay);
 }
 
 /**

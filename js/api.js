@@ -416,6 +416,20 @@ const API = {
     },
 
     /**
+     * Archiver un document collaboratif
+     */
+    async archiveCollabDocument(documentId) {
+        return await this.request('PUT', `/collab/documents/${documentId}/archive`);
+    },
+
+    /**
+     * Désarchiver un document collaboratif
+     */
+    async unarchiveCollabDocument(documentId) {
+        return await this.request('PUT', `/collab/documents/${documentId}/unarchive`);
+    },
+
+    /**
      * Liste des permissions d'un document
      */
     async getDocumentPermissions(documentId) {
