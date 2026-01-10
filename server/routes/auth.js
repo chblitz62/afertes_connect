@@ -8,6 +8,7 @@ const crypto = require('crypto');
 const router = express.Router();
 const { query } = require('../database/db');
 const { generateToken, authenticateToken } = require('../middleware/auth');
+const { sendPasswordResetEmail, isConfigured: isMailConfigured } = require('../services/mailer');
 
 // ==========================================
 // RATE LIMITING (protection brute force)
@@ -317,28 +318,36 @@ router.post('/forgot-password', async (req, res) => {
             [user.id, 'password_reset_request', JSON.stringify({ email })]
         );
 
-        // En mode démo : afficher le lien dans la console (pas d'envoi email réel)
-        const resetLink = `http://localhost:3000/reset-password?token=${token}`;
-        console.log('');
-        console.log('╔═══════════════════════════════════════════════════════════════════╗');
-        console.log('║  LIEN DE RÉINITIALISATION DE MOT DE PASSE (MODE DÉMO)             ║');
-        console.log('╠═══════════════════════════════════════════════════════════════════╣');
-        console.log(`║  Utilisateur: ${user.first_name} ${user.last_name}`);
-        console.log(`║  Email: ${user.email}`);
-        console.log(`║  Token: ${token}`);
-        console.log(`║  Expire: ${expiresAt.toLocaleString('fr-FR')}`);
-        console.log('║');
-        console.log('║  Lien de reset:');
-        console.log(`║  ${resetLink}`);
-        console.log('╚═══════════════════════════════════════════════════════════════════╝');
-        console.log('');
+        // Déterminer l'URL de base
+        const baseUrl = process.env.APP_URL || `http://localhost:${process.env.PORT || 3000}`;
 
-        res.json({
-            success: true,
-            message: 'Si un compte existe avec cet email, un lien de réinitialisation a été envoyé.',
-            // En mode démo, on renvoie le token pour faciliter les tests
-            ...(process.env.NODE_ENV !== 'production' && { demoToken: token })
-        });
+        // Envoyer l'email de réinitialisation
+        try {
+            const emailResult = await sendPasswordResetEmail(user, token, baseUrl);
+
+            // Réponse
+            const response = {
+                success: true,
+                message: 'Si un compte existe avec cet email, un lien de réinitialisation a été envoyé.'
+            };
+
+            // En mode démo (email simulé), renvoyer le token pour faciliter les tests
+            if (emailResult.demo || process.env.NODE_ENV !== 'production') {
+                response.demoToken = token;
+                response.demoMode = !isMailConfigured();
+            }
+
+            res.json(response);
+        } catch (emailError) {
+            console.error('[Auth] Erreur envoi email:', emailError);
+            // Ne pas exposer l'erreur à l'utilisateur
+            res.json({
+                success: true,
+                message: 'Si un compte existe avec cet email, un lien de réinitialisation a été envoyé.',
+                // En cas d'erreur email, donner le token en dev
+                ...(process.env.NODE_ENV !== 'production' && { demoToken: token, emailError: true })
+            });
+        }
 
     } catch (error) {
         console.error('Erreur forgot-password:', error);
