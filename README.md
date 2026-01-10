@@ -2,7 +2,7 @@
 
 [![Node.js](https://img.shields.io/badge/Node.js-18%2B-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-14%2B-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![PWA Ready](https://img.shields.io/badge/PWA-Ready-5A0FC8?logo=pwa)](https://web.dev/progressive-web-apps/)
 
 Application web progressive (PWA) pour le centre de formation en travail social AFERTES. Portail unifié pour les étudiants, formateurs et secrétaires.
@@ -274,7 +274,7 @@ Les contributions sont les bienvenues ! Veuillez :
 
 ## Licence
 
-Ce projet est sous licence [GNU General Public License v3.0](LICENSE).
+Ce projet est sous licence [Apache License 2.0](LICENSE).
 
 ---
 
