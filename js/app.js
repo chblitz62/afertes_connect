@@ -1372,23 +1372,281 @@ function updateMessageBadge() {
     }
 }
 
-function loadConversations() {
-    const conversations = getConversations();
+function loadConversations(showArchived = false) {
+    const allConversations = getConversations();
     const container = document.getElementById('conversations-items');
 
-    // Mettre à jour le badge
+    // Filtrer selon archivé ou non
+    const conversations = allConversations.filter(conv =>
+        showArchived ? conv.archived : !conv.archived
+    );
+
+    // Mettre à jour le badge (seulement les non-archivées)
     updateMessageBadge();
 
-    container.innerHTML = conversations.map(conv => `
-        <div class="conversation-item ${conv.unread ? 'unread' : ''}" onclick="openConversation(${conv.id})">
-            <img src="${conv.avatar}" alt="${conv.name}" class="conversation-avatar">
-            <div class="conversation-info">
-                <h4>${conv.name}</h4>
-                <p>${conv.lastMessage}</p>
+    if (conversations.length === 0) {
+        container.innerHTML = `
+            <div class="empty-conversations">
+                <i class="fas fa-${showArchived ? 'archive' : 'comments'}"></i>
+                <p>${showArchived ? 'Aucune conversation archivée' : 'Aucune conversation'}</p>
             </div>
-            <div class="conversation-meta">
-                <span class="time">${formatDate(conv.lastDate)}</span>
-                ${conv.unread ? `<span class="unread-badge">${conv.unreadCount}</span>` : ''}
+        `;
+        return;
+    }
+
+    container.innerHTML = conversations.map(conv => `
+        <div class="conversation-item ${conv.unread ? 'unread' : ''}" data-id="${conv.id}">
+            <div class="conversation-content" onclick="openConversation(${conv.id})">
+                <img src="${conv.avatar}" alt="${conv.name}" class="conversation-avatar">
+                <div class="conversation-info">
+                    <h4>${conv.name}</h4>
+                    <p>${conv.lastMessage}</p>
+                </div>
+                <div class="conversation-meta">
+                    <span class="time">${formatDate(conv.lastDate)}</span>
+                    ${conv.unread ? `<span class="unread-badge">${conv.unreadCount}</span>` : ''}
+                </div>
+            </div>
+            <div class="conversation-actions">
+                <button class="btn-icon-sm" onclick="event.stopPropagation(); toggleConversationMenu(${conv.id})" title="Options">
+                    <i class="fas fa-ellipsis-v"></i>
+                </button>
+                <div class="conversation-menu hidden" id="conv-menu-${conv.id}">
+                    ${conv.archived ? `
+                        <button onclick="unarchiveConversation(${conv.id})">
+                            <i class="fas fa-box-open"></i> Restaurer
+                        </button>
+                    ` : `
+                        <button onclick="archiveConversation(${conv.id})">
+                            <i class="fas fa-archive"></i> Archiver
+                        </button>
+                    `}
+                    <button onclick="confirmDeleteConversation(${conv.id}, '${conv.name.replace(/'/g, "\\'")}')">
+                        <i class="fas fa-trash"></i> Supprimer
+                    </button>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+/**
+ * Affiche/masque le menu d'une conversation
+ */
+function toggleConversationMenu(convId) {
+    // Fermer tous les autres menus
+    document.querySelectorAll('.conversation-menu').forEach(menu => {
+        if (menu.id !== `conv-menu-${convId}`) {
+            menu.classList.add('hidden');
+        }
+    });
+
+    const menu = document.getElementById(`conv-menu-${convId}`);
+    if (menu) {
+        menu.classList.toggle('hidden');
+
+        // Fermer au clic ailleurs
+        if (!menu.classList.contains('hidden')) {
+            setTimeout(() => {
+                document.addEventListener('click', closeAllConversationMenus, { once: true });
+            }, 0);
+        }
+    }
+}
+
+function closeAllConversationMenus() {
+    document.querySelectorAll('.conversation-menu').forEach(menu => {
+        menu.classList.add('hidden');
+    });
+}
+
+/**
+ * Archive une conversation
+ */
+function archiveConversation(convId) {
+    const conversations = getConversations();
+    const conv = conversations.find(c => c.id === convId);
+
+    if (conv) {
+        conv.archived = true;
+        conv.archivedAt = new Date().toISOString();
+        localStorage.setItem('afertes_conversations', JSON.stringify(conversations));
+
+        // Si c'était la conversation active, fermer le chat
+        if (activeConversation === convId) {
+            closeChat();
+        }
+
+        loadConversations();
+        updateMessageBadge();
+        showToast('Conversation archivée', 'success');
+    }
+}
+
+/**
+ * Restaure une conversation archivée
+ */
+function unarchiveConversation(convId) {
+    const conversations = getConversations();
+    const conv = conversations.find(c => c.id === convId);
+
+    if (conv) {
+        conv.archived = false;
+        conv.archivedAt = null;
+        localStorage.setItem('afertes_conversations', JSON.stringify(conversations));
+
+        loadConversations(true); // Recharger la vue archives
+        showToast('Conversation restaurée', 'success');
+    }
+}
+
+/**
+ * Confirme la suppression d'une conversation
+ */
+function confirmDeleteConversation(convId, convName) {
+    closeAllConversationMenus();
+
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.id = 'delete-conv-modal';
+    modal.innerHTML = `
+        <div class="modal delete-confirm-modal">
+            <button class="modal-close" onclick="closeDeleteConvModal()">&times;</button>
+            <div class="modal-content">
+                <h2><i class="fas fa-exclamation-triangle" style="color: var(--error-color);"></i> Supprimer la conversation</h2>
+                <p>Êtes-vous sûr de vouloir supprimer définitivement la conversation avec <strong>${convName}</strong> ?</p>
+                <p class="text-muted">Cette action supprimera tous les messages et ne peut pas être annulée.</p>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" onclick="closeDeleteConvModal()">Annuler</button>
+                    <button class="btn btn-danger" onclick="deleteConversation(${convId})">
+                        <i class="fas fa-trash"></i> Supprimer
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeDeleteConvModal();
+    });
+
+    document.body.appendChild(modal);
+}
+
+function closeDeleteConvModal() {
+    const modal = document.getElementById('delete-conv-modal');
+    if (modal) modal.remove();
+}
+
+/**
+ * Supprime définitivement une conversation
+ */
+function deleteConversation(convId) {
+    closeDeleteConvModal();
+
+    const conversations = getConversations();
+    const filtered = conversations.filter(c => c.id !== convId);
+    localStorage.setItem('afertes_conversations', JSON.stringify(filtered));
+
+    // Supprimer aussi les messages
+    localStorage.removeItem(`afertes_messages_${convId}`);
+
+    // Si c'était la conversation active, fermer le chat
+    if (activeConversation === convId) {
+        closeChat();
+    }
+
+    // Vérifier si on est en vue archives
+    const showingArchived = document.querySelector('.conv-filter-btn.active')?.dataset.filter === 'archived';
+    loadConversations(showingArchived);
+    updateMessageBadge();
+    showToast('Conversation supprimée', 'success');
+}
+
+/**
+ * Ferme le chat actif
+ */
+function closeChat() {
+    activeConversation = null;
+    const container = document.getElementById('chat-container');
+    if (container) {
+        container.innerHTML = `
+            <div class="chat-placeholder">
+                <i class="fas fa-comments"></i>
+                <p>Sélectionnez une conversation ou créez-en une nouvelle</p>
+            </div>
+        `;
+    }
+}
+
+/**
+ * Filtre les conversations (actives ou archivées)
+ */
+function filterConversationsView(filter) {
+    document.querySelectorAll('.conv-filter-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.filter === filter);
+    });
+
+    loadConversations(filter === 'archived');
+}
+
+/**
+ * Recherche dans les conversations
+ */
+function searchConversations(query) {
+    const showingArchived = document.querySelector('.conv-filter-btn.active')?.dataset.filter === 'archived';
+    const allConversations = getConversations();
+    const container = document.getElementById('conversations-items');
+
+    const conversations = allConversations.filter(conv => {
+        const matchesArchive = showingArchived ? conv.archived : !conv.archived;
+        const matchesQuery = !query ||
+            conv.name.toLowerCase().includes(query.toLowerCase()) ||
+            conv.lastMessage.toLowerCase().includes(query.toLowerCase());
+        return matchesArchive && matchesQuery;
+    });
+
+    if (conversations.length === 0) {
+        container.innerHTML = `
+            <div class="empty-conversations">
+                <i class="fas fa-search"></i>
+                <p>Aucune conversation trouvée</p>
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = conversations.map(conv => `
+        <div class="conversation-item ${conv.unread ? 'unread' : ''}" data-id="${conv.id}">
+            <div class="conversation-content" onclick="openConversation(${conv.id})">
+                <img src="${conv.avatar}" alt="${conv.name}" class="conversation-avatar">
+                <div class="conversation-info">
+                    <h4>${conv.name}</h4>
+                    <p>${conv.lastMessage}</p>
+                </div>
+                <div class="conversation-meta">
+                    <span class="time">${formatDate(conv.lastDate)}</span>
+                    ${conv.unread ? `<span class="unread-badge">${conv.unreadCount}</span>` : ''}
+                </div>
+            </div>
+            <div class="conversation-actions">
+                <button class="btn-icon-sm" onclick="event.stopPropagation(); toggleConversationMenu(${conv.id})" title="Options">
+                    <i class="fas fa-ellipsis-v"></i>
+                </button>
+                <div class="conversation-menu hidden" id="conv-menu-${conv.id}">
+                    ${conv.archived ? `
+                        <button onclick="unarchiveConversation(${conv.id})">
+                            <i class="fas fa-box-open"></i> Restaurer
+                        </button>
+                    ` : `
+                        <button onclick="archiveConversation(${conv.id})">
+                            <i class="fas fa-archive"></i> Archiver
+                        </button>
+                    `}
+                    <button onclick="confirmDeleteConversation(${conv.id}, '${conv.name.replace(/'/g, "\\'")}')">
+                        <i class="fas fa-trash"></i> Supprimer
+                    </button>
+                </div>
             </div>
         </div>
     `).join('');
@@ -1412,10 +1670,20 @@ function openConversation(id) {
     
     container.innerHTML = `
         <div class="chat-header">
-            <img src="${conv.avatar}" alt="${conv.name}" style="width: 40px; height: 40px; border-radius: 50%;">
-            <div>
-                <h4 style="font-size: 0.95rem;">${conv.name}</h4>
-                <span style="font-size: 0.8rem; color: var(--text-muted);">${conv.role}</span>
+            <div class="chat-header-info">
+                <img src="${conv.avatar}" alt="${conv.name}" class="chat-avatar">
+                <div class="chat-user-info">
+                    <h4>${conv.name}</h4>
+                    <span>${conv.role || ''}</span>
+                </div>
+            </div>
+            <div class="chat-header-actions">
+                <button class="btn-icon-sm" onclick="archiveConversation(${conv.id})" title="Archiver">
+                    <i class="fas fa-archive"></i>
+                </button>
+                <button class="btn-icon-sm" onclick="closeChat()" title="Fermer">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
         </div>
         <div class="chat-messages" id="chat-messages">

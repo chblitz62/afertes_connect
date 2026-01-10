@@ -688,7 +688,15 @@
                             </button>
                         </div>
                         <div class="conversations-search">
-                            <input type="text" placeholder="Rechercher une conversation...">
+                            <input type="text" placeholder="Rechercher une conversation..." oninput="searchConversations(this.value)">
+                        </div>
+                        <div class="conversations-filters">
+                            <button class="conv-filter-btn active" data-filter="active" onclick="filterConversationsView('active')">
+                                <i class="fas fa-comments"></i> Actives
+                            </button>
+                            <button class="conv-filter-btn" data-filter="archived" onclick="filterConversationsView('archived')">
+                                <i class="fas fa-archive"></i> Archivées
+                            </button>
                         </div>
                         <div class="conversations-items" id="conversations-items">
                             <!-- Conversations générées dynamiquement -->

@@ -4239,3 +4239,193 @@ tr.student-inactive td {
         margin-top: 8px;
     }
 }
+
+/* ========================================
+   GESTION DES CONVERSATIONS
+   ======================================== */
+
+/* Filtres conversations */
+.conversations-filters {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--bg-tertiary);
+}
+
+.conv-filter-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    border: none;
+    border-radius: 8px;
+    background: var(--bg-tertiary);
+    color: var(--text-medium);
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.conv-filter-btn:hover {
+    background: var(--primary-lighter);
+}
+
+.conv-filter-btn.active {
+    background: var(--primary-color);
+    color: white;
+}
+
+/* Conversation item avec actions */
+.conversation-item {
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid var(--bg-tertiary);
+    transition: background 0.2s;
+}
+
+.conversation-item:hover {
+    background: var(--bg-tertiary);
+}
+
+.conversation-content {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem;
+    cursor: pointer;
+}
+
+.conversation-actions {
+    position: relative;
+    padding-right: 0.5rem;
+}
+
+.btn-icon-sm {
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.btn-icon-sm:hover {
+    background: var(--bg-tertiary);
+    color: var(--text-dark);
+}
+
+/* Menu contextuel conversation */
+.conversation-menu {
+    position: absolute;
+    right: 0;
+    top: 100%;
+    background: var(--bg-secondary);
+    border: 1px solid var(--bg-tertiary);
+    border-radius: 8px;
+    box-shadow: var(--shadow-lg);
+    min-width: 150px;
+    z-index: 100;
+    overflow: hidden;
+}
+
+.conversation-menu button {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border: none;
+    background: none;
+    color: var(--text-dark);
+    font-size: 0.9rem;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.2s;
+}
+
+.conversation-menu button:hover {
+    background: var(--bg-tertiary);
+}
+
+.conversation-menu button i {
+    width: 16px;
+    color: var(--text-muted);
+}
+
+.conversation-menu button:last-child:hover {
+    background: rgba(244, 67, 54, 0.1);
+    color: var(--error-color);
+}
+
+.conversation-menu button:last-child:hover i {
+    color: var(--error-color);
+}
+
+/* Chat header amélioré */
+.chat-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--bg-tertiary);
+}
+
+.chat-header-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.chat-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.chat-user-info h4 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin: 0;
+}
+
+.chat-user-info span {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.chat-header-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+/* Empty state conversations */
+.empty-conversations {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1rem;
+    color: var(--text-muted);
+    text-align: center;
+}
+
+.empty-conversations i {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.empty-conversations p {
+    font-size: 0.95rem;
+}
