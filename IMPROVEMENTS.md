@@ -8,7 +8,7 @@
 ## UX/Interface
 - [x] Ajouter un skeleton loading au lieu des spinners pour un ressenti plus fluide
 - [x] Notifications push réelles via Service Worker (actuellement simulées)
-- [ ] Mode hors-ligne amélioré avec sync automatique au retour en ligne
+- [x] Mode hors-ligne amélioré avec sync automatique au retour en ligne
 
 ## Fonctionnalités
 - [ ] Export PDF des emplois du temps

@@ -345,6 +345,162 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ===========================================
+// Gestion de l'état de connexion et mode hors-ligne
+// ===========================================
+const ConnectionStatus = {
+    isOnline: navigator.onLine,
+    pendingActions: 0,
+    indicatorEl: null,
+
+    init() {
+        // Créer l'indicateur de connexion
+        this.createIndicator();
+
+        // Écouter les événements de connexion
+        window.addEventListener('online', () => this.handleOnline());
+        window.addEventListener('offline', () => this.handleOffline());
+
+        // Écouter les messages du Service Worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.addEventListener('message', (event) => {
+                this.handleSWMessage(event.data);
+            });
+        }
+
+        // État initial
+        this.updateIndicator();
+        this.checkPendingActions();
+    },
+
+    createIndicator() {
+        // Créer le bandeau de connexion
+        const indicator = document.createElement('div');
+        indicator.id = 'connection-indicator';
+        indicator.className = 'connection-indicator hidden';
+        indicator.innerHTML = `
+            <div class="connection-content">
+                <i class="fas fa-wifi-slash"></i>
+                <span class="connection-text">Vous êtes hors-ligne</span>
+                <span class="pending-count"></span>
+            </div>
+            <button class="connection-sync-btn" onclick="ConnectionStatus.triggerSync()">
+                <i class="fas fa-sync"></i>
+            </button>
+        `;
+        document.body.appendChild(indicator);
+        this.indicatorEl = indicator;
+    },
+
+    handleOnline() {
+        console.log('[Connection] Connexion rétablie');
+        this.isOnline = true;
+        this.updateIndicator();
+
+        // Déclencher la synchronisation automatique
+        this.triggerSync();
+
+        showToast('Connexion rétablie', 'success');
+    },
+
+    handleOffline() {
+        console.log('[Connection] Connexion perdue');
+        this.isOnline = false;
+        this.updateIndicator();
+        showToast('Vous êtes hors-ligne. Les modifications seront synchronisées au retour de la connexion.', 'warning');
+    },
+
+    handleSWMessage(data) {
+        switch (data.type) {
+            case 'OFFLINE_ACTION_QUEUED':
+                this.pendingActions++;
+                this.updateIndicator();
+                showToast('Action enregistrée pour synchronisation', 'info');
+                break;
+
+            case 'OFFLINE_QUEUE_COUNT':
+                this.pendingActions = data.count;
+                this.updateIndicator();
+                break;
+
+            case 'SYNC_COMPLETE':
+                if (data.processed > 0) {
+                    showToast(`${data.processed} action(s) synchronisée(s)`, 'success');
+                }
+                this.pendingActions = data.remaining;
+                this.updateIndicator();
+                break;
+        }
+    },
+
+    updateIndicator() {
+        if (!this.indicatorEl) return;
+
+        const textEl = this.indicatorEl.querySelector('.connection-text');
+        const iconEl = this.indicatorEl.querySelector('i');
+        const pendingEl = this.indicatorEl.querySelector('.pending-count');
+        const syncBtn = this.indicatorEl.querySelector('.connection-sync-btn');
+
+        if (!this.isOnline) {
+            // Mode hors-ligne
+            this.indicatorEl.classList.remove('hidden', 'online', 'syncing');
+            this.indicatorEl.classList.add('offline');
+            iconEl.className = 'fas fa-wifi-slash';
+            textEl.textContent = 'Vous êtes hors-ligne';
+            pendingEl.textContent = this.pendingActions > 0 ? `(${this.pendingActions} en attente)` : '';
+            syncBtn.style.display = 'none';
+        } else if (this.pendingActions > 0) {
+            // En ligne avec actions en attente
+            this.indicatorEl.classList.remove('hidden', 'offline');
+            this.indicatorEl.classList.add('online', 'syncing');
+            iconEl.className = 'fas fa-sync fa-spin';
+            textEl.textContent = 'Synchronisation en cours...';
+            pendingEl.textContent = `(${this.pendingActions} restante(s))`;
+            syncBtn.style.display = 'flex';
+        } else {
+            // En ligne, tout synchronisé
+            this.indicatorEl.classList.add('hidden');
+        }
+    },
+
+    async checkPendingActions() {
+        if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+            navigator.serviceWorker.controller.postMessage({
+                type: 'GET_OFFLINE_QUEUE_COUNT'
+            });
+        }
+    },
+
+    async triggerSync() {
+        if (!this.isOnline) {
+            showToast('Synchronisation impossible hors-ligne', 'warning');
+            return;
+        }
+
+        // Demander la synchronisation au Service Worker
+        if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+            navigator.serviceWorker.controller.postMessage({
+                type: 'TRIGGER_SYNC'
+            });
+        }
+
+        // Essayer aussi Background Sync si disponible
+        if ('serviceWorker' in navigator && 'sync' in self.registration) {
+            try {
+                const registration = await navigator.serviceWorker.ready;
+                await registration.sync.register('sync-offline-queue');
+            } catch (err) {
+                console.log('[Connection] Background Sync non disponible:', err);
+            }
+        }
+    }
+};
+
+// Initialiser la gestion de connexion
+document.addEventListener('DOMContentLoaded', () => {
+    ConnectionStatus.init();
+});
+
+// ===========================================
 // Notification par email
 // ===========================================
 async function sendEmailNotification(recipientUser, type, data) {

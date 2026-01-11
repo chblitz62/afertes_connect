@@ -318,6 +318,96 @@ img {
 }
 
 /* ===========================================
+   Indicateur de connexion
+   =========================================== */
+.connection-indicator {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 10000;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.connection-indicator.hidden {
+    transform: translateY(-100%);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.connection-indicator.offline {
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+    color: white;
+}
+
+.connection-indicator.online.syncing {
+    background: linear-gradient(135deg, #f39c12, #e67e22);
+    color: white;
+}
+
+.connection-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.connection-content i {
+    font-size: 1.1rem;
+}
+
+.pending-count {
+    opacity: 0.85;
+    font-size: 0.85rem;
+}
+
+.connection-sync-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.connection-sync-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.connection-sync-btn i {
+    font-size: 0.95rem;
+}
+
+/* Décaler le contenu quand le bandeau est visible */
+body:has(.connection-indicator:not(.hidden)) #app {
+    padding-top: 56px;
+}
+
+body:has(.connection-indicator:not(.hidden)) .header {
+    top: 56px;
+}
+
+/* Dark mode */
+[data-theme="dark"] .connection-indicator.offline {
+    background: linear-gradient(135deg, #c0392b, #962d22);
+}
+
+[data-theme="dark"] .connection-indicator.online.syncing {
+    background: linear-gradient(135deg, #d68910, #b9770e);
+}
+
+/* ===========================================
    Page de connexion
    =========================================== */
 .login-page, .register-page {
