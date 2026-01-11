@@ -4857,7 +4857,7 @@ tr.student-inactive td {
     align-items: center;
     gap: 0.5rem;
     padding: 0.5rem 0.75rem;
-    background: rgba(255, 255, 255, 0.15);
+    background: var(--primary-color);
     border: none;
     border-radius: 8px;
     color: white;
@@ -4867,11 +4867,11 @@ tr.student-inactive td {
 }
 
 .site-badge-btn:hover {
-    background: rgba(255, 255, 255, 0.25);
+    background: var(--primary-dark);
 }
 
 .site-badge-btn .fa-map-marker-alt {
-    color: rgba(255, 255, 255, 0.8);
+    color: rgba(255, 255, 255, 0.9);
 }
 
 .site-badge-btn .fa-chevron-down {

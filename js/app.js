@@ -1761,6 +1761,8 @@ function markAllRead() {
     notifications = notifications.map(n => ({ ...n, read: true }));
     localStorage.setItem('afertes_notifications', JSON.stringify(notifications));
     loadNotifications();
+    updateNotificationBadgeHeader();
+    closeNotifications();
     showToast('Toutes les notifications marquées comme lues', 'success');
 }
 
