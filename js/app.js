@@ -603,11 +603,59 @@ function initApp() {
 let facebookRefreshInterval = null;
 
 function initFacebookWidgets() {
+    // Vérifier si les widgets Facebook sont bloqués
+    checkFacebookBlocked();
+
     // Rafraîchir les iframes Facebook toutes les heures (3600000 ms)
     if (facebookRefreshInterval) {
         clearInterval(facebookRefreshInterval);
     }
     facebookRefreshInterval = setInterval(refreshFacebookWidgets, 3600000);
+}
+
+function checkFacebookBlocked() {
+    // Liste des widgets à vérifier
+    const widgets = [
+        { iframe: 'fb-iframe-afertes', fallback: 'fb-fallback-afertes' },
+        { iframe: 'fb-iframe-bde', fallback: 'fb-fallback-bde' }
+    ];
+
+    widgets.forEach(widget => {
+        const iframe = document.getElementById(widget.iframe);
+        const fallback = document.getElementById(widget.fallback);
+
+        if (!iframe || !fallback) return;
+
+        // Vérifier après un délai si l'iframe a chargé
+        setTimeout(() => {
+            try {
+                // Essayer d'accéder au contenu de l'iframe
+                // Si bloqué, cela lancera une erreur ou l'iframe sera vide
+                const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+
+                // Si on peut accéder au document mais qu'il est vide ou a une erreur
+                if (!iframeDoc || iframeDoc.body?.innerHTML === '' ||
+                    iframe.clientHeight < 100) {
+                    showFacebookFallback(iframe, fallback);
+                }
+            } catch (e) {
+                // Erreur cross-origin = Facebook a chargé (normal)
+                // Mais si l'iframe est vraiment petite, c'est probablement bloqué
+                if (iframe.clientHeight < 100) {
+                    showFacebookFallback(iframe, fallback);
+                }
+            }
+        }, 3000);
+
+        // Écouter les erreurs de chargement
+        iframe.onerror = () => showFacebookFallback(iframe, fallback);
+    });
+}
+
+function showFacebookFallback(iframe, fallback) {
+    iframe.style.display = 'none';
+    fallback.classList.remove('hidden');
+    console.log('[Facebook] Widget bloqué, affichage du fallback');
 }
 
 function refreshFacebookWidgets() {
@@ -616,6 +664,9 @@ function refreshFacebookWidgets() {
     // Recharger les iframes en ajoutant un timestamp
     const iframes = document.querySelectorAll('#fb-afertes-container iframe, #fb-bde-container iframe');
     iframes.forEach(iframe => {
+        // Ne pas rafraîchir si le fallback est affiché
+        if (iframe.style.display === 'none') return;
+
         const src = iframe.src;
         // Supprimer l'ancien timestamp s'il existe
         const baseUrl = src.replace(/&_t=\d+/, '');
