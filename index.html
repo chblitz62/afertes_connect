@@ -343,6 +343,10 @@
                         <i class="fas fa-calendar-alt" aria-hidden="true"></i>
                         <span>BDE Info</span>
                     </a>
+                    <a href="#" class="nav-item" data-page="droits" onclick="showPage('droits')">
+                        <i class="fas fa-hands-helping" aria-hidden="true"></i>
+                        <span>Accès aux droits</span>
+                    </a>
                 </div>
 
                 <div class="nav-section">
@@ -720,6 +724,389 @@
                             <button class="btn btn-secondary" onclick="contactBDE()">
                                 <i class="fas fa-hand-paper"></i> Je suis intéressé(e)
                             </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Page Accès aux droits -->
+            <section id="page-droits" class="page-content">
+                <div class="page-header">
+                    <h1><i class="fas fa-hands-helping"></i> Accès aux droits</h1>
+                    <p>Ressources et aides pour les étudiants</p>
+                </div>
+
+                <!-- Numéros d'urgence -->
+                <div class="droits-urgence">
+                    <h2><i class="fas fa-phone-alt"></i> Numéros d'urgence</h2>
+                    <div class="urgence-cards">
+                        <a href="tel:3114" class="urgence-card urgence-sante">
+                            <i class="fas fa-heart-broken"></i>
+                            <span class="urgence-numero">3114</span>
+                            <span class="urgence-label">Prévention suicide</span>
+                        </a>
+                        <a href="tel:0800235236" class="urgence-card urgence-violences">
+                            <i class="fas fa-hand-paper"></i>
+                            <span class="urgence-numero">0 800 235 236</span>
+                            <span class="urgence-label">Violences sexuelles</span>
+                        </a>
+                        <a href="tel:3919" class="urgence-card urgence-femmes">
+                            <i class="fas fa-female"></i>
+                            <span class="urgence-numero">3919</span>
+                            <span class="urgence-label">Violences femmes</span>
+                        </a>
+                        <a href="tel:0969392030" class="urgence-card urgence-ecoute">
+                            <i class="fas fa-headset"></i>
+                            <span class="urgence-numero">09 69 39 20 30</span>
+                            <span class="urgence-label">Fil Santé Jeunes</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Catégories -->
+                <div class="droits-categories">
+                    <!-- Aides financières -->
+                    <div class="droits-card" id="droits-finances">
+                        <div class="droits-card-header" onclick="toggleDroitsCard('finances')">
+                            <div class="droits-card-icon finances">
+                                <i class="fas fa-euro-sign"></i>
+                            </div>
+                            <div class="droits-card-title">
+                                <h3>Aides financières</h3>
+                                <p>Bourses, aides au logement, fonds d'urgence</p>
+                            </div>
+                            <i class="fas fa-chevron-down droits-chevron"></i>
+                        </div>
+                        <div class="droits-card-content">
+                            <div class="droits-item">
+                                <h4><i class="fas fa-graduation-cap"></i> Bourse CROUS</h4>
+                                <p>Aide financière sur critères sociaux pour les étudiants.</p>
+                                <a href="https://www.messervices.etudiant.gouv.fr" target="_blank" class="btn btn-sm">Faire ma demande</a>
+                            </div>
+                            <div class="droits-item">
+                                <h4><i class="fas fa-home"></i> Aides au logement (APL/ALS)</h4>
+                                <p>Réduction du loyer via la CAF.</p>
+                                <a href="https://www.caf.fr" target="_blank" class="btn btn-sm">Simuler mes droits</a>
+                            </div>
+                            <div class="droits-item">
+                                <h4><i class="fas fa-hand-holding-usd"></i> Aide d'urgence AFERTES</h4>
+                                <p>Fonds de secours pour les situations difficiles. Contactez le secrétariat.</p>
+                                <button onclick="showContactSecretariat()" class="btn btn-sm btn-secondary">Contacter</button>
+                            </div>
+                            <div class="droits-item">
+                                <h4><i class="fas fa-car"></i> Aide au permis</h4>
+                                <p>Jusqu'à 1200€ pour le permis de conduire (CPF, région, etc.)</p>
+                                <a href="https://www.hautsdefrance.fr" target="_blank" class="btn btn-sm">En savoir plus</a>
+                            </div>
+                            <div class="droits-item">
+                                <h4><i class="fas fa-map-marked-alt"></i> Aide régionale Hauts-de-France</h4>
+                                <p>Transports, équipement, carte génération.</p>
+                                <a href="https://generation.hautsdefrance.fr" target="_blank" class="btn btn-sm">Génération HdF</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Santé -->
+                    <div class="droits-card" id="droits-sante">
+                        <div class="droits-card-header" onclick="toggleDroitsCard('sante')">
+                            <div class="droits-card-icon sante">
+                                <i class="fas fa-heartbeat"></i>
+                            </div>
+                            <div class="droits-card-title">
+                                <h3>Santé</h3>
+                                <p>Sécurité sociale, mutuelle, soins gratuits</p>
+                            </div>
+                            <i class="fas fa-chevron-down droits-chevron"></i>
+                        </div>
+                        <div class="droits-card-content">
+                            <div class="droits-item">
+                                <h4><i class="fas fa-id-card"></i> Sécurité sociale étudiante</h4>
+                                <p>Affiliation automatique au régime général. Créez votre compte Ameli.</p>
+                                <a href="https://www.ameli.fr" target="_blank" class="btn btn-sm">Ameli.fr</a>
+                            </div>
+                            <div class="droits-item">
+                                <h4><i class="fas fa-shield-alt"></i> Complémentaire Santé Solidaire (CSS)</h4>
+                                <p>Mutuelle gratuite ou à 1€/jour selon vos revenus.</p>
+                                <a href="https://www.ameli.fr/assure/droits-demarches/difficultes-acces-droits-soins/complementaire-sante-solidaire" target="_blank" class="btn btn-sm">Vérifier mon éligibilité</a>
+                            </div>
+                            <div class="droits-item">
+                                <h4><i class="fas fa-user-md"></i> Médecin traitant</h4>
+                                <p>Important pour le remboursement. Déclarez votre médecin sur Ameli.</p>
+                            </div>
+                            <div class="droits-item">
+                                <h4><i class="fas fa-tooth"></i> Soins dentaires et optiques</h4>
+                                <p>100% Santé : lunettes et soins dentaires sans reste à charge.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Santé mentale -->
+                    <div class="droits-card" id="droits-mental">
+                        <div class="droits-card-header" onclick="toggleDroitsCard('mental')">
+                            <div class="droits-card-icon mental">
+                                <i class="fas fa-brain"></i>
+                            </div>
+                            <div class="droits-card-title">
+                                <h3>Santé mentale</h3>
+                                <p>Écoute, soutien psychologique, consultations</p>
+                            </div>
+                            <i class="fas fa-chevron-down droits-chevron"></i>
+                        </div>
+                        <div class="droits-card-content">
+                            <div class="droits-item highlight">
+                                <h4><i class="fas fa-phone"></i> Fil Santé Jeunes</h4>
+                                <p>Écoute anonyme et gratuite, 7j/7 de 9h à 23h.</p>
+                                <a href="tel:0969392030" class="btn btn-sm btn-primary">09 69 39 20 30</a>
+                            </div>
+                            <div class="droits-item">
+                                <h4><i class="fas fa-moon"></i> Nightline</h4>
+                                <p>Écoute étudiante nocturne, par des étudiants formés.</p>
+                                <a href="https://www.nightline.fr" target="_blank" class="btn btn-sm">Nightline.fr</a>
+                            </div>
+                            <div class="droits-item">
+                                <h4><i class="fas fa-couch"></i> MonPsy - 8 séances gratuites</h4>
+                                <p>Dispositif national : 8 séances chez un psychologue remboursées.</p>
+                                <a href="https://monpsy.sante.gouv.fr" target="_blank" class="btn btn-sm">Trouver un psy</a>
+                            </div>
+                            <div class="droits-item">
+                                <h4><i class="fas fa-hospital"></i> CMP (Centre Médico-Psychologique)</h4>
+                                <p>Consultations gratuites avec psychiatre et psychologue.</p>
+                                <p class="local-info"><i class="fas fa-map-marker-alt"></i> CMP Arras : 03 21 21 10 10</p>
+                            </div>
+                            <div class="droits-item">
+                                <h4><i class="fas fa-university"></i> BAPU</h4>
+                                <p>Bureau d'Aide Psychologique Universitaire - consultations gratuites.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Santé sexuelle -->
+                    <div class="droits-card" id="droits-sexuel">
+                        <div class="droits-card-header" onclick="toggleDroitsCard('sexuel')">
+                            <div class="droits-card-icon sexuel">
+                                <i class="fas fa-venus-mars"></i>
+                            </div>
+                            <div class="droits-card-title">
+                                <h3>Santé sexuelle</h3>
+                                <p>Contraception, dépistages, accompagnement</p>
+                            </div>
+                            <i class="fas fa-chevron-down droits-chevron"></i>
+                        </div>
+                        <div class="droits-card-content">
+                            <div class="droits-item">
+                                <h4><i class="fas fa-clinic-medical"></i> Planning Familial</h4>
+                                <p>Contraception, IVG, dépistages, écoute. Gratuit et confidentiel.</p>
+                                <p class="local-info"><i class="fas fa-map-marker-alt"></i> Arras : 03 21 71 15 90</p>
+                                <a href="https://www.planning-familial.org" target="_blank" class="btn btn-sm">planning-familial.org</a>
+                            </div>
+                            <div class="droits-item">
+                                <h4><i class="fas fa-pills"></i> Contraception gratuite - 26 ans</h4>
+                                <p>Pilule, implant, DIU, préservatifs gratuits en pharmacie.</p>
+                            </div>
+                            <div class="droits-item">
+                                <h4><i class="fas fa-vial"></i> Dépistages gratuits</h4>
+                                <p>IST, VIH : dépistages gratuits sans ordonnance en laboratoire.</p>
+                                <a href="https://www.sida-info-service.org" target="_blank" class="btn btn-sm">Sida Info Service</a>
+                            </div>
+                            <div class="droits-item">
+                                <h4><i class="fas fa-shield-virus"></i> PrEP</h4>
+                                <p>Traitement préventif VIH, gratuit et confidentiel.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Logement -->
+                    <div class="droits-card" id="droits-logement">
+                        <div class="droits-card-header" onclick="toggleDroitsCard('logement')">
+                            <div class="droits-card-icon logement">
+                                <i class="fas fa-home"></i>
+                            </div>
+                            <div class="droits-card-title">
+                                <h3>Logement</h3>
+                                <p>Résidences, aides, hébergement d'urgence</p>
+                            </div>
+                            <i class="fas fa-chevron-down droits-chevron"></i>
+                        </div>
+                        <div class="droits-card-content">
+                            <div class="droits-item">
+                                <h4><i class="fas fa-building"></i> Résidences CROUS</h4>
+                                <p>Logements étudiants à loyer modéré.</p>
+                                <a href="https://trouverunlogement.lescrous.fr" target="_blank" class="btn btn-sm">Trouver un logement</a>
+                            </div>
+                            <div class="droits-item">
+                                <h4><i class="fas fa-hand-holding-usd"></i> Action Logement</h4>
+                                <p>Avance Loca-Pass (dépôt de garantie), aide Mobili-Jeune.</p>
+                                <a href="https://www.actionlogement.fr" target="_blank" class="btn btn-sm">Action Logement</a>
+                            </div>
+                            <div class="droits-item">
+                                <h4><i class="fas fa-file-invoice-dollar"></i> FSL (Fonds Solidarité Logement)</h4>
+                                <p>Aide pour accéder ou se maintenir dans un logement.</p>
+                            </div>
+                            <div class="droits-item highlight">
+                                <h4><i class="fas fa-bed"></i> Hébergement d'urgence</h4>
+                                <p>Si vous êtes à la rue, appelez le 115 (gratuit, 24h/24).</p>
+                                <a href="tel:115" class="btn btn-sm btn-primary">Appeler le 115</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Alimentation -->
+                    <div class="droits-card" id="droits-alimentation">
+                        <div class="droits-card-header" onclick="toggleDroitsCard('alimentation')">
+                            <div class="droits-card-icon alimentation">
+                                <i class="fas fa-utensils"></i>
+                            </div>
+                            <div class="droits-card-title">
+                                <h3>Alimentation</h3>
+                                <p>Repas à 1€, épiceries solidaires, aide alimentaire</p>
+                            </div>
+                            <i class="fas fa-chevron-down droits-chevron"></i>
+                        </div>
+                        <div class="droits-card-content">
+                            <div class="droits-item">
+                                <h4><i class="fas fa-ticket-alt"></i> Repas CROUS à 1€</h4>
+                                <p>Pour les boursiers, repas au RU à 1€.</p>
+                            </div>
+                            <div class="droits-item">
+                                <h4><i class="fas fa-shopping-basket"></i> Épiceries solidaires</h4>
+                                <p>Produits à prix réduits selon vos ressources.</p>
+                                <p class="local-info"><i class="fas fa-map-marker-alt"></i> AGORAE Arras - Université</p>
+                            </div>
+                            <div class="droits-item">
+                                <h4><i class="fas fa-heart"></i> Restos du Cœur</h4>
+                                <p>Distribution alimentaire gratuite.</p>
+                                <a href="https://www.restosducoeur.org" target="_blank" class="btn btn-sm">Trouver un centre</a>
+                            </div>
+                            <div class="droits-item">
+                                <h4><i class="fas fa-box-open"></i> Banque Alimentaire</h4>
+                                <p>Colis alimentaires via les associations partenaires.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Handicap -->
+                    <div class="droits-card" id="droits-handicap">
+                        <div class="droits-card-header" onclick="toggleDroitsCard('handicap')">
+                            <div class="droits-card-icon handicap">
+                                <i class="fas fa-wheelchair"></i>
+                            </div>
+                            <div class="droits-card-title">
+                                <h3>Handicap</h3>
+                                <p>MDPH, aménagements, accompagnement</p>
+                            </div>
+                            <i class="fas fa-chevron-down droits-chevron"></i>
+                        </div>
+                        <div class="droits-card-content">
+                            <div class="droits-item">
+                                <h4><i class="fas fa-file-medical"></i> MDPH</h4>
+                                <p>Reconnaissance du handicap, AAH, cartes mobilité.</p>
+                                <a href="https://mdph.pasdecalais.fr" target="_blank" class="btn btn-sm">MDPH Pas-de-Calais</a>
+                            </div>
+                            <div class="droits-item">
+                                <h4><i class="fas fa-edit"></i> Aménagements d'études</h4>
+                                <p>Tiers-temps, aide humaine, adaptation des cours. Contactez le référent handicap AFERTES.</p>
+                                <button onclick="showContactReferentHandicap()" class="btn btn-sm btn-secondary">Contacter le référent</button>
+                            </div>
+                            <div class="droits-item">
+                                <h4><i class="fas fa-laptop"></i> Aides techniques</h4>
+                                <p>Équipements, logiciels adaptés, aides à la communication.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Violences et discriminations -->
+                    <div class="droits-card" id="droits-violences">
+                        <div class="droits-card-header" onclick="toggleDroitsCard('violences')">
+                            <div class="droits-card-icon violences">
+                                <i class="fas fa-shield-alt"></i>
+                            </div>
+                            <div class="droits-card-title">
+                                <h3>Violences & Discriminations</h3>
+                                <p>Signalement, accompagnement, protection</p>
+                            </div>
+                            <i class="fas fa-chevron-down droits-chevron"></i>
+                        </div>
+                        <div class="droits-card-content">
+                            <div class="droits-item highlight">
+                                <h4><i class="fas fa-female"></i> Violences faites aux femmes</h4>
+                                <p>Écoute, orientation, accompagnement. Appel anonyme et gratuit.</p>
+                                <a href="tel:3919" class="btn btn-sm btn-primary">3919</a>
+                            </div>
+                            <div class="droits-item highlight">
+                                <h4><i class="fas fa-exclamation-triangle"></i> Violences sexuelles</h4>
+                                <p>Écoute et orientation 24h/24.</p>
+                                <a href="tel:0800235236" class="btn btn-sm btn-primary">0 800 05 95 95</a>
+                            </div>
+                            <div class="droits-item">
+                                <h4><i class="fas fa-balance-scale"></i> Discriminations</h4>
+                                <p>Défenseur des droits : signalement et accompagnement.</p>
+                                <a href="https://www.defenseurdesdroits.fr" target="_blank" class="btn btn-sm">Défenseur des droits</a>
+                            </div>
+                            <div class="droits-item">
+                                <h4><i class="fas fa-rainbow"></i> LGBT+</h4>
+                                <p>SOS Homophobie : écoute et soutien.</p>
+                                <a href="tel:01 48 06 42 41" class="btn btn-sm">01 48 06 42 41</a>
+                            </div>
+                            <div class="droits-item">
+                                <h4><i class="fas fa-user-shield"></i> Harcèlement</h4>
+                                <p>Signalement interne AFERTES ou plateforme nationale.</p>
+                                <a href="https://www.service-public.fr/particuliers/vosdroits/F32247" target="_blank" class="btn btn-sm">En savoir plus</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Droits du travail -->
+                    <div class="droits-card" id="droits-travail">
+                        <div class="droits-card-header" onclick="toggleDroitsCard('travail')">
+                            <div class="droits-card-icon travail">
+                                <i class="fas fa-briefcase"></i>
+                            </div>
+                            <div class="droits-card-title">
+                                <h3>Droits du travail</h3>
+                                <p>Jobs étudiants, stages, alternance</p>
+                            </div>
+                            <i class="fas fa-chevron-down droits-chevron"></i>
+                        </div>
+                        <div class="droits-card-content">
+                            <div class="droits-item">
+                                <h4><i class="fas fa-file-contract"></i> Contrat de travail étudiant</h4>
+                                <p>Maximum 964h/an pour garder le statut étudiant. Vérifiez votre contrat.</p>
+                            </div>
+                            <div class="droits-item">
+                                <h4><i class="fas fa-user-graduate"></i> Convention de stage</h4>
+                                <p>Obligatoire. Gratification si + de 2 mois. Durée max 6 mois.</p>
+                            </div>
+                            <div class="droits-item">
+                                <h4><i class="fas fa-handshake"></i> Alternance</h4>
+                                <p>Contrat d'apprentissage ou de professionnalisation. Vous êtes salarié.</p>
+                            </div>
+                            <div class="droits-item">
+                                <h4><i class="fas fa-gavel"></i> Litiges</h4>
+                                <p>Inspection du travail, prud'hommes, syndicats étudiants.</p>
+                                <a href="https://www.service-public.fr/particuliers/vosdroits/N518" target="_blank" class="btn btn-sm">Vos droits</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contacts locaux -->
+                <div class="droits-contacts">
+                    <h2><i class="fas fa-map-marker-alt"></i> Contacts locaux AFERTES</h2>
+                    <div class="contacts-grid">
+                        <div class="contact-card">
+                            <h4>Secrétariat pédagogique</h4>
+                            <p><i class="fas fa-phone"></i> 03 21 60 40 00</p>
+                            <p><i class="fas fa-envelope"></i> contact@afertes.org</p>
+                        </div>
+                        <div class="contact-card">
+                            <h4>Référent handicap</h4>
+                            <p><i class="fas fa-phone"></i> 03 21 60 40 00</p>
+                            <p><i class="fas fa-envelope"></i> handicap@afertes.org</p>
+                        </div>
+                        <div class="contact-card">
+                            <h4>Service social</h4>
+                            <p><i class="fas fa-phone"></i> 03 21 60 40 00</p>
+                            <p><i class="fas fa-envelope"></i> social@afertes.org</p>
                         </div>
                     </div>
                 </div>

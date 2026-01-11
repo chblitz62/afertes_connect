@@ -6026,3 +6026,112 @@ window.openGroupChat = openGroupChat;
 window.sendGroupMessage = sendGroupMessage;
 window.handleGroupMessageKeypress = handleGroupMessageKeypress;
 window.createGroup = createGroup;
+
+// ===========================================
+// ACCÈS AUX DROITS
+// ===========================================
+
+/**
+ * Ouvre/ferme une carte accordéon des droits
+ */
+function toggleDroitsCard(header) {
+    const card = header.closest('.droits-card');
+    if (!card) return;
+
+    // Fermer les autres cartes ouvertes (optionnel - accordion mode)
+    // const allCards = document.querySelectorAll('.droits-card.open');
+    // allCards.forEach(c => {
+    //     if (c !== card) c.classList.remove('open');
+    // });
+
+    card.classList.toggle('open');
+}
+
+/**
+ * Affiche les informations de contact du secrétariat
+ */
+function showContactSecretariat() {
+    const site = selectedSite || 'slb';
+    const siteInfo = APP_CONFIG.sites[site];
+
+    showModal(`
+        <h2><i class="fas fa-envelope" style="color: var(--primary-color);"></i> Contacter le secrétariat</h2>
+        <div style="margin-top: 16px;">
+            <div class="droits-local-item" style="margin-bottom: 12px;">
+                <i class="fas fa-map-marker-alt"></i>
+                <div>
+                    <h4>Adresse</h4>
+                    <p>${siteInfo?.name || 'AFERTES'}<br>${siteInfo?.address || ''}</p>
+                </div>
+            </div>
+            <div class="droits-local-item" style="margin-bottom: 12px;">
+                <i class="fas fa-phone"></i>
+                <div>
+                    <h4>Téléphone</h4>
+                    <p><a href="tel:${siteInfo?.phone?.replace(/\s/g, '')}">${siteInfo?.phone || ''}</a></p>
+                </div>
+            </div>
+            <div class="droits-local-item">
+                <i class="fas fa-envelope"></i>
+                <div>
+                    <h4>Email</h4>
+                    <p><a href="mailto:secretariat@afertes.org">secretariat@afertes.org</a></p>
+                </div>
+            </div>
+        </div>
+        <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border-color);">
+            <p style="font-size: 0.9rem; color: var(--text-secondary);">
+                <i class="fas fa-clock"></i> Horaires d'accueil : Lundi au vendredi, 8h30-12h30 / 13h30-17h
+            </p>
+        </div>
+    `);
+}
+
+/**
+ * Affiche les informations du référent handicap
+ */
+function showContactReferentHandicap() {
+    showModal(`
+        <h2><i class="fas fa-universal-access" style="color: var(--primary-color);"></i> Référent Handicap</h2>
+        <div style="margin-top: 16px;">
+            <p style="margin-bottom: 16px;">
+                Le référent handicap de l'AFERTES est à votre disposition pour vous accompagner dans votre parcours de formation.
+            </p>
+            <div class="droits-local-item" style="margin-bottom: 12px;">
+                <i class="fas fa-user"></i>
+                <div>
+                    <h4>Contact</h4>
+                    <p>Référent Handicap AFERTES</p>
+                </div>
+            </div>
+            <div class="droits-local-item" style="margin-bottom: 12px;">
+                <i class="fas fa-envelope"></i>
+                <div>
+                    <h4>Email</h4>
+                    <p><a href="mailto:handicap@afertes.org">handicap@afertes.org</a></p>
+                </div>
+            </div>
+            <div class="droits-local-item">
+                <i class="fas fa-phone"></i>
+                <div>
+                    <h4>Téléphone</h4>
+                    <p><a href="tel:0321604000">03 21 60 40 00</a> (demander le référent handicap)</p>
+                </div>
+            </div>
+        </div>
+        <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border-color);">
+            <h4 style="margin-bottom: 8px;">Accompagnements possibles :</h4>
+            <ul style="font-size: 0.9rem; color: var(--text-secondary); padding-left: 20px;">
+                <li>Aménagements des examens et évaluations</li>
+                <li>Adaptation des supports pédagogiques</li>
+                <li>Accompagnement personnalisé</li>
+                <li>Mise en relation avec les services spécialisés</li>
+            </ul>
+        </div>
+    `);
+}
+
+// Export fonctions Accès aux droits
+window.toggleDroitsCard = toggleDroitsCard;
+window.showContactSecretariat = showContactSecretariat;
+window.showContactReferentHandicap = showContactReferentHandicap;

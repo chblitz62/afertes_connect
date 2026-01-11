@@ -1896,3 +1896,357 @@
         min-width: auto;
     }
 }
+
+/* ========================================
+   ACCÈS AUX DROITS
+   ======================================== */
+
+.droits-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1rem;
+}
+
+.droits-intro {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.droits-intro h2 {
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+}
+
+.droits-intro p {
+    color: var(--text-secondary);
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* Section urgence */
+.droits-urgence {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    color: white;
+}
+
+.droits-urgence h3 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+}
+
+.urgence-numbers {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.urgence-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: rgba(255, 255, 255, 0.15);
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    flex: 1;
+    min-width: 200px;
+}
+
+.urgence-item i {
+    font-size: 1.25rem;
+}
+
+.urgence-item .urgence-name {
+    font-size: 0.85rem;
+    opacity: 0.9;
+}
+
+.urgence-item .urgence-number {
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+/* Grille des catégories */
+.droits-categories {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+/* Carte de catégorie */
+.droits-card {
+    background: var(--card-bg);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    transition: box-shadow 0.3s, transform 0.3s;
+}
+
+.droits-card:hover {
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.droits-card-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.25rem;
+    cursor: pointer;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+    transition: background 0.3s;
+}
+
+.droits-card-header:hover {
+    background: var(--hover-bg);
+}
+
+.droits-card-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+}
+
+.droits-card-icon.finances {
+    background: rgba(46, 204, 113, 0.15);
+    color: #2ecc71;
+}
+
+.droits-card-icon.health {
+    background: rgba(52, 152, 219, 0.15);
+    color: #3498db;
+}
+
+.droits-card-icon.mental {
+    background: rgba(155, 89, 182, 0.15);
+    color: #9b59b6;
+}
+
+.droits-card-icon.sexual {
+    background: rgba(241, 92, 128, 0.15);
+    color: #e91e63;
+}
+
+.droits-card-icon.housing {
+    background: rgba(230, 126, 34, 0.15);
+    color: #e67e22;
+}
+
+.droits-card-icon.food {
+    background: rgba(241, 196, 15, 0.15);
+    color: #f39c12;
+}
+
+.droits-card-icon.disability {
+    background: rgba(52, 73, 94, 0.15);
+    color: #34495e;
+}
+
+.droits-card-icon.violence {
+    background: rgba(231, 76, 60, 0.15);
+    color: #e74c3c;
+}
+
+.droits-card-icon.work {
+    background: rgba(26, 188, 156, 0.15);
+    color: #1abc9c;
+}
+
+.droits-card-title h4 {
+    margin: 0;
+    font-size: 1.05rem;
+    color: var(--text-primary);
+}
+
+.droits-card-title p {
+    margin: 0.25rem 0 0;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.droits-card-toggle {
+    margin-left: auto;
+    font-size: 1rem;
+    color: var(--text-secondary);
+    transition: transform 0.3s;
+}
+
+.droits-card.open .droits-card-toggle {
+    transform: rotate(180deg);
+}
+
+/* Contenu de la carte */
+.droits-card-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease-out;
+}
+
+.droits-card.open .droits-card-content {
+    max-height: 1000px;
+}
+
+.droits-card-body {
+    padding: 1.25rem;
+}
+
+/* Items dans les cartes */
+.droits-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1rem;
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    margin-bottom: 0.75rem;
+    transition: transform 0.2s;
+}
+
+.droits-item:last-child {
+    margin-bottom: 0;
+}
+
+.droits-item:hover {
+    transform: translateX(4px);
+}
+
+.droits-item-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    background: var(--primary-light);
+    color: var(--primary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.droits-item-content h5 {
+    margin: 0 0 0.25rem;
+    font-size: 0.95rem;
+    color: var(--text-primary);
+}
+
+.droits-item-content p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+.droits-item-content a {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.droits-item-content a:hover {
+    text-decoration: underline;
+}
+
+/* Tag info */
+.droits-tag {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    background: var(--primary-light);
+    color: var(--primary-color);
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    margin-top: 0.5rem;
+}
+
+/* Section contacts locaux */
+.droits-local {
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 2px solid var(--primary-color);
+}
+
+.droits-local h3 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+
+.droits-local-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1rem;
+}
+
+.droits-local-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: var(--bg-secondary);
+    border-radius: 8px;
+}
+
+.droits-local-item i {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+}
+
+.droits-local-item h4 {
+    margin: 0;
+    font-size: 0.95rem;
+}
+
+.droits-local-item p {
+    margin: 0.25rem 0 0;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.droits-local-item .btn {
+    margin-left: auto;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .droits-categories {
+        grid-template-columns: 1fr;
+    }
+
+    .urgence-numbers {
+        flex-direction: column;
+    }
+
+    .urgence-item {
+        min-width: auto;
+    }
+
+    .droits-local-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Mode sombre */
+[data-theme="dark"] .droits-urgence {
+    background: linear-gradient(135deg, #c0392b 0%, #96281b 100%);
+}
+
+[data-theme="dark"] .droits-item {
+    background: var(--bg-tertiary, #1a1a2e);
+}
+
+[data-theme="dark"] .droits-local-item {
+    background: var(--bg-tertiary, #1a1a2e);
+}
