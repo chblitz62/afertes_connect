@@ -191,6 +191,160 @@ function updateSessionActivity() {
 }
 
 // ===========================================
+// Notifications Push - Service Worker
+// ===========================================
+const PushNotifications = {
+    swRegistration: null,
+    isSupported: 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window,
+
+    // Initialise le Service Worker et les notifications
+    async init() {
+        if (!this.isSupported) {
+            console.log('[Push] Notifications non supportées par ce navigateur');
+            return false;
+        }
+
+        try {
+            // Enregistrer le Service Worker
+            this.swRegistration = await navigator.serviceWorker.register('/sw.js');
+            console.log('[Push] Service Worker enregistré');
+
+            // Vérifier si déjà abonné
+            const subscription = await this.swRegistration.pushManager.getSubscription();
+            if (subscription) {
+                console.log('[Push] Déjà abonné aux notifications');
+            }
+
+            return true;
+        } catch (error) {
+            console.error('[Push] Erreur d\'initialisation:', error);
+            return false;
+        }
+    },
+
+    // Demande la permission pour les notifications
+    async requestPermission() {
+        if (!this.isSupported) {
+            showToast('Les notifications ne sont pas supportées par ce navigateur', 'warning');
+            return false;
+        }
+
+        try {
+            const permission = await Notification.requestPermission();
+
+            if (permission === 'granted') {
+                console.log('[Push] Permission accordée');
+                localStorage.setItem('afertes_push_enabled', 'true');
+                showToast('Notifications activées', 'success');
+                return true;
+            } else if (permission === 'denied') {
+                console.log('[Push] Permission refusée');
+                localStorage.setItem('afertes_push_enabled', 'false');
+                showToast('Notifications refusées. Vous pouvez les activer dans les paramètres du navigateur.', 'warning');
+                return false;
+            }
+
+            return false;
+        } catch (error) {
+            console.error('[Push] Erreur lors de la demande de permission:', error);
+            return false;
+        }
+    },
+
+    // Vérifie si les notifications sont activées
+    isEnabled() {
+        return this.isSupported &&
+               Notification.permission === 'granted' &&
+               localStorage.getItem('afertes_push_enabled') === 'true';
+    },
+
+    // Envoie une notification locale via le Service Worker
+    async send(title, options = {}) {
+        if (!this.isEnabled()) {
+            console.log('[Push] Notifications désactivées, notification non envoyée');
+            return false;
+        }
+
+        const defaultOptions = {
+            icon: '/img/icons/icon-192x192.png',
+            badge: '/img/icons/icon-72x72.png',
+            tag: 'afertes-' + Date.now(),
+            requireInteraction: false,
+            silent: false,
+            data: { url: '/index.html' }
+        };
+
+        const notificationOptions = { ...defaultOptions, ...options };
+
+        try {
+            // Utiliser le Service Worker pour afficher la notification
+            if (this.swRegistration) {
+                await this.swRegistration.showNotification(title, notificationOptions);
+                console.log('[Push] Notification envoyée:', title);
+                return true;
+            } else {
+                // Fallback: notification native
+                new Notification(title, notificationOptions);
+                return true;
+            }
+        } catch (error) {
+            console.error('[Push] Erreur lors de l\'envoi:', error);
+            return false;
+        }
+    },
+
+    // Notifications prédéfinies pour l'application
+    async notifyNewMessage(senderName, preview) {
+        return this.send(`Nouveau message de ${senderName}`, {
+            body: preview || 'Vous avez reçu un nouveau message',
+            tag: 'afertes-message',
+            data: { url: '/index.html#messages' },
+            actions: [
+                { action: 'view', title: 'Voir' },
+                { action: 'dismiss', title: 'Ignorer' }
+            ]
+        });
+    },
+
+    async notifyNewGrade(subject, value) {
+        return this.send('Nouvelle note disponible', {
+            body: `${subject}: ${value}/20`,
+            tag: 'afertes-grade',
+            data: { url: '/index.html#grades' }
+        });
+    },
+
+    async notifyScheduleChange(details) {
+        return this.send('Modification d\'emploi du temps', {
+            body: details || 'Votre emploi du temps a été modifié',
+            tag: 'afertes-schedule',
+            data: { url: '/index.html#schedule' }
+        });
+    },
+
+    async notifyEvent(eventTitle, eventDate) {
+        return this.send('Événement à venir', {
+            body: `${eventTitle} - ${eventDate}`,
+            tag: 'afertes-event',
+            data: { url: '/index.html#bde' }
+        });
+    },
+
+    async notifyReminder(title, body) {
+        return this.send(title, {
+            body: body,
+            tag: 'afertes-reminder',
+            requireInteraction: true
+        });
+    }
+};
+
+// Initialiser les notifications au chargement
+document.addEventListener('DOMContentLoaded', () => {
+    PushNotifications.init();
+});
+
+// ===========================================
 // Notification par email
 // ===========================================
 async function sendEmailNotification(recipientUser, type, data) {
@@ -2245,24 +2399,27 @@ function filterDirectory() {
 // ===========================================
 function loadProfile() {
     if (!currentUser) return;
-    
+
     document.getElementById('profile-avatar').src = currentUser.avatar;
     document.getElementById('profile-fullname').textContent = `${currentUser.firstname} ${currentUser.lastname}`;
-    document.getElementById('profile-role').textContent = 
+    document.getElementById('profile-role').textContent =
         currentUser.role === 'teacher' ? 'Formateur' : `Étudiant - ${APP_CONFIG.formations[currentUser.formation] || ''}`;
-    document.getElementById('profile-site').innerHTML = 
+    document.getElementById('profile-site').innerHTML =
         `<i class="fas fa-map-marker-alt"></i> ${APP_CONFIG.sites[currentUser.site]?.name || ''}`;
-    
+
     document.getElementById('profile-email').textContent = currentUser.email;
     document.getElementById('profile-formation').textContent = APP_CONFIG.formations[currentUser.formation] || 'N/A';
     document.getElementById('profile-promo').textContent = currentUser.promo || 'N/A';
     document.getElementById('profile-site-detail').textContent = APP_CONFIG.sites[currentUser.site]?.name || '';
     document.getElementById('profile-bio').textContent = currentUser.bio || 'Cliquez sur "Modifier mon profil" pour ajouter une description.';
-    
+
     // Paramètres de confidentialité
     document.getElementById('privacy-directory').checked = currentUser.privacy?.directory ?? true;
     document.getElementById('privacy-email').checked = currentUser.privacy?.email ?? false;
     document.getElementById('privacy-photo').checked = currentUser.privacy?.photo ?? true;
+
+    // Paramètres de notifications
+    loadNotificationSettings();
 }
 
 function editProfile() {
@@ -2364,14 +2521,88 @@ function savePrivacySettings() {
         email: document.getElementById('privacy-email').checked,
         photo: document.getElementById('privacy-photo').checked
     };
-    
+
     localStorage.setItem('afertes_user', JSON.stringify(currentUser));
-    
+
     let users = JSON.parse(localStorage.getItem('afertes_users') || '[]');
     users = users.map(u => u.id === currentUser.id ? currentUser : u);
     localStorage.setItem('afertes_users', JSON.stringify(users));
-    
+
     showToast('Paramètres de confidentialité mis à jour', 'success');
+}
+
+// Gestion des paramètres de notifications push
+async function togglePushNotifications(enabled) {
+    if (enabled) {
+        const granted = await PushNotifications.requestPermission();
+        document.getElementById('notifications-push').checked = granted;
+        updateNotificationStatus();
+    } else {
+        localStorage.setItem('afertes_push_enabled', 'false');
+        updateNotificationStatus();
+        showToast('Notifications désactivées', 'info');
+    }
+    saveNotificationSettings();
+}
+
+function saveNotificationSettings() {
+    const settings = {
+        messages: document.getElementById('notif-messages')?.checked ?? true,
+        grades: document.getElementById('notif-grades')?.checked ?? true,
+        schedule: document.getElementById('notif-schedule')?.checked ?? true
+    };
+    localStorage.setItem('afertes_notif_settings', JSON.stringify(settings));
+}
+
+function loadNotificationSettings() {
+    const settings = JSON.parse(localStorage.getItem('afertes_notif_settings') || '{}');
+    const pushEnabled = PushNotifications.isEnabled();
+
+    // Mettre à jour les toggles
+    const pushToggle = document.getElementById('notifications-push');
+    const msgToggle = document.getElementById('notif-messages');
+    const gradesToggle = document.getElementById('notif-grades');
+    const scheduleToggle = document.getElementById('notif-schedule');
+
+    if (pushToggle) pushToggle.checked = pushEnabled;
+    if (msgToggle) msgToggle.checked = settings.messages ?? true;
+    if (gradesToggle) gradesToggle.checked = settings.grades ?? true;
+    if (scheduleToggle) scheduleToggle.checked = settings.schedule ?? true;
+
+    // Ajouter les event listeners pour sauvegarder automatiquement
+    [msgToggle, gradesToggle, scheduleToggle].forEach(toggle => {
+        if (toggle) {
+            toggle.addEventListener('change', saveNotificationSettings);
+        }
+    });
+
+    updateNotificationStatus();
+}
+
+function updateNotificationStatus() {
+    const statusEl = document.getElementById('notification-status');
+    if (!statusEl) return;
+
+    if (!PushNotifications.isSupported) {
+        statusEl.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Les notifications ne sont pas supportées par ce navigateur';
+        statusEl.style.color = 'var(--warning-color)';
+    } else if (Notification.permission === 'denied') {
+        statusEl.innerHTML = '<i class="fas fa-ban"></i> Les notifications sont bloquées. Modifiez les paramètres du navigateur pour les activer.';
+        statusEl.style.color = 'var(--error-color)';
+    } else if (PushNotifications.isEnabled()) {
+        statusEl.innerHTML = '<i class="fas fa-check-circle"></i> Notifications activées';
+        statusEl.style.color = 'var(--success-color)';
+    } else {
+        statusEl.innerHTML = '<i class="fas fa-info-circle"></i> Activez les notifications pour recevoir des alertes en temps réel';
+        statusEl.style.color = 'var(--text-light)';
+    }
+}
+
+// Vérifie si une notification doit être envoyée selon les paramètres
+function shouldNotify(type) {
+    if (!PushNotifications.isEnabled()) return false;
+    const settings = JSON.parse(localStorage.getItem('afertes_notif_settings') || '{}');
+    return settings[type] ?? true;
 }
 
 function viewProfile(userId) {

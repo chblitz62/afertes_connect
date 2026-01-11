@@ -825,6 +825,33 @@
                         </div>
 
                         <div class="profile-section">
+                            <h2><i class="fas fa-bell"></i> Notifications</h2>
+                            <div class="privacy-settings">
+                                <label class="toggle-setting">
+                                    <span>Activer les notifications push</span>
+                                    <input type="checkbox" id="notifications-push" onchange="togglePushNotifications(this.checked)">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                                <label class="toggle-setting">
+                                    <span>Nouveaux messages</span>
+                                    <input type="checkbox" id="notif-messages" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                                <label class="toggle-setting">
+                                    <span>Nouvelles notes</span>
+                                    <input type="checkbox" id="notif-grades" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                                <label class="toggle-setting">
+                                    <span>Modifications d'emploi du temps</span>
+                                    <input type="checkbox" id="notif-schedule" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            <p class="notification-status" id="notification-status"></p>
+                        </div>
+
+                        <div class="profile-section">
                             <h2><i class="fas fa-shield-alt"></i> Confidentialité RGPD</h2>
                             <div class="privacy-settings">
                                 <label class="toggle-setting">

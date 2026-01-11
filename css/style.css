@@ -1729,6 +1729,21 @@ img {
     font-size: 0.9rem;
 }
 
+.notification-status {
+    margin-top: 12px;
+    padding: 8px 12px;
+    border-radius: var(--border-radius-sm);
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--bg-tertiary);
+}
+
+.notification-status i {
+    font-size: 1rem;
+}
+
 /* Documents Page */
 .documents-grid {
     display: grid;
