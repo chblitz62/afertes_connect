@@ -6,7 +6,7 @@
 - [ ] Mettre en cache les appels API fréquents (emplois du temps, notes)
 
 ## UX/Interface
-- [ ] Ajouter un skeleton loading au lieu des spinners pour un ressenti plus fluide
+- [x] Ajouter un skeleton loading au lieu des spinners pour un ressenti plus fluide
 - [ ] Notifications push réelles via Service Worker (actuellement simulées)
 - [ ] Mode hors-ligne amélioré avec sync automatique au retour en ligne
 

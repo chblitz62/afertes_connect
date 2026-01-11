@@ -34,6 +34,125 @@ let currentPage = 'dashboard';
 // Variable activeConversation déplacée dans js/modules/messaging.js
 
 // ===========================================
+// Skeleton Loading - Utilitaires
+// ===========================================
+const Skeleton = {
+    // Génère une ligne skeleton
+    line(size = 'medium') {
+        return `<div class="skeleton skeleton-line ${size}"></div>`;
+    },
+
+    // Génère un titre skeleton
+    title() {
+        return `<div class="skeleton skeleton-title"></div>`;
+    },
+
+    // Génère un avatar skeleton
+    avatar(large = false) {
+        return `<div class="skeleton skeleton-avatar${large ? ' large' : ''}"></div>`;
+    },
+
+    // Génère un badge skeleton
+    badge() {
+        return `<div class="skeleton skeleton-badge"></div>`;
+    },
+
+    // Génère une notification skeleton
+    notification() {
+        return `
+            <div class="skeleton-notification">
+                <div class="skeleton skeleton-icon"></div>
+                <div class="skeleton-notification-content">
+                    ${this.line('medium')}
+                    ${this.line('short')}
+                </div>
+            </div>
+        `;
+    },
+
+    // Génère un item d'emploi du temps skeleton
+    scheduleItem() {
+        return `
+            <div class="skeleton-schedule-item">
+                <div class="skeleton-schedule-time">
+                    ${this.line('long')}
+                    ${this.line('short')}
+                </div>
+                <div class="skeleton-schedule-content">
+                    ${this.line('medium')}
+                    ${this.line('short')}
+                </div>
+            </div>
+        `;
+    },
+
+    // Génère une ligne de note skeleton
+    gradeRow() {
+        return `
+            <div class="skeleton-grade-row">
+                <div class="skeleton skeleton-icon"></div>
+                <div class="skeleton-grade-subject">
+                    ${this.line('medium')}
+                    ${this.line('short')}
+                </div>
+                <div class="skeleton skeleton-grade-value"></div>
+            </div>
+        `;
+    },
+
+    // Génère un message skeleton
+    message() {
+        return `
+            <div class="skeleton-message">
+                ${this.avatar()}
+                <div class="skeleton-message-content">
+                    ${this.line('short')}
+                    ${this.line('long')}
+                    ${this.line('medium')}
+                </div>
+            </div>
+        `;
+    },
+
+    // Génère une carte skeleton
+    card() {
+        return `
+            <div class="skeleton-card">
+                ${this.title()}
+                ${this.line('long')}
+                ${this.line('medium')}
+                ${this.line('short')}
+            </div>
+        `;
+    },
+
+    // Génère plusieurs skeletons du même type
+    repeat(type, count = 3) {
+        const generators = {
+            notification: () => this.notification(),
+            schedule: () => this.scheduleItem(),
+            grade: () => this.gradeRow(),
+            message: () => this.message(),
+            card: () => this.card(),
+            line: () => this.line()
+        };
+
+        const generator = generators[type] || generators.card;
+        return Array(count).fill(null).map(() => generator()).join('');
+    },
+
+    // Affiche le skeleton dans un container
+    show(container, type, count = 3) {
+        if (typeof container === 'string') {
+            container = document.getElementById(container) || document.querySelector(container);
+        }
+        if (container) {
+            container.innerHTML = `<div class="skeleton-container">${this.repeat(type, count)}</div>`;
+        }
+    }
+};
+
+// ===========================================
 // Gestion des sessions actives
 // ===========================================
 function registerActiveSession(userId) {
@@ -1339,11 +1458,21 @@ function markAllRead() {
 // Dashboard
 // ===========================================
 function loadDashboardData() {
-    loadDashboardSchedule();
-    loadDashboardNews();
-    loadDashboardBDE();
-    loadDashboardMessages();
-    loadDashboardPromo();
+    // Afficher les skeletons immédiatement
+    Skeleton.show('today-schedule-items', 'schedule', 3);
+    Skeleton.show('dashboard-news', 'card', 2);
+    Skeleton.show('dashboard-bde', 'card', 2);
+    Skeleton.show('dashboard-messages', 'message', 3);
+    Skeleton.show('dashboard-promo', 'card', 2);
+
+    // Charger les vraies données avec un léger délai pour l'effet visuel
+    setTimeout(() => {
+        loadDashboardSchedule();
+        loadDashboardNews();
+        loadDashboardBDE();
+        loadDashboardMessages();
+        loadDashboardPromo();
+    }, 150);
 }
 
 function loadDashboardNews() {
@@ -1405,8 +1534,14 @@ function loadDashboardPromo() {
 // Actualités
 // ===========================================
 function loadNews() {
-    const news = getNews();
-    displayNews(news);
+    const container = document.getElementById('news-list');
+    // Afficher les skeletons
+    Skeleton.show(container, 'card', 4);
+
+    setTimeout(() => {
+        const news = getNews();
+        displayNews(news);
+    }, 150);
 }
 
 function displayNews(news) {
@@ -1484,25 +1619,31 @@ function handlePublish(e) {
 // BDE
 // ===========================================
 function loadBDEEvents() {
-    const events = getBDEEvents();
     const container = document.getElementById('bde-events');
-    
-    container.innerHTML = events.map(event => {
-        const date = new Date(event.date);
-        return `
-            <article class="event-card">
-                <div class="event-date">
-                    <span class="day">${date.getDate()}</span>
-                    <span class="month">${date.toLocaleDateString('fr-FR', { month: 'short' })}</span>
-                </div>
-                <div class="event-info">
-                    <h3>${event.title}</h3>
-                    <p>${event.description}</p>
-                    <span class="location"><i class="fas fa-map-marker-alt"></i> ${event.location}</span>
-                </div>
-            </article>
-        `;
-    }).join('');
+
+    // Afficher les skeletons
+    Skeleton.show(container, 'card', 3);
+
+    setTimeout(() => {
+        const events = getBDEEvents();
+
+        container.innerHTML = events.map(event => {
+            const date = new Date(event.date);
+            return `
+                <article class="event-card">
+                    <div class="event-date">
+                        <span class="day">${date.getDate()}</span>
+                        <span class="month">${date.toLocaleDateString('fr-FR', { month: 'short' })}</span>
+                    </div>
+                    <div class="event-info">
+                        <h3>${event.title}</h3>
+                        <p>${event.description}</p>
+                        <span class="location"><i class="fas fa-map-marker-alt"></i> ${event.location}</span>
+                    </div>
+                </article>
+            `;
+        }).join('');
+    }, 150);
 }
 
 function contactBDE() {
@@ -1551,28 +1692,33 @@ function updateMessageBadge() {
 }
 
 function loadConversations(showArchived = false) {
-    const allConversations = getConversations();
     const container = document.getElementById('conversations-items');
 
-    // Filtrer selon archivé ou non
-    const conversations = allConversations.filter(conv =>
-        showArchived ? conv.archived : !conv.archived
-    );
+    // Afficher les skeletons
+    Skeleton.show(container, 'message', 4);
 
-    // Mettre à jour le badge (seulement les non-archivées)
-    updateMessageBadge();
+    setTimeout(() => {
+        const allConversations = getConversations();
 
-    if (conversations.length === 0) {
-        container.innerHTML = `
-            <div class="empty-conversations">
-                <i class="fas fa-${showArchived ? 'archive' : 'comments'}"></i>
-                <p>${showArchived ? 'Aucune conversation archivée' : 'Aucune conversation'}</p>
-            </div>
-        `;
-        return;
-    }
+        // Filtrer selon archivé ou non
+        const conversations = allConversations.filter(conv =>
+            showArchived ? conv.archived : !conv.archived
+        );
 
-    container.innerHTML = conversations.map(conv => `
+        // Mettre à jour le badge (seulement les non-archivées)
+        updateMessageBadge();
+
+        if (conversations.length === 0) {
+            container.innerHTML = `
+                <div class="empty-conversations">
+                    <i class="fas fa-${showArchived ? 'archive' : 'comments'}"></i>
+                    <p>${showArchived ? 'Aucune conversation archivée' : 'Aucune conversation'}</p>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = conversations.map(conv => `
         <div class="conversation-item ${conv.unread ? 'unread' : ''}" data-id="${conv.id}">
             <div class="conversation-content" onclick="openConversation(${conv.id})">
                 <img src="${conv.avatar}" alt="${conv.name}" class="conversation-avatar">
@@ -1606,6 +1752,7 @@ function loadConversations(showArchived = false) {
             </div>
         </div>
     `).join('');
+    }, 150);
 }
 
 /**
@@ -2262,20 +2409,26 @@ function viewProfile(userId) {
 // Documents
 // ===========================================
 function loadDocuments() {
-    const documents = getDocuments();
     const container = document.getElementById('documents-list');
-    
-    container.innerHTML = documents.map(doc => `
-        <div class="document-card">
-            <div class="document-icon">
-                <i class="fas fa-${getDocumentIcon(doc.type)}"></i>
+
+    // Afficher les skeletons
+    Skeleton.show(container, 'card', 4);
+
+    setTimeout(() => {
+        const documents = getDocuments();
+
+        container.innerHTML = documents.map(doc => `
+            <div class="document-card">
+                <div class="document-icon">
+                    <i class="fas fa-${getDocumentIcon(doc.type)}"></i>
+                </div>
+                <div class="document-info">
+                    <h3>${doc.title}</h3>
+                    <p>${doc.description}</p>
+                </div>
             </div>
-            <div class="document-info">
-                <h3>${doc.title}</h3>
-                <p>${doc.description}</p>
-            </div>
-        </div>
-    `).join('');
+        `).join('');
+    }, 150);
 }
 
 function getDocumentIcon(type) {
@@ -2802,20 +2955,38 @@ function goToToday() {
 // Notes
 // ===========================================
 function loadGrades() {
-    const grades = getStudentGrades();
-    
-    // Calculer les statistiques
-    if (grades.length > 0) {
-        const sum = grades.reduce((acc, g) => acc + g.value, 0);
-        const avg = (sum / grades.length).toFixed(2);
-        const best = Math.max(...grades.map(g => g.value));
-        
-        document.getElementById('average-grade').textContent = avg + '/20';
-        document.getElementById('total-grades').textContent = grades.length;
-        document.getElementById('best-grade').textContent = best + '/20';
+    const tbody = document.getElementById('grades-tbody');
+
+    // Afficher les skeletons
+    if (tbody) {
+        tbody.innerHTML = Array(4).fill(null).map(() => `
+            <tr>
+                <td><div class="skeleton skeleton-line medium"></div></td>
+                <td><div class="skeleton skeleton-line short"></div></td>
+                <td><div class="skeleton skeleton-badge"></div></td>
+                <td><div class="skeleton skeleton-line short"></div></td>
+                <td><div class="skeleton skeleton-line medium"></div></td>
+                <td><div class="skeleton skeleton-line short"></div></td>
+            </tr>
+        `).join('');
     }
-    
-    renderGradesTable(grades);
+
+    setTimeout(() => {
+        const grades = getStudentGrades();
+
+        // Calculer les statistiques
+        if (grades.length > 0) {
+            const sum = grades.reduce((acc, g) => acc + g.value, 0);
+            const avg = (sum / grades.length).toFixed(2);
+            const best = Math.max(...grades.map(g => g.value));
+
+            document.getElementById('average-grade').textContent = avg + '/20';
+            document.getElementById('total-grades').textContent = grades.length;
+            document.getElementById('best-grade').textContent = best + '/20';
+        }
+
+        renderGradesTable(grades);
+    }, 150);
 }
 
 function getStudentGrades() {
