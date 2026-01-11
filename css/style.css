@@ -1951,14 +1951,34 @@ body:has(.connection-indicator:not(.hidden)) .header {
 
 .modal-close {
     position: absolute;
-    top: 16px;
-    right: 16px;
-    width: 36px;
-    height: 36px;
-    background: var(--bg-tertiary);
+    top: 12px;
+    right: 12px;
+    width: 40px;
+    height: 40px;
+    background: var(--bg-secondary);
+    border: 2px solid var(--border-color);
     border-radius: 50%;
-    color: var(--text-medium);
-    z-index: 1;
+    color: var(--text-primary);
+    font-size: 1.5rem;
+    font-weight: 300;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 10;
+    transition: all 0.2s ease;
+    line-height: 1;
+}
+
+.modal-close:hover {
+    background: var(--danger-color, #e74c3c);
+    border-color: var(--danger-color, #e74c3c);
+    color: white;
+    transform: scale(1.1);
+}
+
+.modal-close:active {
+    transform: scale(0.95);
 }
 
 .modal-content {
