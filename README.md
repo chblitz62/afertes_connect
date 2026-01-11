@@ -2,7 +2,7 @@
 
 [![Node.js](https://img.shields.io/badge/Node.js-18%2B-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-14%2B-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
-[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![License](https://img.shields.io/badge/License-GPL_3.0-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![PWA Ready](https://img.shields.io/badge/PWA-Ready-5A0FC8?logo=pwa)](https://web.dev/progressive-web-apps/)
 [![YunoHost](https://img.shields.io/badge/YunoHost-Compatible-green?logo=yunohost)](https://yunohost.org/)
 
@@ -299,7 +299,7 @@ Les contributions sont les bienvenues ! Veuillez :
 
 ## Licence
 
-Ce projet est sous licence [Apache License 2.0](LICENSE).
+Ce projet est sous licence [GPL-3.0](LICENSE).
 
 ---
 
