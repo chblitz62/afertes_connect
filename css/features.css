@@ -2023,7 +2023,7 @@
     color: #2ecc71;
 }
 
-.droits-card-icon.health {
+.droits-card-icon.sante {
     background: rgba(52, 152, 219, 0.15);
     color: #3498db;
 }
@@ -2033,37 +2033,37 @@
     color: #9b59b6;
 }
 
-.droits-card-icon.sexual {
+.droits-card-icon.sexuel {
     background: rgba(241, 92, 128, 0.15);
     color: #e91e63;
 }
 
-.droits-card-icon.housing {
+.droits-card-icon.logement {
     background: rgba(230, 126, 34, 0.15);
     color: #e67e22;
 }
 
-.droits-card-icon.food {
+.droits-card-icon.alimentation {
     background: rgba(241, 196, 15, 0.15);
     color: #f39c12;
 }
 
-.droits-card-icon.disability {
+.droits-card-icon.handicap {
     background: rgba(52, 73, 94, 0.15);
     color: #34495e;
 }
 
-.droits-card-icon.violence {
+.droits-card-icon.violences {
     background: rgba(231, 76, 60, 0.15);
     color: #e74c3c;
 }
 
-.droits-card-icon.work {
+.droits-card-icon.travail {
     background: rgba(26, 188, 156, 0.15);
     color: #1abc9c;
 }
 
-.droits-card-title h4 {
+.droits-card-title h3 {
     margin: 0;
     font-size: 1.05rem;
     color: var(--text-primary);
@@ -2075,14 +2075,14 @@
     color: var(--text-secondary);
 }
 
-.droits-card-toggle {
+.droits-chevron {
     margin-left: auto;
     font-size: 1rem;
     color: var(--text-secondary);
     transition: transform 0.3s;
 }
 
-.droits-card.open .droits-card-toggle {
+.droits-card.open .droits-chevron {
     transform: rotate(180deg);
 }
 
